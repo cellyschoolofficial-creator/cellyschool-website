@@ -1,6 +1,6 @@
-@font-face{font-family:Lexend;src:url(/cellyschool-website/fonts/lexend-regular.woff) format("woff");font-weight:400;font-display:swap}
-@font-face{font-family:Lexend;src:url(/cellyschool-website/fonts/lexend-semibold.woff) format("woff");font-weight:600;font-display:swap}
-@font-face{font-family:Lexend;src:url(/cellyschool-website/fonts/lexend-bold.woff) format("woff");font-weight:700;font-display:swap}
+@font-face{font-family:Lexend;src:url(/fonts/lexend-regular.woff) format("woff");font-weight:400;font-display:swap}
+@font-face{font-family:Lexend;src:url(/fonts/lexend-semibold.woff) format("woff");font-weight:600;font-display:swap}
+@font-face{font-family:Lexend;src:url(/fonts/lexend-bold.woff) format("woff");font-weight:700;font-display:swap}
 :root{
   --cream:#FAF6E9;--paper:#FFFDF6;--ink:#1F2A44;--ink2:#4A5573;--line:#2E3F6E;--rule:#E6DFC8;
   --bio:#5E7F22;--bio-m:#B5D27E;--bio-p:#DCEBC4;
