@@ -1,0 +1,21 @@
+# Celly School unlock Worker. Placeholders only: NO secrets in this file.
+# Secret: run `npx wrangler secret put TOKEN_SECRET` and paste a long random string (at least 32 characters).
+name = "celly-unlock"
+main = "index.js"
+compatibility_date = "2024-11-01"
+
+# Custom domain for the Worker (needs cellyschool.com on Cloudflare DNS).
+routes = [
+  { pattern = "unlock.cellyschool.com", custom_domain = true }
+]
+
+[vars]
+GUMROAD_PRODUCT_ID = "REPLACE_WITH_GUMROAD_PRODUCT_ID"
+MAX_USES = "3"
+ALLOWED_ORIGINS = "https://www.cellyschool.com,https://cellyschool.com"
+
+# KV namespace with the paid game data ("game:<slug>") and optional "revoked:<sale_id>" keys.
+# Create it with `npx wrangler kv namespace create GAMES`, then paste the id it prints here.
+[[kv_namespaces]]
+binding = "GAMES"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

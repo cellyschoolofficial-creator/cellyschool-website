@@ -1,0 +1,9 @@
+{
+  "name": "celly-unlock-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/worker.test.mjs",
+    "dev:mock": "node dev-mock.mjs"
+  }
+}
