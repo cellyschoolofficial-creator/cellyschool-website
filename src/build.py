@@ -6,7 +6,8 @@ OUT = os.path.join(ROOT, 'build')
 SITE = 'https://www.cellyschool.com'
 YT = 'https://www.youtube.com/@CellySchool'
 EMAIL = 'cellyschool.official@gmail.com'
-COURSE_URL = 'https://ayman-s-site-7527.thinkific.com/courses/ks3-science-year-7'
+THINKIFIC_URL = 'https://ayman-s-site-7527.thinkific.com/courses/ks3-science-year-7'
+COURSE_URL = '/course'
 UMAMI_ID = '585f0232-f0de-4980-a401-6b8133b6d029'    # Umami Cloud website ID (cookieless counts)
 CLARITY_ID = 'zhgmzz2723'  # Microsoft Clarity project ID (replays, only after consent)
 NOW = dt.datetime.now(dt.timezone.utc)
@@ -219,7 +220,7 @@ def build_lesson(d, prev, nxt):
         b.append('</section>')
     b.append(f'<section id="workbook"><h2>Free printable workbook</h2><p>Practise at home with the free {d["code"]} workbook: picture activities, word games with syllable taps, test-style questions and answers. Each part has a QR code that takes you straight back to the right part of the video.</p>'
              f'<p><a class="btn primary" href="/{d["slug"]}-workbook">{ICON_DL} Get the {d["code"]} workbook</a></p></section>')
-    b.append(f'<section class="course-cta"><h2>Follow the whole course, in order</h2><p>All Year 7 lessons in one place, in the Exploring Science order, with every workbook and your progress saved. Free.</p><p><a class="btn" href="{COURSE_URL}" rel="noopener">Take the full course (free)</a></p></section>')
+    b.append(f'<section class="course-cta"><h2>Follow the whole course, in order</h2><p>All Year 7 lessons in one place, in the Exploring Science order, with every workbook and your progress saved. Free.</p><p><a class="btn" href="{COURSE_URL}">Take the full course (free)</a></p></section>')
     # pager
     pg = '<nav class="pager" aria-label="Lessons">'
     if prev: pg += f'<a class="card" href="/{prev["slug"]}"><span class="dir">← Previous lesson</span><strong>{prev["code"]} {E(prev["title"])}</strong></a>'
@@ -327,7 +328,7 @@ def build_home():
     body = f'''<section class="hero"><div class="wrap">
 <div><h1>Science that sticks, one small step at a time</h1>
 <p class="lead">Free Year 7 science lessons made for children with dyslexia: short video parts, long words broken into beats, memory tricks, and a free printable workbook for every lesson.</p>
-<div class="btns"><a class="btn primary" href="/year-7">Start Year 7 Science</a><a class="btn" href="/workbooks">{ICON_DL} Free workbooks</a><a class="btn" href="{COURSE_URL}" rel="noopener">Full course (free)</a></div></div>
+<div class="btns"><a class="btn primary" href="/year-7">Start Year 7 Science</a><a class="btn" href="/workbooks">{ICON_DL} Free workbooks</a><a class="btn" href="{COURSE_URL}">Full course (free)</a></div></div>
 <div class="heroes" aria-hidden="true"><img class="h1" src="/img/celly.png" alt=""><img class="h2" src="/img/atomy.png" alt=""><img class="h3" src="/img/volty.png" alt=""></div>
 </div></section>
 <div class="wrap">
@@ -384,7 +385,7 @@ def build_static_pages():
 <li><strong>A friendly mistake-maker.</strong> Bolt the robot gets things wrong, so children practise spotting and fixing mistakes.</li>
 <li><strong>Free workbooks.</strong> Printable practice for home, with answers and QR codes back to the video.</li></ul>
 <h2>The full course, in order</h2>
-<p>Prefer one place with everything in order? The free Celly School course has every Year 7 lesson, every workbook, and saves your child\'s progress. <a href="{COURSE_URL}" rel="noopener">Take the full course (free)</a>.</p>
+<p>Prefer one place with everything in order? The free Celly School course has every Year 7 lesson, every workbook, and saves your child\'s progress. <a href="{COURSE_URL}">Take the full course (free)</a>.</p>
 <h2>Using the lessons at home</h2>
 <p>Watch one part, pause, and do the matching workbook part. Say the key words out loud together and tap the beats. Short and often works better than long sessions.</p>
 <h2>Easier reading on this website</h2>
@@ -409,6 +410,7 @@ def build_static_pages():
 <div class="btns" style="justify-content:center"><a class="btn primary" href="/year-7">Year 7 Science</a><a class="btn" href="/workbooks">Free workbooks</a></div></div>'''
     page('404.html', 'Page not found | Celly School', 'This page could not be found.', nf)
     # old Google Sites address /home -> /
+    open(os.path.join(OUT, 'course.html'), 'w').write(f'<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Celly School course</title><meta http-equiv="refresh" content="0; url={THINKIFIC_URL}"><script>try{{window.umami&&umami.track("course-redirect")}}catch(e){{}};location.replace("{THINKIFIC_URL}")</script><p style="font-family:sans-serif">Opening the Celly School course… <a href="{THINKIFIC_URL}">Continue</a></p>')
     open(os.path.join(OUT, 'home.html'), 'w').write(f'<!doctype html><meta charset="utf-8"><title>Celly School</title><link rel="canonical" href="{SITE}/"><meta http-equiv="refresh" content="0; url=/"><a href="/">Celly School</a>')
 
 
