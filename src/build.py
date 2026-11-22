@@ -268,7 +268,10 @@ def build_workbook(d):
     if d.get('pdf_src'):
         dst = os.path.join(OUT, 'workbooks', fn)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copy2(d['pdf_src'], dst)
+        ps = d['pdf_src']
+        if not os.path.exists(ps) and 'data/raw/' in ps:
+            ps = os.path.join(ROOT, 'data', 'raw', ps.split('data/raw/', 1)[1])
+        shutil.copy2(ps, dst)
 
 
 def build_unit(u):
