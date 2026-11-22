@@ -1,0 +1,341 @@
+{
+ "_note": "Practice data (key words, quiz, tricks, big ideas) for lessons whose voice script is not in the .md format that src/extract.py reads. Taken only from each lesson's own workbook text, website key facts and (7Ca) voice script in data/raw. build.py fills these fields into lessons.json data only when a lesson has none of its own, so re-running extract.py never loses them.",
+ "7Aa": {
+  "keywords": [
+   {"word": "organism", "taps": "Or. Gan. Is. M.", "meaning": "A living thing. You are one. A dog and a tree are too."},
+   {"word": "movement", "taps": "Move. Ment.", "meaning": "Moving from place to place, or moving parts."},
+   {"word": "reproduction", "taps": "Re. Pro. Duc. Tion.", "meaning": "Making more living things like yourself."},
+   {"word": "sensitivity", "taps": "Sen. Si. Tiv. I. Ty.", "meaning": "Sensing and reacting to things."},
+   {"word": "growth", "taps": "Growth.", "meaning": "Getting bigger."},
+   {"word": "respiration", "taps": "Res. Pi. Ra. Tion.", "meaning": "Releasing energy from food. It happens inside your cells."},
+   {"word": "excretion", "taps": "Ex. Cre. Tion.", "meaning": "Getting rid of waste. Ex means out."},
+   {"word": "nutrition", "taps": "Nu. Tri. Tion.", "meaning": "Getting the substances you need to live and grow."}
+  ],
+  "tricks": [
+   "Mrs Gren. Each letter starts one life process: movement, reproduction, sensitivity, growth, respiration, excretion, nutrition."
+  ],
+  "bigideas": [
+   "An organism is a living thing.",
+   "All organisms do the seven life processes.",
+   "Mrs Gren helps us remember them."
+  ],
+  "quiz": [
+   {"q": "What is an organism?", "a": "A living thing."},
+   {"q": "What does Mrs Gren help you remember?", "a": "The seven life processes."},
+   {"q": "Which life process releases energy from food?", "a": "Respiration."},
+   {"q": "What does excretion mean?", "a": "Getting rid of waste."},
+   {"q": "Is respiration the same as breathing?", "a": "No. Breathing brings oxygen in. Respiration happens inside your cells."},
+   {"q": "What are the young made by reproduction called?", "a": "Offspring."},
+   {"q": "Is a car an organism?", "a": "No. A car cannot grow and cannot reproduce."}
+  ]
+ },
+ "7Ab": {
+  "keywords": [
+   {"word": "organ", "taps": "Or. Gan.", "meaning": "A large part of a plant or animal that does an important job."},
+   {"word": "function", "taps": "Func. Tion.", "meaning": "The job of an organ."},
+   {"word": "diaphragm", "taps": "Di. A. Phragm.", "meaning": "A sheet of muscle under your lungs. It helps you breathe."},
+   {"word": "oesophagus", "taps": "Oe. Soph. A. Gus.", "meaning": "The science name for the gullet. It takes food from the mouth to the stomach."},
+   {"word": "intestine", "taps": "In. Tes. Tine.", "meaning": "The small one breaks up food and absorbs it into the blood. The large one takes water out of food."},
+   {"word": "photosynthesis", "taps": "Pho. To. Syn. The. Sis.", "meaning": "Making food using light. It happens in the leaves."},
+   {"word": "diagnosis", "taps": "Di. Ag. No. Sis.", "meaning": "A doctor's conclusion about what is wrong."}
+  ],
+  "tricks": [
+   "Good Snacks Stay Long: gullet, stomach, small intestine, large intestine.",
+   "Real Snails Love Flowers, from the bottom to the top: root, stem, leaf, flower."
+  ],
+  "bigideas": [
+   "Every organ has a function.",
+   "Plants have organs too.",
+   "Leaves make food by photosynthesis, using light."
+  ],
+  "quiz": [
+   {"q": "What is the function of the heart?", "a": "It pumps blood."},
+   {"q": "Which organs clean your blood and make urine?", "a": "The kidneys."},
+   {"q": "Which plant organ makes food?", "a": "The leaf."},
+   {"q": "What is a doctor's conclusion called?", "a": "A diagnosis."},
+   {"q": "What do leaves need for photosynthesis?", "a": "Light, carbon dioxide from the air, and water."},
+   {"q": "What is a storage organ?", "a": "A part of a plant that stores food for later, like a carrot or a potato."},
+   {"q": "What are the four organs of a plant?", "a": "Root, stem, leaf and flower. Real Snails Love Flowers."}
+  ]
+ },
+ "7Ac": {
+  "keywords": [
+   {"word": "tissue", "taps": "Tis. Sue.", "meaning": "A group of cells that are the same, all doing the same job."},
+   {"word": "xylem", "taps": "Xy. Lem.", "meaning": "A plant tissue that carries water. It is found in stems and roots."},
+   {"word": "muscle tissue", "taps": "—", "meaning": "It changes shape and moves things. In the heart, it pumps blood."},
+   {"word": "root hair tissue", "taps": "—", "meaning": "It helps roots take in water quickly."},
+   {"word": "organ", "taps": "Or. Gan.", "meaning": "Different tissues working together."},
+   {"word": "organ system", "taps": "Or. Gan. Sys. Tem.", "meaning": "Organs working together."},
+   {"word": "organism", "taps": "Or. Gan. Is. M.", "meaning": "A whole living thing."}
+  ],
+  "tricks": [
+   "Can Tiny Owls Sing Opera: cell, tissue, organ, system, organism."
+  ],
+  "bigideas": [
+   "A tissue is a team of the same cells.",
+   "Every organ is made of different tissues.",
+   "Can Tiny Owls Sing Opera: cell, tissue, organ, system, organism."
+  ],
+  "quiz": [
+   {"q": "What is a tissue?", "a": "A group of cells that are the same, all doing the same job."},
+   {"q": "Which tissue moves, to pump blood?", "a": "Muscle tissue."},
+   {"q": "Which tissue helps roots take in water quickly?", "a": "Root hair tissue."},
+   {"q": "Which plant tissue carries water?", "a": "Xylem tissue."},
+   {"q": "What is an organ made of?", "a": "Different tissues working together."},
+   {"q": "Put these in order, smallest first: organ, cell, organism, tissue, organ system.", "a": "Cell, tissue, organ, organ system, organism. Can Tiny Owls Sing Opera."}
+  ]
+ },
+ "7Ad": {
+  "keywords": [
+   {"word": "microscope", "taps": "Mi. Cro. Scope.", "meaning": "A tool that makes tiny things look bigger."},
+   {"word": "specimen", "taps": "Spec. I. Men.", "meaning": "The thing you look at under the microscope."},
+   {"word": "magnification", "taps": "Mag. Ni. Fi. Ca. Tion.", "meaning": "How much bigger something looks than its real size."},
+   {"word": "nucleus", "taps": "Nu. Cle. Us.", "meaning": "The control centre of the cell."},
+   {"word": "cytoplasm", "taps": "Cy. To. Plasm.", "meaning": "A watery jelly. Most of the cell's activities happen here."},
+   {"word": "membrane", "taps": "Mem. Brane.", "meaning": "A very thin bag. It controls what goes in and out of the cell."},
+   {"word": "mitochondria", "taps": "Mi. To. Chon. Dri. A.", "meaning": "Tiny jelly-bean shapes where respiration releases energy."},
+   {"word": "vacuole", "taps": "Vac. U. Ole.", "meaning": "A large space filled with cell sap."},
+   {"word": "chloroplast", "taps": "Chlor. O. Plast.", "meaning": "A green disc that makes food using light."},
+   {"word": "specialised", "taps": "Spe. Cial. Ised.", "meaning": "A cell with a special job. Its shape helps it do the job."},
+   {"word": "unicellular", "taps": "U. Ni. Cel. Lu. Lar.", "meaning": "Made of just one cell."}
+  ],
+  "tricks": [
+   "Nine Cats Make Music: nucleus, cytoplasm, membrane, mitochondria.",
+   "Very Wobbly Cabbage: vacuole, cell wall, chloroplasts. The three plant extras.",
+   "Magnification: multiply, don't add. Eyepiece times objective."
+  ],
+  "bigideas": [
+   "All living things are made of cells. We use a microscope to see them.",
+   "Animal and plant cells share four parts: Nine Cats Make Music. Plants have three extras: Very Wobbly Cabbage.",
+   "Some cells are specialised. Their shape fits their job."
+  ],
+  "quiz": [
+   {"q": "Which part controls the cell?", "a": "The nucleus."},
+   {"q": "Name one part found only in plant cells.", "a": "The cell wall, the vacuole or a chloroplast."},
+   {"q": "Eyepiece ×10. Objective ×10. What is the magnification?", "a": "×100. Multiply, don't add."},
+   {"q": "Why must a specimen be thin?", "a": "So light can get through it."},
+   {"q": "Why do root hair cells have no chloroplasts?", "a": "There is no light underground."},
+   {"q": "Which four parts do animal and plant cells share?", "a": "Nucleus, cytoplasm, cell membrane and mitochondria. Nine Cats Make Music."},
+   {"q": "What does unicellular mean?", "a": "Made of just one cell."}
+  ]
+ },
+ "7Ae": {
+  "keywords": [
+   {"word": "organ system", "taps": "Or. Gan. Sys. Tem.", "meaning": "A group of organs that work together, to do an important job."},
+   {"word": "digestive", "taps": "Di. Ges. Tive.", "meaning": "This system breaks down food and takes nutrients into the blood."},
+   {"word": "circulatory", "taps": "Cir. Cu. La. To. Ry.", "meaning": "This system carries oxygen and nutrients around the body."},
+   {"word": "breathing", "taps": "Breath. Ing.", "meaning": "This system gets oxygen into the blood and gets rid of carbon dioxide."},
+   {"word": "urinary", "taps": "U. Ri. Nar. Y.", "meaning": "This system gets rid of waste made in the body."},
+   {"word": "nervous", "taps": "Ner. Vous.", "meaning": "This system has the brain, the spinal cord and the nerves."},
+   {"word": "locomotor", "taps": "Lo. Co. Mo. Tor.", "meaning": "This system has your muscles and your bones."},
+   {"word": "biopsy", "taps": "Bi. Op. Sy.", "meaning": "A tiny piece of tissue a doctor takes, to look at under a microscope."},
+   {"word": "transplant", "taps": "Trans. Plant.", "meaning": "An unhealthy organ is replaced with a healthy one."}
+  ],
+  "tricks": [
+   "Can Dogs Usually Nap By Lakes? Circulatory, digestive, urinary, nervous, breathing, locomotor."
+  ],
+  "bigideas": [
+   "Cells make tissues, tissues make organs, and organs make organ systems.",
+   "Your body has six organ systems. Can Dogs Usually Nap By Lakes?",
+   "Plants have a water transport system: roots, stem and leaves."
+  ],
+  "quiz": [
+   {"q": "What is an organ system?", "a": "A group of organs working together."},
+   {"q": "Which system carries blood around your body?", "a": "The circulatory system."},
+   {"q": "Which organs are in a plant's water transport system?", "a": "Roots, stem and leaves."},
+   {"q": "What is a transplant?", "a": "Replacing an unhealthy organ with a healthy one."},
+   {"q": "What are the six body systems?", "a": "Circulatory, digestive, urinary, nervous, breathing and locomotor. Can Dogs Usually Nap By Lakes?"},
+   {"q": "What is a biopsy?", "a": "A tiny piece of tissue a doctor takes, to look at under a microscope."},
+   {"q": "What does dialysis do, when the kidneys stop working?", "a": "A machine cleans the blood."}
+  ]
+ },
+ "7Ba": {
+  "keywords": [
+   {"word": "reproduce", "taps": "Re. Pro. Duce.", "meaning": "To make more living things of the same type."},
+   {"word": "extinct", "taps": "Ex. Tinct.", "meaning": "Gone forever. There are none left anywhere, like the dinosaurs."},
+   {"word": "hypothesis", "taps": "Hy. Poth. E. Sis.", "meaning": "An idea that answers a question. You can test it with an experiment."},
+   {"word": "prediction", "taps": "Pre. Dic. Tion.", "meaning": "What you think will happen. Often: if … then …"},
+   {"word": "endangered", "taps": "En. Dan. Gered.", "meaning": "In danger of becoming extinct."},
+   {"word": "gametes", "taps": "Gam. Etes.", "meaning": "Special sex cells. Each parent makes them."},
+   {"word": "ovum", "taps": "O. Vum.", "meaning": "Another name for an egg cell."},
+   {"word": "fertilisation", "taps": "Fer. Ti. Li. Sa. Tion.", "meaning": "A sperm cell enters an egg cell. The two nuclei fuse."},
+   {"word": "zygote", "taps": "Zy. Gote.", "meaning": "A fertilised egg cell."}
+  ],
+  "tricks": [
+   "Old Queens Have Purple Elegant Dresses: observation, question, hypothesis, prediction, experiment, data."
+  ],
+  "bigideas": [
+   "Scientists test ideas. Old Queens Have Purple Elegant Dresses.",
+   "In sexual reproduction, a sperm cell and an egg cell fuse.",
+   "Fish use external fertilisation. Birds and mammals use internal fertilisation."
+  ],
+  "quiz": [
+   {"q": "What is a hypothesis?", "a": "An idea you can test."},
+   {"q": "In Redi's test, where did the maggots appear?", "a": "Only in the open jar."},
+   {"q": "What are the male and female gametes?", "a": "Sperm cells and egg cells."},
+   {"q": "What happens at fertilisation?", "a": "A sperm cell enters an egg cell. The two nuclei fuse."},
+   {"q": "What does extinct mean?", "a": "Gone forever. None are left anywhere."},
+   {"q": "What is another name for a fertilised egg cell?", "a": "A zygote."},
+   {"q": "Do fish use external or internal fertilisation?", "a": "External. It happens outside the body, in water."}
+  ]
+ },
+ "7Bb": {
+  "keywords": [
+   {"word": "reproductive", "taps": "Re. Pro. Duc. Tive.", "meaning": "Describes the organs where gametes are made."},
+   {"word": "testis", "taps": "Tes. Tis.", "meaning": "It makes sperm cells. There are two."},
+   {"word": "scrotum", "taps": "Scro. Tum.", "meaning": "The bag of skin that the testes hang in, outside the body."},
+   {"word": "semen", "taps": "Se. Men.", "meaning": "Sperm cells and fluids from the glands."},
+   {"word": "urethra", "taps": "U. Re. Thra.", "meaning": "A tube that carries urine or semen out of the body."},
+   {"word": "ovary", "taps": "O. Va. Ry.", "meaning": "It releases egg cells. There are two."},
+   {"word": "oviduct", "taps": "O. Vi. Duct.", "meaning": "The egg tube. Its other name is the fallopian tube."},
+   {"word": "cilia", "taps": "Cil. I. A.", "meaning": "Tiny hairs that sweep the egg cell along."},
+   {"word": "uterus", "taps": "U. Ter. Us.", "meaning": "Where a baby develops. It has strong walls of muscle."},
+   {"word": "cervix", "taps": "Cer. Vix.", "meaning": "A ring of muscle that holds the baby in place."},
+   {"word": "menopause", "taps": "Men. O. Pause.", "meaning": "When the ovaries stop releasing egg cells."},
+   {"word": "adapted", "taps": "A. Dap. Ted.", "meaning": "Has special features to do its job."}
+  ],
+  "tricks": [
+   "Make. Carry. Add. Out. The testes make sperm cells. The sperm ducts carry them. Glands add fluids. The urethra carries semen out.",
+   "Orange Owls Use Cosy Vans: the female organs, from the ovary to the outside."
+  ],
+  "bigideas": [
+   "Testes make sperm cells. Make. Carry. Add. Out.",
+   "Ovaries release egg cells. Orange Owls Use Cosy Vans.",
+   "Sperm cells and egg cells are adapted to do their jobs."
+  ],
+  "quiz": [
+   {"q": "Where are sperm cells made?", "a": "In the testes."},
+   {"q": "Why do the testes hang outside the body?", "a": "To keep the sperm cells cooler."},
+   {"q": "Which tube carries both semen and urine?", "a": "The urethra."},
+   {"q": "How does an egg cell move along the oviduct?", "a": "Tiny hairs called cilia sweep it along."},
+   {"q": "What is in the egg cell's cytoplasm?", "a": "A store of food."},
+   {"q": "What does an ovary do?", "a": "It releases egg cells."},
+   {"q": "What is the menopause?", "a": "When the ovaries stop releasing egg cells, usually at about 45 to 55 years old."}
+  ]
+ },
+ "7Bc": {
+  "keywords": [
+   {"word": "pregnant", "taps": "Preg. Nant.", "meaning": "A baby is developing inside the woman's uterus."},
+   {"word": "zygote", "taps": "Zy. Gote.", "meaning": "The first cell of a new human. It is made at fertilisation."},
+   {"word": "embryo", "taps": "Em. Bry. O.", "meaning": "A little ball of cells that grows into a baby."},
+   {"word": "implantation", "taps": "Im. Plan. Ta. Tion.", "meaning": "The embryo sinks into the soft lining of the uterus."},
+   {"word": "identical twins", "taps": "I. Den. Ti. Cal.", "meaning": "One fertilised egg cell splits in two. Each cell grows into a baby."},
+   {"word": "amnion", "taps": "Am. Ni. On.", "meaning": "The bag the embryo grows in."},
+   {"word": "amniotic fluid", "taps": "Am. Ni. Ot. Ic.", "meaning": "The liquid in the bag. It cushions the embryo from bumps."},
+   {"word": "placenta", "taps": "Pla. Cen. Ta.", "meaning": "An organ shaped like a plate. It swaps substances between the two bloods."},
+   {"word": "umbilical cord", "taps": "Um. Bil. I. Cal.", "meaning": "It joins the embryo to the placenta, and carries blood to and from it."}
+  ],
+  "tricks": [
+   "Speedy Fish Dive In: Swim. Fuse. Divide. Implant.",
+   "The safe room: Cushion. Swap. Carry."
+  ],
+  "bigideas": [
+   "Speedy Fish Dive In. Swim. Fuse. Divide. Implant.",
+   "Each parent gives half of the instructions for a new baby.",
+   "The amniotic fluid cushions. The placenta swaps. The umbilical cord carries."
+  ],
+  "quiz": [
+   {"q": "Where does fertilisation happen?", "a": "In the oviduct."},
+   {"q": "What is implantation?", "a": "The embryo sinks into the soft lining of the uterus."},
+   {"q": "How are identical twins made?", "a": "One fertilised egg cell divides, and the two cells separate."},
+   {"q": "What does the placenta do?", "a": "It swaps substances between the mother's blood and the embryo's blood."},
+   {"q": "Why does the mother's blood not mix with the embryo's blood?", "a": "Her blood is at high pressure. It would damage the embryo's blood vessels."},
+   {"q": "What does the amniotic fluid do?", "a": "It cushions the embryo from bumps."},
+   {"q": "What is a zygote?", "a": "The first cell of a new human. It is made at fertilisation."}
+  ]
+ },
+ "7Bd": {
+  "keywords": [
+   {"word": "gestation", "taps": "Ges. Ta. Tion.", "meaning": "The time from fertilisation to birth. In humans it is about 9 months."},
+   {"word": "foetus", "taps": "Foe. Tus.", "meaning": "The new name for the embryo at about 8 weeks, when it has a full set of organs."},
+   {"word": "ultrasound", "taps": "Ul. Tra. Sound.", "meaning": "Sounds too high for us to hear. They make a picture of the foetus on a screen."},
+   {"word": "premature", "taps": "Pre. Ma. Ture.", "meaning": "Born early and small."},
+   {"word": "labour", "taps": "La. Bour.", "meaning": "Giving birth. The word means hard work."},
+   {"word": "contraction", "taps": "Con. Trac. Tion.", "meaning": "Each squeeze of the strong muscle walls of the uterus."},
+   {"word": "navel", "taps": "Na. Vel.", "meaning": "The belly button. A small scar left when the stump of the umbilical cord falls off."},
+   {"word": "mammary glands", "taps": "Mam. Ma. Ry.", "meaning": "They make milk, in the mother's breasts."},
+   {"word": "antibodies", "taps": "An. Ti. Bod. Ies.", "meaning": "They help to protect the baby against diseases."},
+   {"word": "zoologists", "taps": "Zo. Ol. O. Gists.", "meaning": "Scientists who study animals."}
+  ],
+  "tricks": [
+   "Many Silver Vans Drive Away: medicines, smoking, viruses, drugs, alcohol. Keep them away from the foetus.",
+   "Clever Camels Always Plod Calmly Across: contractions, cervix widens, amnion breaks, push, cord is cut, afterbirth."
+  ],
+  "bigideas": [
+   "Gestation is the time from fertilisation to birth. Many Silver Vans Drive Away.",
+   "Labour has six steps. Clever Camels Always Plod Calmly Across.",
+   "Zoos can breed endangered animals. Then they can return them to the wild."
+  ],
+  "quiz": [
+   {"q": "What is the gestation period?", "a": "The time from fertilisation to birth."},
+   {"q": "When does an embryo become a foetus?", "a": "At about 8 weeks, when it has a full set of organs."},
+   {"q": "Why can smoking make a baby premature?", "a": "Less oxygen reaches the foetus."},
+   {"q": "Why did the Arabian oryx become extinct in the wild?", "a": "Hunting."},
+   {"q": "What is the first step of labour?", "a": "Contractions start."},
+   {"q": "Name two things in milk that help a baby.", "a": "Nutrients, for energy and growth. Antibodies, to help protect against diseases."},
+   {"q": "How did zoos save the Arabian oryx?", "a": "They bred them in a breeding programme. Then they put them back into the wild."}
+  ]
+ },
+ "7Be": {
+  "keywords": [
+   {"word": "puberty", "taps": "Pu. Ber. Ty.", "meaning": "A time of big physical changes. The body grows fast."},
+   {"word": "hormones", "taps": "Hor. Mones.", "meaning": "Chemical messages. They travel around the body in the blood."},
+   {"word": "acne", "taps": "Ac. Ne.", "meaning": "Spots on the skin, caused by sex hormones. It is very common."},
+   {"word": "adolescence", "taps": "Ad. O. Les. Cence.", "meaning": "The time when the body and the feelings change."},
+   {"word": "menstrual cycle", "taps": "Men. Stru. Al.", "meaning": "A monthly cycle that starts after puberty. It takes about 28 days."},
+   {"word": "menstruation", "taps": "Men. Stru. A. Tion.", "meaning": "The science word for a period."},
+   {"word": "ovulation", "taps": "Ov. U. La. Tion.", "meaning": "When an egg cell is released from an ovary."}
+  ],
+  "tricks": [
+   "Happy Snails Grow Gently: hair, smell, growth, gametes. Changes in both boys and girls.",
+   "My Big Orange Moon: menstruation, build up, ovulation, menstruation again."
+  ],
+  "bigideas": [
+   "Sex hormones start puberty. Happy Snails Grow Gently.",
+   "The menstrual cycle takes about 28 days. My Big Orange Moon.",
+   "Animals with short life cycles are easier to breed."
+  ],
+  "quiz": [
+   {"q": "What starts puberty?", "a": "Sex hormones."},
+   {"q": "What is adolescence?", "a": "The time when the body and the feelings change."},
+   {"q": "How long is the menstrual cycle?", "a": "About 28 days."},
+   {"q": "What is ovulation?", "a": "When an egg cell is released from an ovary."},
+   {"q": "Why is a Sumatran rhino hard to breed?", "a": "It has a long life cycle, and only one calf at a time."},
+   {"q": "Where are sex hormones made?", "a": "In the brain, the ovaries and the testes."},
+   {"q": "What is acne, and who can help with it?", "a": "Spots on the skin, caused by sex hormones. A pharmacist or a doctor can help."}
+  ]
+ },
+ "7Ca": {
+  "keywords": [
+   {"word": "stamina", "taps": "Stam. I. Na.", "meaning": "Keeping going for a long time without getting tired."},
+   {"word": "criteria", "taps": "Cri. Te. Ri. A.", "meaning": "The rules we use to judge something."},
+   {"word": "respiration", "taps": "Res. Pi. Ra. Tion.", "meaning": "Releasing energy from food, inside cells."},
+   {"word": "trachea", "taps": "Tra. Che. A.", "meaning": "The tube that air goes in and out through. Its everyday name is the windpipe."},
+   {"word": "contract", "taps": "Con. Tract.", "meaning": "A muscle cell gets shorter and fatter."},
+   {"word": "intercostal", "taps": "In. Ter. Cos. Tal.", "meaning": "Between the ribs. These muscles sit between your ribs."},
+   {"word": "diaphragm", "taps": "Di. A. Phragm.", "meaning": "A dome-shaped sheet of muscle under your lungs."},
+   {"word": "inhalation", "taps": "In. Ha. La. Tion.", "meaning": "Breathing in."},
+   {"word": "exhalation", "taps": "Ex. Ha. La. Tion.", "meaning": "Breathing out."},
+   {"word": "ventilation", "taps": "Ven. Ti. La. Tion.", "meaning": "The air moving in and out of the lungs."}
+  ],
+  "tricks": [
+   "Suppleness. Strength. Speed. Stamina. Hold up four fingers, one for each S.",
+   "Inter means between. Costa means rib. So intercostal means between the ribs.",
+   "Ribs up and out. Diaphragm down. Air in."
+  ],
+  "bigideas": [
+   "Fitness has four S-factors. Suppleness, strength, speed and stamina.",
+   "Breathing moves air. Respiration releases energy in cells.",
+   "Ribs up and out. Diaphragm down. Air in."
+  ],
+  "quiz": [
+   {"q": "What are the four S-factors?", "a": "Suppleness, strength, speed and stamina."},
+   {"q": "What is respiration?", "a": "Releasing energy from food, inside cells."},
+   {"q": "What happens in gas exchange?", "a": "Oxygen goes into the blood. Carbon dioxide leaves the blood."},
+   {"q": "What does the diaphragm do when you breathe in?", "a": "It contracts, moves down and flattens."},
+   {"q": "What happens to muscles when you breathe out?", "a": "They relax."},
+   {"q": "Are breathing and respiration the same thing?", "a": "No. Breathing moves air. Respiration releases energy in cells."},
+   {"q": "Sam takes seven breaths in thirty seconds. What is Sam's breathing rate for one minute?", "a": "Fourteen breaths per minute."}
+  ]
+ }
+}

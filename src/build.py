@@ -15,6 +15,14 @@ E = html.escape
 
 L = json.load(open(os.path.join(ROOT, 'data', 'lessons.json')))
 BY = {d['code']: d for d in L}
+# Practice data for lessons whose scripts extract.py cannot read (7A, 7B, 7Ca).
+# Only fills fields a lesson does not already have.
+_PX = os.path.join(ROOT, 'data', 'practice-extra.json')
+if os.path.exists(_PX):
+    for _c, _v in json.load(open(_PX, encoding='utf-8')).items():
+        if _c in BY:
+            for _k, _x in _v.items():
+                if not BY[_c].get(_k): BY[_c][_k] = _x
 UNITS = []
 for d in L:
     if not UNITS or UNITS[-1]['code'] != d['unit']:
