@@ -23,7 +23,7 @@
     var h=a.getAttribute('href')||'';
     if(a.hasAttribute('download')||/\.pdf($|\?)/i.test(h)) csTrack('workbook-download',{page:page,file:h.split('/').pop()});
     else if(/youtube\.com|youtu\.be/.test(h)) csTrack('youtube-click',{page:page});
-    else if(/thinkific\.com/.test(h)) csTrack('thinkific-click',{page:page});
+    else if(/thinkific\.com/.test(h)||/^\/course$/.test(h)) csTrack('thinkific-click',{page:page});
     else if(/teachers?payteachers|tes\.com/.test(h)) csTrack('shop-click',{page:page,to:a.hostname});
     else if(/^mailto:/.test(h)) csTrack('email-click',{page:page});
   },true);
