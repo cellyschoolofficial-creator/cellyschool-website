@@ -30,6 +30,7 @@
   b.style.backgroundImage='url(https://i.ytimg.com/vi/'+vid+'/hqdefault.jpg)';
   b.innerHTML='<span class="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>';
   b.addEventListener('click',function(){
+    if(window.csTrack)csTrack('video-play',{lesson:location.pathname.replace(/^\//,'')});
     var f=document.createElement('iframe');
     f.src='https://www.youtube-nocookie.com/embed/'+vid+'?autoplay=1&rel=0&modestbranding=1';
     f.title='Lesson video';f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.allowFullscreen=true;

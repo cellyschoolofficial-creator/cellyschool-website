@@ -41,7 +41,7 @@
   tabs.appendChild(snd);
   box.appendChild(tabs);box.appendChild(stage);
 
-  function done(msg){setStar(code);var s=document.querySelectorAll('[data-star="'+code+'"]');s.forEach(function(e){e.hidden=false});
+  function done(msg){setStar(code);if(window.csTrack)csTrack('practice-done',{lesson:code});var s=document.querySelectorAll('[data-star="'+code+'"]');s.forEach(function(e){e.hidden=false});
     var w=h('div','pcard pdone');w.appendChild(h('p','pbig','⭐'));w.appendChild(h('p','pq',msg));w.appendChild(h('p','small','Star saved on this device.'));return w}
 
   function open(m){
