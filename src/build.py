@@ -13,6 +13,17 @@ CLARITY_ID = 'zhgmzz2723'  # Microsoft Clarity project ID (replays, only after c
 NOW = dt.datetime.now(dt.timezone.utc)
 E = html.escape
 
+# ---- Paid games (see GAMES-PAYWALL.md) ------------------------------------------
+# The ONE switch. False = the site builds exactly as before (all games free, in the HTML).
+# True  = games of the first lesson of each unit stay free; all other games are locked
+#         and loaded from the unlock Worker after a Gumroad code is entered.
+PAYWALL = False
+if os.environ.get('CS_PAYWALL') == '1':   # test builds only: CS_PAYWALL=1 python3 src/build.py
+    PAYWALL = True
+GUMROAD_URL = 'https://cellyschool.gumroad.com/l/REPLACE-ME'   # placeholder: the Gumroad product page
+UNLOCK_API = os.environ.get('CS_UNLOCK_API', 'https://unlock.cellyschool.com')   # the Cloudflare Worker
+UNLOCK_DEVICES = 3   # must match MAX_USES in worker/wrangler.toml (shown in the lock panel text)
+
 L = json.load(open(os.path.join(ROOT, 'data', 'lessons.json')))
 BY = {d['code']: d for d in L}
 # Practice data for lessons whose scripts extract.py cannot read (7A, 7B, 7Ca).
@@ -50,6 +61,45 @@ ICON_DL = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="curre
 ICON_YT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-3.2.5-4.8s-.1-3.2-.5-4.8zM9.7 15.1V8.9l5.8 3.1z"/></svg>'
 
 
+def has_games(d):
+    return bool(d.get('quiz') or len(d.get('keywords', [])) >= 3)
+
+
+def practice_data(d):
+    """The JSON the games in static/practice.js play with."""
+    kws = d.get('keywords', [])
+    return {'code': d['code'], 'quiz': d.get('quiz', []),
+            'words': [{'w': k['word'], 'm': k.get('meaning', ''), 'b': [p.strip() for p in re.split(r'[.·]\s*', k['taps']) if p.strip()]} for k in kws]}
+
+
+# First lesson of each unit: games always free.
+FREE_GAMES = {u['lessons'][0]['code'] for u in UNITS}
+
+
+def games_paid(d):
+    return PAYWALL and d['code'] not in FREE_GAMES
+
+
+def lock_panel(d):
+    """Friendly lock box shown instead of the games on a paid lesson (PAYWALL only)."""
+    return (f'<div class="practice locked" data-code="{d["code"]}" data-slug="{d["slug"]}" data-api="{E(UNLOCK_API)}">'
+            '<div class="lockcard" data-lock>'
+            '<p class="lockicon" aria-hidden="true">🔒</p>'
+            '<h3>Unlock all Year 7 games</h3>'
+            '<p>One code opens the recall quiz, word match and beat tapping games for every Year 7 lesson, on this device. '
+            f'The video, the workbook and the quick quiz below stay free.</p>'
+            f'<div class="btns"><a class="btn primary" href="{E(GUMROAD_URL)}" rel="noopener" data-unlock-buy>Get an unlock code</a></div>'
+            '<form class="unlockform" data-unlock-form novalidate>'
+            f'<label for="code-{d["slug"]}">I have a code</label>'
+            f'<div class="unlockrow"><input id="code-{d["slug"]}" name="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" '
+            'placeholder="Paste your code here" required>'
+            '<button class="btn" type="submit">Unlock</button></div>'
+            '<p class="unlockmsg" role="status" aria-live="polite"></p></form>'
+            f'<p class="small">A grown-up buys one code on Gumroad. It works on up to {UNLOCK_DEVICES} devices. '
+            'The first lesson of every unit is free to play: <a href="/play">see the free games</a>.</p>'
+            '</div></div>')
+
+
 def live_at(d):
     """UTC datetime the lesson video goes public (6 pm Qatar = 15:00 UTC), or None if already public."""
     if not d.get('public_from'):
@@ -78,6 +128,10 @@ def secs(ts):
     return p[0] * 60 + p[1] if len(p) == 2 else p[0] * 3600 + p[1] * 60 + p[2]
 
 
+PAYWALL_HEAD = '<link rel="stylesheet" href="/unlock.css?v=1">\n'
+PAYWALL_JS = '<script src="/unlock.js?v=1" defer></script>'
+
+
 def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_head=''):
     canonical = canonical or (SITE + ('/' if path == 'index.html' else '/' + path.replace('.html', '')))
     nav = [('/year-7', 'Year 7 Science', 'y7'), ('/play', 'Practise', 'pl'), ('/workbooks', 'Free workbooks', 'wb'), ('/about', 'For grown-ups', 'ab')]
@@ -98,7 +152,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 <link rel="icon" href="/img/favicon.png" type="image/png">
 <link rel="preload" href="/fonts/lexend-regular.woff" as="font" type="font/woff" crossorigin>
 <link rel="stylesheet" href="/site.css?v=3">
-{extra_head}{ld}
+{PAYWALL_HEAD if PAYWALL else ''}{extra_head}{ld}
 </head>
 <body>
 <a class="skip" href="#main">Skip to the lesson content</a>
@@ -117,7 +171,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=1" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}"></script><script src="/site.js?v=3" defer></script><script src="/practice.js?v=2" defer></script>
+<script src="/track.js?v=1" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}"></script><script src="/site.js?v=3" defer></script><script src="/practice.js?v={'3' if PAYWALL else '2'}" defer></script>{PAYWALL_JS if PAYWALL else ''}
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
@@ -214,9 +268,12 @@ def build_lesson(d, prev, nxt):
     if d.get('bigideas'):
         b.append('<section id="ideas"><h2>Three big ideas</h2><ol class="ideas">' + ''.join(f'<li>{E(x)}</li>' for x in d['bigideas']) + '</ol></section>')
     faq = []
-    if d.get('quiz') or len(kws) >= 3:
-        pdata = {'code': d['code'], 'quiz': d.get('quiz', []),
-                 'words': [{'w': k['word'], 'm': k.get('meaning', ''), 'b': [p.strip() for p in re.split(r'[.·]\s*', k['taps']) if p.strip()]} for k in kws]}
+    if has_games(d) and games_paid(d):
+        # Paid lesson: NO game data in the HTML. The lock panel loads it from the Worker after unlocking.
+        b.append('<section id="practice"><h2>Practise</h2><p>Three short games to help the words stick. Take your time: there is no timer.</p>'
+                 + lock_panel(d) + '</section>')
+    elif has_games(d):
+        pdata = practice_data(d)
         b.append('<section id="practice" hidden><h2>Practise</h2><p>Three short games to help the words stick. Take your time: there is no timer.</p>'
                  f'<div class="practice" data-code="{d["code"]}"></div>'
                  '<script type="application/json" id="practice-data">' + json.dumps(pdata, ensure_ascii=False).replace('</', '<\\/') + '</script></section>')
@@ -362,22 +419,34 @@ def build_home():
          'Free dyslexia-friendly KS3 science for Year 7: video lessons in short parts, syllable taps, memory tricks and free printable workbooks.', body, '', jsonld=ld)
 
 
+PLAY_PAYWALL_NOTE = (f'<div class="note unlocknote" data-unlock-note><p style="margin:0">The games for the first lesson of every unit are free. '
+                     f'One unlock code opens all the other Year 7 games on this device. <a href="{GUMROAD_URL}" rel="noopener" data-unlock-buy>Get an unlock code</a>.</p></div>\n')
+
+
 def build_play():
     secs_ = []
     for u in UNITS:
         subj, hero, heroname = SUBJ[u['subject']]
-        items = ''.join(f'<a class="card" href="/{d["slug"]}#practice"><span class="chip {d["subject"]}">{d["code"]}</span> <span class="star" data-star="{d["code"]}" hidden>★</span><h3 style="margin-top:.4em">{E(d["title"])}</h3></a>'
-                        for d in u['lessons'] if d.get('quiz') or len(d.get('keywords', [])) >= 3)
+        items = ''.join(f'<a class="card" href="/{d["slug"]}#practice"><span class="chip {d["subject"]}">{d["code"]}</span> <span class="star" data-star="{d["code"]}" hidden>★</span>'
+                        + ((' <span class="plock" data-plock>🔒 Unlock</span>' if games_paid(d) else ' <span class="pfree">Free</span>') if PAYWALL else '')
+                        + f'<h3 style="margin-top:.4em">{E(d["title"])}</h3></a>'
+                        for d in u['lessons'] if has_games(d))
         if not items: continue
-        n = sum(1 for d in u['lessons'] if d.get('quiz') or len(d.get('keywords', [])) >= 3)
+        n = sum(1 for d in u['lessons'] if has_games(d))
         secs_.append(f'<section class="subj {u["subject"]}"><div class="subj-head"><img src="/img/{hero}.png" alt="" width="64" height="56"><div><h2>{u["code"]} {E(u["name"])}</h2>'
                      f'<p class="small" style="margin:0"><span data-unit-count="{u["code"]}">0</span> of {n} practised on this device</p></div></div><div class="grid four">{items}</div></section>')
     body = f'''<div class="wrap"><h1 style="margin-top:36px">Practise</h1>
 <p class="lead">Short games for every lesson: a recall quiz, match the word to its meaning, and tap the beats of long science words. No sign-in and no timer.</p>
 <p class="small">Your stars are saved only in this browser, on this device. Nothing is sent to us.</p>
-{"".join(secs_)}</div>'''
+{PLAY_PAYWALL_NOTE if PAYWALL else ''}{"".join(secs_)}</div>'''
     page('play.html', 'Practise Year 7 science | Quizzes and word games | Celly School',
          'Free dyslexia-friendly practice games for Year 7 science: recall quizzes, key word matching and syllable beat tapping for every lesson.', body, 'pl')
+
+
+PRIVACY_PAYWALL = '''
+<h2>Unlock codes for the games</h2>
+<p>The videos, workbooks and quick quizzes are free. Most practice games need an unlock code. You buy the code on Gumroad, which handles the payment and its own privacy policy applies. Card details never touch this website, and we do not see them.</p>
+<p>When you type a code, it is sent once to our small unlock service (unlock.cellyschool.com), which asks Gumroad if the code is real. The service then gives your browser an unlock key. That key is saved only in this browser, on this device, so the games open next time. We do not save your name or email on this website. To remove the key, clear this website's data in your browser.</p>'''
 
 
 def build_static_pages():
@@ -410,7 +479,7 @@ def build_static_pages():
 <li>Only if a grown-up presses “Yes” on the message at the bottom of the page, we use Microsoft Clarity to see how pages are used: clicks, scrolling and where people get stuck. Clarity uses cookies, hides anything typed, and does not record names or contact details. If nobody presses “Yes”, Clarity never loads. Microsoft\'s privacy statement applies to Clarity. <button type="button" class="btn" data-consent-reset hidden>Change my choice</button></li>
 <li>We count visits with Cloudflare Web Analytics. It uses no cookies, does not collect personal information and does not follow you to other websites. It only tells us totals, such as how many people visited a page and which country or website they came from.</li>
 <li>Lesson videos are hosted on YouTube. A video only loads from YouTube (in privacy-enhanced mode, youtube-nocookie.com) when you press play. YouTube's own privacy policy then applies.</li>
-<li>The website is hosted on GitHub Pages, which may keep basic technical logs (such as IP addresses) for security.</li></ul>
+<li>The website is hosted on GitHub Pages, which may keep basic technical logs (such as IP addresses) for security.</li></ul>{PRIVACY_PAYWALL if PAYWALL else ''}
 <p>Questions: <a href="mailto:{EMAIL}">{EMAIL}</a></p></div>'''
     page('privacy.html', 'Privacy | Celly School', 'Celly School collects no personal data: no accounts and no ads. Visits are counted without cookies; visit recordings only with a grown-up\'s permission.', privacy)
     nf = '''<div class="wrap narrow center" style="padding:60px 20px"><img src="/img/celly.png" alt="" width="160"><h1>Oops, this page is missing</h1>
@@ -436,14 +505,15 @@ def build_meta():
 
 def main():
     if os.path.exists(OUT): shutil.rmtree(OUT)
-    shutil.copytree(os.path.join(ROOT, 'static'), OUT, ignore=shutil.ignore_patterns('src'))
+    shutil.copytree(os.path.join(ROOT, 'static'), OUT, ignore=shutil.ignore_patterns('src', *(() if PAYWALL else ('unlock.js', 'unlock.css'))))
     for i, d in enumerate(L):
         build_lesson(d, L[i - 1] if i else None, L[i + 1] if i + 1 < len(L) else None)
         build_workbook(d)
     for u in UNITS: build_unit(u)
     build_year7(); build_workbooks(); build_home(); build_play(); build_static_pages(); build_meta()
     n = sum(len(f) for _, _, f in os.walk(OUT))
-    print('built', n, 'files')
+    print('built', n, 'files', '(PAYWALL on: %d free, %d paid lessons with games)' % (
+        sum(1 for d in L if has_games(d) and not games_paid(d)), sum(1 for d in L if has_games(d) and games_paid(d))) if PAYWALL else '')
 
 
 if __name__ == '__main__':

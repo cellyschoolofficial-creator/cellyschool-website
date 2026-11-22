@@ -1,3 +1,7 @@
 build/
 __pycache__/
 *.mp3
+worker/.games/
+worker/node_modules/
+worker/.wrangler/
+shots/

@@ -1,0 +1,23 @@
+/* Lock panel for paid games (only loaded when PAYWALL = True in src/build.py) */
+.practice.locked{margin:12px 0}
+.lockcard{background:var(--paper);border:2px solid var(--rule);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.lockcard h3{font-size:1.35rem;margin:0 0 .4em}
+.lockicon{font-size:2.2rem;line-height:1;margin:0 0 .3em}
+.lockcard .btns{margin:14px 0 18px}
+.lockcard .btn.primary{font-size:1.1em;padding:.85em 1.5em}
+.unlockform{border-top:2px dashed var(--rule);padding-top:16px;margin-bottom:12px}
+.unlockform label{display:block;font-weight:600;margin-bottom:.4em}
+.unlockrow{display:flex;flex-wrap:wrap;gap:10px}
+.unlockrow input{flex:1 1 220px;min-width:0;font:inherit;font-size:1rem;letter-spacing:.04em;padding:.75em 1em;border:2px solid var(--line);border-radius:14px;background:#fff;color:var(--ink)}
+.unlockrow input:focus-visible{outline:3px solid #F2A900;outline-offset:2px}
+.unlockrow .btn{font:inherit;font-weight:600;cursor:pointer;justify-content:center;flex:0 0 auto}
+.unlockrow .btn[disabled]{opacity:.6;cursor:wait}
+.unlockmsg{min-height:1.4em;margin:.6em 0 0}
+.unlockmsg.bad{color:#9B2A10;font-weight:600}
+.unlockmsg.good{color:var(--bio);font-weight:600}
+.lockcard .small{margin:0}
+.plock,.pfree{display:inline-block;font-size:.8rem;font-weight:600;padding:.15em .6em;border-radius:6px;vertical-align:middle}
+.plock{background:#EDE7D3;color:var(--ink2)}
+.pfree{background:var(--sun);color:var(--ink)}
+.unlocknote p{max-width:none}
+@media(max-width:480px){.lockcard{padding:18px}.unlockrow .btn{flex:1 1 100%}}

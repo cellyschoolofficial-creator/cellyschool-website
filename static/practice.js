@@ -6,8 +6,12 @@
   document.querySelectorAll('[data-star]').forEach(function(el){if(stars[el.getAttribute('data-star')])el.hidden=false;});
   document.querySelectorAll('[data-unit-count]').forEach(function(el){var u=el.getAttribute('data-unit-count'),n=0;Object.keys(stars).forEach(function(k){if(k.indexOf(u)===0)n++;});el.textContent=n;});
 
+  // start() runs once now; unlock.js calls it again after it adds the data for a paid lesson.
+  window.csPracticeStart=start; start();
+  function start(){
   var box=document.querySelector('.practice'), dataEl=document.getElementById('practice-data');
-  if(!box||!dataEl)return;
+  if(!box||!dataEl||box.getAttribute('data-started'))return;
+  box.setAttribute('data-started','1');
   var D=JSON.parse(dataEl.textContent), code=D.code;
   var words=D.words.filter(function(w){return w.w&&w.m});
   var beatWords=D.words.filter(function(w){return w.b&&w.b.length>1});
@@ -117,4 +121,5 @@
   }
   open(modes[0][0]);
   if(location.hash==='#practice')document.getElementById('practice').scrollIntoView();
+  }
 })();
