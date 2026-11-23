@@ -74,7 +74,7 @@ def secs(ts):
 
 def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_head=''):
     canonical = canonical or (SITE + ('/' if path == 'index.html' else '/' + path.replace('.html', '')))
-    nav = [('/year-7', 'Year 7 Science', 'y7'), ('/play', 'Practise', 'pl'), ('/workbooks', 'Free workbooks', 'wb'), ('/help', 'Help', 'hp'), ('/about', 'For grown-ups', 'ab')]
+    nav = [('/year-7', 'Year 7 Science', 'y7'), ('/play', 'Talk to Celly', 'pl'), ('/workbooks', 'Free workbooks', 'wb'), ('/help', 'Help', 'hp'), ('/about', 'For grown-ups', 'ab')]
     navh = ''.join(f'<a href="{h}"{" aria-current=page" if k == active else ""}>{t}</a>' for h, t, k in nav)
     ld = ''.join(f'<script type="application/ld+json">{json.dumps(j, ensure_ascii=False)}</script>' for j in (jsonld or []))
     doc = f'''<!doctype html>
@@ -111,7 +111,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=1" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}"></script><script src="/site.js?v=3" defer></script><script src="/practice.js?v=2" defer></script>
+<script src="/track.js?v=1" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}"></script><script src="/site.js?v=3" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
@@ -127,7 +127,7 @@ def lesson_card(d):
     badge = '<span class="badge">Watch now</span>' if live else f'<span class="badge soon">Video {nice_date(d)}</span>'
     hq = E(d.get('hook_q') or '')
     return (f'<a class="card" href="/{d["slug"]}"><span class="chip {d["subject"]}">{d["code"]}</span> {badge}'
-            f'<h3 style="margin-top:.5em">{E(d["title"])}</h3>' + (f'<p class="muted">{hq}</p>' if hq else '') + f'<span class="star" data-star="{d["code"]}" hidden>★ Practised</span></a>')
+            f'<h3 style="margin-top:.5em">{E(d["title"])}</h3>' + (f'<p class="muted">{hq}</p>' if hq else '') + '</a>')
 
 
 def facts_html(code):
@@ -208,12 +208,10 @@ def build_lesson(d, prev, nxt):
     if d.get('bigideas'):
         b.append('<section id="ideas"><h2>Three big ideas</h2><ol class="ideas">' + ''.join(f'<li>{E(x)}</li>' for x in d['bigideas']) + '</ol></section>')
     faq = []
-    if d.get('quiz') or len(kws) >= 3:
-        pdata = {'code': d['code'], 'quiz': d.get('quiz', []),
-                 'words': [{'w': k['word'], 'm': k.get('meaning', ''), 'b': [p.strip() for p in re.split(r'[.·]\s*', k['taps']) if p.strip()]} for k in kws]}
-        b.append('<section id="practice" hidden><h2>Practise</h2><p>Three short games to help the words stick. Take your time: there is no timer.</p>'
-                 f'<div class="practice" data-code="{d["code"]}"></div>'
-                 '<script type="application/json" id="practice-data">' + json.dumps(pdata, ensure_ascii=False).replace('</', '<\\/') + '</script></section>')
+    if True:
+        b.append('<section id="practice"><h2>Talk to Celly <span class="chip">Coming soon</span></h2>'
+                 '<p>An interactive game for this lesson is on its way. Celly talks, listens to your answers and helps you practise the key words. '
+                 'For now, use the video and the free workbook.</p></section>')
     if d.get('quiz'):
         b.append('<section id="quiz"><h2>Quick quiz</h2><p>Say your answer out loud first, then check.</p>')
         for q in d['quiz']:
@@ -358,21 +356,12 @@ def build_home():
 
 
 def build_play():
-    secs_ = []
-    for u in UNITS:
-        subj, hero, heroname = SUBJ[u['subject']]
-        items = ''.join(f'<a class="card" href="/{d["slug"]}#practice"><span class="chip {d["subject"]}">{d["code"]}</span> <span class="star" data-star="{d["code"]}" hidden>★</span><h3 style="margin-top:.4em">{E(d["title"])}</h3></a>'
-                        for d in u['lessons'] if d.get('quiz') or len(d.get('keywords', [])) >= 3)
-        if not items: continue
-        n = sum(1 for d in u['lessons'] if d.get('quiz') or len(d.get('keywords', [])) >= 3)
-        secs_.append(f'<section class="subj {u["subject"]}"><div class="subj-head"><img src="/img/{hero}.png" alt="" width="64" height="56"><div><h2>{u["code"]} {E(u["name"])}</h2>'
-                     f'<p class="small" style="margin:0"><span data-unit-count="{u["code"]}">0</span> of {n} practised on this device</p></div></div><div class="grid four">{items}</div></section>')
-    body = f'''<div class="wrap"><h1 style="margin-top:36px">Practise</h1>
-<p class="lead">Short games for every lesson: a recall quiz, match the word to its meaning, and tap the beats of long science words. No sign-in and no timer.</p>
-<p class="small">Your stars are saved only in this browser, on this device. Nothing is sent to us.</p>
-{"".join(secs_)}</div>'''
-    page('play.html', 'Practise Year 7 science | Quizzes and word games | Celly School',
-         'Free dyslexia-friendly practice games for Year 7 science: recall quizzes, key word matching and syllable beat tapping for every lesson.', body, 'pl')
+    body = f'''<div class="wrap"><h1 style="margin-top:36px">Talk to Celly <span class="chip">Coming soon</span></h1>
+<p class="lead">Interactive science games are on their way. In each game Celly talks to you, listens to your answers and helps you say, tap and remember the key words.</p>
+<p>We are getting them ready now. Until then, every lesson has a video in short parts, a quick quiz and a free printable workbook.</p>
+<div class="btns"><a class="btn primary" href="/year-7">Go to the lessons</a><a class="btn" href="/workbooks">{ICON_DL} Free workbooks</a></div></div>'''
+    page('play.html', 'Talk to Celly: interactive science games (coming soon) | Celly School',
+         'Interactive, dyslexia-friendly Year 7 science games where Celly talks and listens are coming soon to Celly School.', body, 'pl')
 
 
 def build_static_pages():
@@ -402,7 +391,7 @@ def build_static_pages():
 <p>Celly School is made for children, so this website collects as little as possible.</p>
 <ul><li>No accounts, no sign-up and no email collection.</li>
 <li>No advertising cookies on this website.</li>
-<li>The “Easier reading” setting, the sound setting and practice stars are saved only in your own browser, on your device. They are never sent to us.</li>
+<li>The “Easier reading” setting is saved only in your own browser, on your device. It is never sent to us.</li>
 <li>We count which pages are visited and which buttons are used (for example “download the workbook”, “play the video” or “finished a game”) with Umami. Umami uses no cookies and collects no personal information; we only see totals.</li>
 <li>Only if a grown-up presses “Yes” on the message at the bottom of the page, we use Microsoft Clarity to see how pages are used: clicks, scrolling and where people get stuck. Clarity uses cookies, hides anything typed, and does not record names or contact details. If nobody presses “Yes”, Clarity never loads. Microsoft\'s privacy statement applies to Clarity. <button type="button" class="btn" data-consent-reset hidden>Change my choice</button></li>
 <li>We count visits with Cloudflare Web Analytics. It uses no cookies, does not collect personal information and does not follow you to other websites. It only tells us totals, such as how many people visited a page and which country or website they came from.</li>
