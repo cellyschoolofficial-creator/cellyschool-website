@@ -124,21 +124,21 @@ function textOf(ids){return ids.map(i=>window.LINES[i]||i).join(" ");}
 async function say(ids,{face=null,pose=null}={}){
   ids=[].concat(ids);stopVoice();const tok=S.token;S.last=ids;
   $("#say").textContent=textOf(ids);if(face)Celly.face(face);
-  S.speaking=true;Celly.setPose(pose||"talk");
+  S.speaking=true;Mic.pause();Celly.setPose(pose||"talk");
   let flap=0;const flapper=()=>{if(!S.speaking)return;if(!curAudio){const t=performance.now()/1000;Celly.mouth(Math.max(0,.15+.55*Math.abs(Math.sin(t*13))*Math.abs(Math.sin(t*3.1))));}flap=requestAnimationFrame(flapper);};
   for(const id of ids){if(tok!==S.token)break;const text=window.LINES[id]||id;
     if(S.mute){await sleep(Math.min(2400,500+text.length*30));continue;}
     let ok=false;if(window.VOICE.ready&&window.LINES[id]){curAudio=null;ok=await clipLine(id,tok);curAudio=null;}
     if(!ok&&tok===S.token){cancelAnimationFrame(flap);flap=requestAnimationFrame(flapper);await ttsLine(text,tok);cancelAnimationFrame(flap);}
     await sleep(120);}
-  if(tok===S.token){S.speaking=false;Mic.muteUntil=performance.now()+450;Celly.mouth(0);if(!pose||pose==="talk")Celly.setPose("idle");}
+  if(tok===S.token){S.speaking=false;Mic.muteUntil=performance.now()+700;Mic.resume();Celly.mouth(0);if(!pose||pose==="talk")Celly.setPose("idle");}
 }
 function praise(){S.praise=(S.praise%7)+1;return "p"+S.praise;}
 $("#again").onclick=async()=>{if(!S.last.length)return;const L=S.lastOpts,k=S.last.join("|");await say(S.last);if(L&&L.key===k&&L.btns[0]&&L.btns[0].isConnected)await readOpts(L.btns,L.texts);};
 
 /* ================= Celly listens (one microphone session for the whole game) ================= */
-const Mic={sr:null,want:false,blocked:false,cb:null,muteUntil:0};
-Mic.start=function(){if(!SR||Mic.sr||Mic.blocked)return;const r=new SR();r.lang="en-GB";r.continuous=true;r.interimResults=true;r.maxAlternatives=3;
+const Mic={sr:null,want:false,blocked:false,cb:null,muteUntil:0,paused:false,rt:0};
+Mic.start=function(){if(!SR||Mic.sr||Mic.blocked||Mic.paused)return;const r=new SR();r.lang="en-GB";r.continuous=true;r.interimResults=true;r.maxAlternatives=3;
   const echo=new Set();
   r.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];
     // a phrase that started while Celly was talking is Celly's own voice (echo from the speakers): ignore it, even when it finishes later
@@ -146,9 +146,12 @@ Mic.start=function(){if(!SR||Mic.sr||Mic.blocked)return;const r=new SR();r.lang=
     if(echo.has(i))continue;
     const alts=[];for(let k=0;k<res.length;k++)alts.push(res[k].transcript.toLowerCase().trim());if(Mic.cb&&alts[0])Mic.cb(alts,res.isFinal);}};
   r.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){Mic.blocked=true;Mic.want=false;micBlocked();}};
-  r.onend=()=>{Mic.sr=null;if(Mic.want&&!Mic.blocked&&S.mode==="talk")setTimeout(()=>Mic.start(),250);};
+  r.onend=()=>{Mic.sr=null;if(Mic.want&&!Mic.paused&&!Mic.blocked&&S.mode==="talk")setTimeout(()=>{if(!Mic.paused)Mic.start();},250);};
   r.onstart=()=>echo.clear();
   Mic.want=true;Mic.sr=r;try{r.start();}catch(e){Mic.sr=null;}};
+// Celly's own voice must never be heard as the child's answer: the microphone is switched off while she talks (aborting throws away anything it already heard) and back on just after
+Mic.pause=function(){if(Mic.paused)return;Mic.paused=true;clearTimeout(Mic.rt);if(Mic.sr)try{Mic.sr.abort();}catch(e){}};
+Mic.resume=function(){if(!Mic.paused)return;Mic.paused=false;clearTimeout(Mic.rt);Mic.rt=setTimeout(()=>{if(!Mic.paused&&!Mic.sr&&Mic.want!==false&&canHear())Mic.start();},350);};
 Mic.stop=function(){Mic.want=false;if(Mic.sr)try{Mic.sr.stop();}catch(e){}};
 function micBlocked(){setMode("tap");$("#live").textContent="The microphone is off, so we'll tap. A grown-up can allow the microphone and switch talk mode back on.";}
 function canHear(){return S.mode==="talk"&&!!SR&&!Mic.blocked;}
@@ -259,10 +262,10 @@ function micRow(){return canHear()?`<div class="row"><button class="tbtn" id="no
 /* one question, several answers. Tap, or say a key word. Returns true if right first time. */
 /* Celly reads the answer choices aloud (recorded lines in window.OPTV), each button lights up as she reads it */
 function optKey(h){const d=document.createElement("div");d.innerHTML=h;return d.textContent.replace(/^[^A-Za-z0-9]+/,"").replace(/\s+/g," ").trim();}
-async function readOpts(btns,texts){if(S.mute||!window.OPTV)return;const tok=S.token;S.speaking=true;Celly.setPose("talk");
+async function readOpts(btns,texts){if(S.mute||!window.OPTV)return;const tok=S.token;S.speaking=true;Mic.pause();Celly.setPose("talk");
   for(let k=0;k<btns.length;k++){if(tok!==S.token||!btns[k].isConnected||btns[k].onclick===null)break;const id=window.OPTV[optKey(texts[k])];if(!id)continue;
     btns[k].classList.add("reading");await clipLine(id,tok);btns[k].classList.remove("reading");if(tok===S.token)await sleep(250);}
-  if(tok===S.token){S.speaking=false;Mic.muteUntil=performance.now()+450;Celly.mouth(0);Celly.setPose("idle");}}
+  if(tok===S.token){S.speaking=false;Mic.muteUntil=performance.now()+700;Mic.resume();Celly.mouth(0);Celly.setPose("idle");}}
 function remember(ask,btns,texts){S.lastOpts={key:[].concat(ask||[]).join("|"),btns,texts};}
 function choose(opts,{ask=null,wrong="lab_wrong",into="#opts",grid=false,onRight=null}={}){return new Promise(async res=>{
   const box=$(into);box.innerHTML=grid?`<div class="pick">${opts.map((o,k)=>`<button data-k="${k}"><span class="e">${o.e||""}</span>${o.t}</button>`).join("")}</div>`
