@@ -21,6 +21,8 @@ for d in L:
         UNITS.append({'code': d['unit'], 'name': d['unit_name'], 'subject': d['subject'], 'lessons': []})
     UNITS[-1]['lessons'].append(d)
 
+from help import build_help
+HELP_URLS = []
 UNIT_BLURB = {
  '7A': 'What makes something alive, and how cells build tissues, organs and whole body systems.',
  '7B': 'How animals reproduce, from the scientific method to growing up. For older students: these videos are age-restricted on YouTube.',
@@ -72,7 +74,7 @@ def secs(ts):
 
 def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_head=''):
     canonical = canonical or (SITE + ('/' if path == 'index.html' else '/' + path.replace('.html', '')))
-    nav = [('/year-7', 'Year 7 Science', 'y7'), ('/play', 'Practise', 'pl'), ('/workbooks', 'Free workbooks', 'wb'), ('/about', 'For grown-ups', 'ab')]
+    nav = [('/year-7', 'Year 7 Science', 'y7'), ('/play', 'Practise', 'pl'), ('/workbooks', 'Free workbooks', 'wb'), ('/help', 'Help', 'hp'), ('/about', 'For grown-ups', 'ab')]
     navh = ''.join(f'<a href="{h}"{" aria-current=page" if k == active else ""}>{t}</a>' for h, t, k in nav)
     ld = ''.join(f'<script type="application/ld+json">{json.dumps(j, ensure_ascii=False)}</script>' for j in (jsonld or []))
     doc = f'''<!doctype html>
@@ -104,7 +106,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </main>
 <footer><div class="wrap"><div class="cols">
 <div><p><strong>Celly School</strong><br>Dyslexia-friendly science lessons, one small step at a time. Free videos and free printable workbooks for Year 7.</p></div>
-<div><p><a href="/year-7">Year 7 Science</a><br><a href="/workbooks">Free workbooks</a><br><a href="/about">For parents, tutors and teachers</a><br><a href="/privacy">Privacy</a></p></div>
+<div><p><a href="/year-7">Year 7 Science</a><br><a href="/workbooks">Free workbooks</a><br><a href="/about">For parents, tutors and teachers</a><br><a href="/help">Help guides for grown-ups</a><br><a href="/privacy">Privacy</a></p></div>
 <div><p><a href="{YT}" rel="noopener">youtube.com/@CellySchool</a><br>Questions or ideas: <a href="mailto:{EMAIL}">{EMAIL}</a></p></div>
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
@@ -166,7 +168,7 @@ def build_lesson(d, prev, nxt):
     lt = live_at(d)
     unit_slug = d['unit'].lower()
     hook = d.get('hook_q') or ''
-    title = f'{d["code"]} {d["title"]} | KS3 {subj} Year 7 | Celly School'
+    title = f'{d["code"]} {d["title"]}: free video lesson and worksheet | Year 7 {subj} | Celly School'
     desc = (f'{hook} ' if hook else '') + f'Free dyslexia-friendly KS3 {subj.lower()} lesson for Year 7 ({d["code"]} {d["title"]}): video, key words with syllables, memory tricks and a free printable workbook.'
     b = [f'<div class="wrap narrow">',
          f'<nav class="crumbs" aria-label="Breadcrumb"><a href="/year-7">Year 7 Science</a> › <a href="/year-7/{unit_slug}">{d["unit"]} {E(d["unit_name"])}</a> › {d["code"]}</nav>',
@@ -249,8 +251,8 @@ def build_lesson(d, prev, nxt):
 def build_workbook(d):
     subj, hero, _ = SUBJ[d['subject']]
     fn = pdf_name(d)
-    title = f'Free {d["code"]} {d["title"]} workbook (PDF) | Celly School'
-    desc = f'Download the free printable {d["code"]} {d["title"]} workbook for KS3 {subj.lower()}, Year 7. Dyslexia-friendly activities with answers.'
+    title = f'Free {d["code"]} {d["title"]} worksheet with answers (printable PDF) | Year 7 {subj}'
+    desc = f'Download the free printable {d["code"]} {d["title"]} workbook for KS3 {subj.lower()}, Year 7. Dyslexia-friendly worksheets with answers, following the Exploring Science order.'
     mb = d.get('pdf_kb', 0) / 1024
     body = f'''<div class="wrap narrow">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/workbooks">Free workbooks</a> › {d["code"]}</nav>
@@ -285,11 +287,11 @@ def build_unit(u):
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/year-7">Year 7 Science</a> › {u["code"]}</nav>
 <div class="subj {u["subject"]}"><div class="subj-head"><img src="/img/{hero}.png" alt="{heroname}" width="64" height="56"><div><span class="chip {u["subject"]}">{subj}</span><h1 style="margin:.2em 0 0">{u["code"]} {E(u["name"])}</h1></div></div>
 <p>{E(UNIT_BLURB[u["code"]])}</p></div>
-<h2>Lessons in this unit</h2><p>Each lesson has a video in short parts with brain breaks, and a free printable workbook for practice at home.</p>
+<h2>Lessons in this unit</h2><p>Free video lessons and printable worksheets with answers for Exploring Science {u["code"]} {E(u["name"])}. Each video comes in short parts with brain breaks.</p>
 <div class="grid">{cards}</div>
 <p style="margin-top:28px"><a href="/year-7">← All Year 7 units</a></p></div>'''
-    page(f'year-7/{s}.html', f'{u["code"]} {u["name"]} | KS3 {subj} Year 7 | Celly School',
-         f'Free dyslexia-friendly KS3 {subj.lower()} lessons for Year 7 unit {u["code"]} {u["name"]}: videos and free printable workbooks.', body, 'y7')
+    page(f'year-7/{s}.html', f'Exploring Science {u["code"]} {u["name"]}: free worksheets, answers and video lessons | Year 7 {subj}',
+         f'Free dyslexia-friendly Year 7 {subj.lower()} for Exploring Science {u["code"]} {u["name"]}: video lessons, printable worksheets with answers, key words and memory tricks.', body, 'y7')
 
 
 def build_year7():
@@ -299,9 +301,9 @@ def build_year7():
         cards = ''.join(f'<a class="card" href="/year-7/{u["code"].lower()}"><span class="chip {sj}">{u["code"]}</span><h3 style="margin-top:.5em">{E(u["name"])}</h3><p class="muted">{E(UNIT_BLURB[u["code"]])}</p></a>' for u in UNITS if u['subject'] == sj)
         secs_.append(f'<section class="subj {sj}"><div class="subj-head"><img src="/img/{hero}.png" alt="{heroname}" width="64" height="56"><h2>{subj} <span class="small">with {heroname}</span></h2></div><div class="grid">{cards}</div></section>')
     body = f'''<div class="wrap"><h1 style="margin-top:36px">Year 7 Science</h1>
-<p class="lead">All 12 units of Year 7 science, in the Exploring Science topic order. Every lesson has a video and a free workbook.</p>
+<p class="lead">A free online Year 7 science course in the Exploring Science order: all 12 units, 60 video lessons, and a free printable workbook with answers for every lesson. Prefer everything in one place with progress saved? <a href="/course">Take the full course (free)</a>.</p>
 {"".join(secs_)}</div>'''
-    page('year-7.html', 'Year 7 Science lessons | KS3 dyslexia-friendly | Celly School',
+    page('year-7.html', 'Free online Year 7 science course in Exploring Science order | Celly School',
          'Free dyslexia-friendly Year 7 science lessons (KS3 biology, chemistry and physics): 60 video lessons and free printable workbooks.', body, 'y7')
 
 
@@ -315,7 +317,7 @@ def build_workbooks():
 <p class="lead">60 free workbooks for Year 7 science, one for every lesson. No sign-up, no email: just download and print.</p>
 <div class="grid">{"".join(rows)}</div>
 <p class="note" style="margin-top:28px">Free to print and share for home and classroom use. Please don't sell them or upload them elsewhere.</p></div>'''
-    page('workbooks.html', 'Free Year 7 science workbooks (PDF) | Celly School',
+    page('workbooks.html', 'Free printable Year 7 science workbooks with answers (PDF) | Celly School',
          '60 free printable KS3 science workbooks for Year 7, dyslexia-friendly, with answers. Biology, chemistry and physics.', body, 'wb')
 
 
@@ -344,14 +346,15 @@ def build_home():
 <p><strong>Celly the cell</strong> teaches biology, <strong>Atomy the atom</strong> teaches chemistry, and <strong>Volty the spark</strong> teaches physics. Bolt the robot joins every lesson and gets things wrong, so children can spot the mistake.</p></section>
 <h2>For parents, tutors and teachers</h2>
 <p>Celly School began at a kitchen table, when a Year 7 student understood the science but could not remember the words. The lessons use proven methods for teaching dyslexic learners (Orton-Gillingham style): multisensory steps, syllables, memory tricks and regular recall. <a href="/about">Read more about how the lessons work</a>.</p>
+<p><strong>Guides for grown-ups:</strong> <a href="/help/dyslexia-year-7-science">helping with Year 7 science at home</a> · <a href="/help/remember-science-words">remembering long science words</a> · <a href="/help/for-sencos">resources for SENCOs and teachers</a> · <a href="/help">all guides</a>.</p>
 <div class="btns"><a class="btn" href="{YT}" rel="noopener">{ICON_YT} Watch on YouTube</a></div>
 </div>'''
     ld = [{'@context': 'https://schema.org', '@type': 'EducationalOrganization', 'name': 'Celly School', 'url': SITE,
            'logo': SITE + '/img/favicon.png', 'sameAs': [YT], 'email': EMAIL,
            'description': 'Free dyslexia-friendly KS3 science lessons and printable workbooks.'},
           {'@context': 'https://schema.org', '@type': 'WebSite', 'name': 'Celly School', 'url': SITE}]
-    page('index.html', 'Celly School | Free dyslexia-friendly Year 7 science lessons',
-         'Free dyslexia-friendly KS3 science for Year 7: video lessons in short parts, syllable taps, memory tricks and free printable workbooks.', body, '', jsonld=ld)
+    page('index.html', 'Celly School | Free dyslexia-friendly Year 7 science course, videos and workbooks',
+         'A free online Year 7 science course for children with dyslexia, in the Exploring Science order: video lessons in short parts, syllable taps, memory tricks and free printable workbooks with answers.', body, '', jsonld=ld)
 
 
 def build_play():
@@ -386,6 +389,8 @@ def build_static_pages():
 <li><strong>Free workbooks.</strong> Printable practice for home, with answers and QR codes back to the video.</li></ul>
 <h2>The full course, in order</h2>
 <p>Prefer one place with everything in order? The free Celly School course has every Year 7 lesson, every workbook, and saves your child\'s progress. <a href="{COURSE_URL}">Take the full course (free)</a>.</p>
+<h2>Guides for grown-ups</h2>
+<p>Short guides on <a href="/help/dyslexia-year-7-science">helping a dyslexic child with Year 7 science at home</a>, <a href="/help/remember-science-words">remembering long science words</a>, <a href="/help/orton-gillingham-science">multisensory teaching</a> and <a href="/help/for-sencos">resources for SENCOs</a>. <a href="/help">All guides</a>.</p>
 <h2>Using the lessons at home</h2>
 <p>Watch one part, pause, and do the matching workbook part. Say the key words out loud together and tap the beats. Short and often works better than long sessions.</p>
 <h2>Easier reading on this website</h2>
@@ -415,7 +420,7 @@ def build_static_pages():
 
 
 def build_meta():
-    urls = ['', 'year-7', 'play', 'workbooks', 'about', 'privacy'] + [f'year-7/{u["code"].lower()}' for u in UNITS]
+    urls = ['', 'year-7', 'play', 'workbooks', 'about', 'privacy'] + HELP_URLS + [f'year-7/{u["code"].lower()}' for u in UNITS]
     for d in L: urls += [d['slug'], d['slug'] + '-workbook']
     today = NOW.strftime('%Y-%m-%d')
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(
@@ -433,7 +438,9 @@ def main():
         build_lesson(d, L[i - 1] if i else None, L[i + 1] if i + 1 < len(L) else None)
         build_workbook(d)
     for u in UNITS: build_unit(u)
-    build_year7(); build_workbooks(); build_home(); build_play(); build_static_pages(); build_meta()
+    build_year7(); build_workbooks(); build_home(); build_play(); build_static_pages()
+    HELP_URLS[:] = build_help(page, E, SITE, L)
+    build_meta()
     n = sum(len(f) for _, _, f in os.walk(OUT))
     print('built', n, 'files')
 
