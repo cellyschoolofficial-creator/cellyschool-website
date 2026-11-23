@@ -6,7 +6,8 @@ const card=$("#card");
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const S={mode:SR?"talk":"tap",mute:false,results:[],last:[],speaking:false,praise:0,token:0};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function rec(act,item,first,said){S.results.push({act,item,first,said});}
+function rec(act,item,first,said){S.results.push({act,item,first,said});try{sessionStorage.setItem("cs7ad_res",JSON.stringify(S.results));}catch(e){}}
+try{const r=JSON.parse(sessionStorage.getItem("cs7ad_res")||"[]");if(new URLSearchParams(location.search).get("room"))S.results=r;else sessionStorage.removeItem("cs7ad_res");}catch(e){}
 
 /* ================= Celly and Very Wobbly Cabbage ================= */
 const BODY="M200,64 C280,60 352,112 356,206 C360,296 290,362 200,362 C110,364 42,298 44,208 C46,114 120,68 200,64Z";
@@ -182,7 +183,14 @@ $("#modeTalk").onclick=()=>{if(!SR){$("#live").textContent="This browser can't l
 $("#modeTap").onclick=()=>setMode("tap");
 $("#muteBtn").onclick=()=>{S.mute=!S.mute;$("#muteBtn").setAttribute("aria-pressed",S.mute);$("#muteBtn").textContent=S.mute?"🔇 Celly's voice off":"🔈 Celly's voice on";if(S.mute)stopVoice();};
 const TRAIL=["Achoo!","Hooke's rooms","Building blocks","Word workshop","Fix Celly","Wobbly Cabbage","Brain break","Plant or animal?","Special jobs","How big really?","Teach Celly","Draw it","Certificate"];
-function trail(n){$("#trail").innerHTML=TRAIL.map((t,i)=>`<span class="step ${i<n?"done":i===n?"now":""}">${i<n?"✓ ":""}${t}</span>`).join("");}
+function trail(n){S.room=n;$("#trail").innerHTML=`<button class="step nav" data-go="${n-1}" ${n<=0?"disabled":""} aria-label="Previous room">◀ back</button>`+
+  TRAIL.map((t,i)=>`<button class="step ${i<n?"done":i===n?"now":""}" data-go="${i}" ${i===n?'aria-current="step"':""} title="Go to ${t}">${i<n?"✓ ":""}${t}</button>`).join("")+
+  `<button class="step nav" data-go="${n+1}" ${n>=TRAIL.length-1?"disabled":""} aria-label="Next room">next ▶</button>`;}
+/* jump to any room: reload the page at that room, so nothing from the old room keeps running */
+function goRoom(i){i=Math.max(0,Math.min(TRAIL.length-1,i));if(i===S.room)return;
+  try{sessionStorage.setItem("cs7ad_prefs",JSON.stringify({mode:S.mode,mute:S.mute}));}catch(e){}
+  stopVoice();location.href=location.pathname+(i?"?room="+i:"");}
+$("#trail").addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b&&!b.disabled)goRoom(+b.dataset.go);});
 function show(html,n){card.innerHTML=html;if(n!=null)trail(n);if(innerWidth<=820)$("#stage").scrollIntoView({behavior:"smooth",block:"start"});}
 function waitClick(sel){return new Promise(r=>{const b=$(sel);if(b)b.onclick=()=>{ac();r();};});}
 function bigStage(on){$("#stage").classList.toggle("bigstage",on);}
@@ -962,4 +970,14 @@ function saveCert(){
 }
 
 /* ================= go ================= */
-setMode(S.mode);trail(0);start();
+const STEPS=[start,hooke,blocks,words,fixCelly,cabbage,brainBreak,detective,special,realSize,teach,drawIt,finish];
+try{const pr=JSON.parse(sessionStorage.getItem("cs7ad_prefs")||"null");if(pr){if(pr.mode==="tap"||!SR)S.mode="tap";else S.mode="talk";if(pr.mute)$("#muteBtn").click();}}catch(e){}
+setMode(S.mode);
+const R0=+(new URLSearchParams(location.search).get("room")||0);
+if(R0>0&&R0<STEPS.length){trail(R0);
+  show(`${room(R0,TRAIL[R0])}<p>Ready when you are.</p><div class="row"><button class="big go" id="go">Go to ${TRAIL[R0]}</button></div>`,R0);
+  $("#say").textContent="Let's go to "+TRAIL[R0]+"!";
+  $("#go").onclick=()=>{ac();loadSprite();S.started=true;if(canHear())Mic.start();
+    if(R0<=3)for(const n of ["nucleus","mito","membrane","cytoplasm"])Celly.part(n,false);
+    STEPS[R0]();};
+}else{trail(0);start();}
