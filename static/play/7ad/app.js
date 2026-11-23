@@ -132,7 +132,7 @@ async function say(ids,{face=null,pose=null}={}){
   if(tok===S.token){S.speaking=false;Mic.muteUntil=performance.now()+450;Celly.mouth(0);if(!pose||pose==="talk")Celly.setPose("idle");}
 }
 function praise(){S.praise=(S.praise%6)+1;return (typeof praiseExtra==="function"&&praiseExtra())||"p"+S.praise;}
-$("#again").onclick=()=>{if(S.last.length)say(S.last);};
+$("#again").onclick=async()=>{if(!S.last.length)return;const L=S.lastOpts,k=S.last.join("|");await say(S.last);if(L&&L.key===k&&L.btns[0]&&L.btns[0].isConnected)await readOpts(L.btns,L.texts);};
 
 /* ================= Celly listens (one microphone session for the whole game) ================= */
 const Mic={sr:null,want:false,blocked:false,cb:null,muteUntil:0};
@@ -312,6 +312,13 @@ function kmatch(alts,keys){if(!alts||!keys)return false;if(heardAny(alts,keys))r
   return alts.some(a=>keys.some(k=>/^[\d.]+$/.test(k)&&new RegExp("(^|[^\\d.])"+k.replace(".","\\.")+"([^\\d.]|$)").test(a)));}
 function micRow(){return canHear()?`<div class="row"><button class="tbtn" id="noMic">Celly can't hear me</button></div>`:"";}
 /* one question, several answers. Tap, or say a key word. Returns true if right first time. */
+/* Celly reads the answer choices aloud (recorded lines in window.OPTV), each button lights up as she reads it */
+function optKey(h){const d=document.createElement("div");d.innerHTML=h;return d.textContent.replace(/^[^A-Za-z0-9]+/,"").replace(/\s+/g," ").trim();}
+async function readOpts(btns,texts){if(S.mute||!window.OPTV)return;const tok=S.token;S.speaking=true;Celly.setPose("talk");
+  for(let k=0;k<btns.length;k++){if(tok!==S.token||!btns[k].isConnected||btns[k].onclick===null)break;const id=window.OPTV[optKey(texts[k])];if(!id)continue;
+    btns[k].classList.add("reading");await clipLine(id,tok);btns[k].classList.remove("reading");if(tok===S.token)await sleep(250);}
+  if(tok===S.token){S.speaking=false;Mic.muteUntil=performance.now()+450;Celly.mouth(0);Celly.setPose("idle");}}
+function remember(ask,btns,texts){S.lastOpts={key:[].concat(ask||[]).join("|"),btns,texts};}
 function choose(opts,{ask=null,wrong="lab_wrong",into="#opts",grid=false,onRight=null}={}){return new Promise(async res=>{
   const box=$(into);box.innerHTML=grid?`<div class="pick">${opts.map((o,k)=>`<button data-k="${k}"><span class="e">${o.e||""}</span>${o.t}</button>`).join("")}</div>`
     :`<div class="opts">${opts.map((o,k)=>`<button class="opt" data-k="${k}">${o.e?o.e+" ":""}${o.t}</button>`).join("")}</div>`;
@@ -324,7 +331,7 @@ function choose(opts,{ask=null,wrong="lab_wrong",into="#opts",grid=false,onRight
   const listen=async()=>{if(settled||!canHear()||!opts.some(o=>o.keys))return;
     const got=await hear(10000,a=>{for(const k of order)if(kmatch(a,opts[k].keys))return k+1;return null;});
     if(settled)return;if(got.ok)pickK(got.val-1);};
-  if(ask)await say(ask,{face:"normal"});listen();});}
+  if(ask)await say(ask,{face:"normal"});remember(S.last,btns,opts.map(o=>o.t));if(!settled)await readOpts(btns,opts.map(o=>o.t));listen();});}
 const YES=["yes","yeah","yep","true","tick","right","correct","of course","lots"],NO=["no","nope","false","cross","wrong","not","never","don't","dont","can't","cannot","too small"];
 function yesNo(q,isYes,{wrong="lab_wrong",yesT="✅ Yes",noT="❌ No"}={}){
   return choose([{t:yesT,ok:isYes,keys:YES},{t:noT,ok:!isYes,keys:NO,neg:true}],{ask:q,wrong});}
@@ -885,7 +892,7 @@ async function teach(){
   drawIt();
 }
 function options(T,silent){return new Promise(res=>{$("#opts").innerHTML=`<div class="opts">${T.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join("")}</div>`;
-  if(!silent)say("t_three");let wrong=0;
+  const ob=[...$("#opts").querySelectorAll(".opt")];(async()=>{if(!silent)await say("t_three");remember(S.last,ob,T.opts);await readOpts(ob,T.opts);})();let wrong=0;
   $("#opts").querySelectorAll(".opt").forEach(b=>b.onclick=async()=>{ac();const k=+b.dataset.k;
     if(k===T.right){$("#opts").querySelectorAll(".opt").forEach(x=>x.onclick=null);b.classList.add("right");SFX.sparkle();await say("t_ok_"+T.k,{face:"happy",pose:"happy"});res(wrong===0);}
     else{wrong++;b.classList.add("wrong");SFX.oops();say("t_notquite",{face:"oops"});}});});}
