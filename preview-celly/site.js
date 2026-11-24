@@ -1,3 +1,27 @@
+/* School order (Nov 2026): a parent can set the order their school teaches the units.
+   Saved on this device (localStorage "cs_order"); every "Next" suggestion follows it. */
+window.CSOrder=(function(){
+  var D=window.CS_DATA||{L:[],U:[]};
+  function get(){try{var o=JSON.parse(localStorage.getItem('cs_order')||'null');return o&&o.units&&o.units.length?o:null;}catch(e){return null;}}
+  function set(o){try{if(o)localStorage.setItem('cs_order',JSON.stringify(o));else localStorage.removeItem('cs_order');}catch(e){}}
+  function book(){return D.U.map(function(u){return u[0];});}
+  function units(){var o=get(),b=book();if(!o)return b;var out=o.units.filter(function(c){return b.indexOf(c)>=0;});b.forEach(function(c){if(out.indexOf(c)<0)out.push(c);});return out;}
+  function unitOf(code){return String(code).slice(0,2).toUpperCase();}
+  function lessonsOf(u){return D.L.filter(function(l){return unitOf(l[1])===u;});}
+  function find(slug){for(var i=0;i<D.L.length;i++)if(D.L[i][0]===slug)return D.L[i];return null;}
+  // next lesson: the next one in the same unit, else the first lesson of the next unit in the school's order
+  function nextAfter(slug){
+    var l=find(slug);if(!l)return null;var u=unitOf(l[1]),inU=lessonsOf(u),i=-1;
+    inU.forEach(function(x,k){if(x[0]===slug)i=k;});
+    if(i>=0&&i+1<inU.length)return inU[i+1];
+    var us=units(),j=us.indexOf(u);
+    for(var k=j+1;k<us.length;k++){var f=lessonsOf(us[k]);if(f.length)return f[0];}
+    return null;
+  }
+  function current(){var o=get();return o&&o.now?o.now:null;}
+  function unitName(c){for(var i=0;i<D.U.length;i++)if(D.U[i][0]===c)return D.U[i][1];return '';}
+  return {get:get,set:set,book:book,units:units,nextAfter:nextAfter,lessonsOf:lessonsOf,find:find,current:current,unitName:unitName,custom:function(){return !!get();}};
+})();
 (function(){
   // Phone menu: one button opens the full list (Stage 1, Nov 2026)
   var mb=document.getElementById('menuBtn'), nv=document.getElementById('mainNav');
@@ -104,7 +128,10 @@
   var box=document.getElementById('carryOn');
   if(!box)return;
   var order=[],games={};try{order=JSON.parse(box.getAttribute('data-order'));games=JSON.parse(box.getAttribute('data-games'));}catch(e){}
-  var last=P.last;if(!last)return;
+  var last=P.last;
+  if(!last){var nu=CSOrder.current();if(!nu)return;var f0=CSOrder.lessonsOf(nu)[0];if(!f0)return;
+    box.innerHTML='<a class="btn primary big" href="'+BASE+'/'+f0[0]+'">'+esc('▶ Start '+nu+': '+f0[2])+'</a><p class="carry-sub">Following your school\'s order. <a href="'+BASE+'/year-7#schoolOrder">Change</a></p>';
+    box.hidden=false;var hg0=document.getElementById('heroGo');if(hg0)hg0.hidden=true;return;}
   var href,label,sub='';
   if(last.kind==='game'&&P.games[last.slug]&&!P.games[last.slug].done){
     var G=P.games[last.slug],gn=games[last.slug]||G.name||'your game';href=BASE+'/'+'play/'+last.slug+'/';
@@ -114,15 +141,67 @@
     var i=-1;order.forEach(function(o,k){if(o[0]===last.slug)i=k;});
     var cur=order[i];
     if(cur&&!isDone(P,cur[0])){href=BASE+'/'+cur[0];label='▶ Carry on: '+cur[1]+' '+cur[2];}
-    else{var nx=null;for(var k=i+1;k<order.length;k++){if(order[k][3]&&!isDone(P,order[k][0])){nx=order[k];break;}}
+    else{var nx=null,cur2=last.slug;for(var k=0;k<60;k++){var n2=CSOrder.nextAfter(cur2);if(!n2)break;if(!isDone(P,n2[0])){nx=n2;break;}cur2=n2[0];}
       if(nx){href=BASE+'/'+nx[0];label='▶ Next: '+nx[1]+' '+nx[2];}}
   }
   if(!href)return;
   var vids=0,gms=0;Object.keys(P.lessons).forEach(function(k){if(P.lessons[k].watched)vids++;});Object.keys(P.games).forEach(function(k){if(P.games[k].done)gms++;});
   var bits=[];if(vids)bits.push(vids+' video'+(vids>1?'s':'')+' watched');if(gms)bits.push(gms+' game'+(gms>1?'s':'')+' finished');
   box.innerHTML='<p class="carry-hi">👋 Welcome back!</p><a class="btn primary big" href="'+href+'">'+esc(label)+'</a>'+
-    (sub?'<p class="carry-sub">'+esc(sub)+'</p>':'')+(bits.length?'<p class="carry-sub">✓ '+bits.join(' · ')+'</p>':'');
+    (sub?'<p class="carry-sub">'+esc(sub)+'</p>':'')+(bits.length?'<p class="carry-sub">✓ '+bits.join(' · ')+'</p>':'')+(CSOrder.custom()?'<p class="carry-sub">Following your school\'s order. <a href="'+BASE+'/year-7#schoolOrder">Change</a></p>':'');
   box.hidden=false;
   var hg=document.getElementById('heroGo');if(hg)hg.hidden=true;
   box.addEventListener('click',function(e){if(e.target.closest('a')&&window.csTrack)csTrack('carry-on-click',{to:href.replace(BASE,'')});});
+})();
+
+/* ---------- School order: rewrite "Next" links, and the editor on the Year 7 page ---------- */
+(function(){
+  if(!window.CSOrder)return;
+  var BASE=(location.pathname.match(/^\/preview-[a-z0-9-]+/)||[''])[0];
+  function esc(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var meta=document.getElementById('lessonMeta');
+  var here=meta?meta.getAttribute('data-slug'):(location.pathname.match(/\/(7[a-l][a-e])-workbook(\.html)?$/)||[])[1];
+  if(here&&CSOrder.custom()){
+    var nx=CSOrder.nextAfter(here),wb=/-workbook(\.html)?$/.test(location.pathname);
+    document.querySelectorAll('.pager a.next').forEach(function(a){
+      if(!nx){a.remove();return;}
+      a.href=BASE+'/'+nx[0]+(wb?'-workbook':'');var st=a.querySelector('strong');if(st)st.textContent=nx[1]+' '+nx[2];
+      var d=a.querySelector('.dir');if(d&&!/school/.test(d.textContent))d.textContent=(wb?'Next workbook':'Next lesson')+' (your school\'s order) →';
+    });
+    var nb=document.querySelector('.nb-next');
+    if(nb){if(nx){nb.href=BASE+'/'+nx[0];nb.lastElementChild.textContent='Next: '+nx[1];}else nb.remove();}
+  }
+  // editor
+  var box=document.getElementById('schoolOrder');if(!box)return;
+  var U=(window.CS_DATA||{}).U||[];
+  function summary(){
+    var o=CSOrder.get();
+    if(!o){box.querySelector('#soEdit').onclick=editor;return;}
+    var us=CSOrder.units(),now=o.now||us[0];
+    box.innerHTML='<h2 id="soH">Your school\'s order ✓</h2><p class="so-line">'+us.map(function(c){return '<span class="so-chip'+(c===now?' now':'')+'">'+c+'</span>';}).join('<span aria-hidden="true">→</span>')+'</p>'+
+      '<p>Now on: <b>'+esc(now+' '+CSOrder.unitName(now))+'</b>. Every “Next” button follows this order.</p><p><button class="btn" type="button" id="soEdit">Change</button></p>';
+    box.querySelector('#soEdit').onclick=editor;
+  }
+  function editor(){
+    var o=CSOrder.get(),picked=o?CSOrder.units().slice(0,o.units.length):[],now=o&&o.now||'';
+    function draw(){
+      box.innerHTML='<h2 id="soH">Your school\'s order</h2><p>Tap the units in the order your school teaches them. Units you don\'t tap go at the end, in book order.</p>'+
+        '<div class="so-grid">'+U.map(function(u){var k=picked.indexOf(u[0]);return '<button type="button" class="so-u'+(k>=0?' on':'')+'" data-u="'+u[0]+'" aria-pressed="'+(k>=0)+'"><span class="so-n">'+(k>=0?k+1:'')+'</span><b>'+u[0]+'</b> '+esc(u[1])+'</button>';}).join('')+'</div>'+
+        '<label class="so-now">Which unit is your child doing now? <select id="soNow"><option value="">Choose a unit</option>'+U.map(function(u){return '<option value="'+u[0]+'"'+(u[0]===now?' selected':'')+'>'+u[0]+' '+esc(u[1])+'</option>';}).join('')+'</select></label>'+
+        '<div class="btns"><button class="btn primary" type="button" id="soSave">Save our order</button><button class="btn" type="button" id="soUndo">Clear</button><button class="btn" type="button" id="soBook">Use the book order</button></div>';
+      box.querySelectorAll('.so-u').forEach(function(b){b.onclick=function(){var c=b.getAttribute('data-u'),k=picked.indexOf(c);if(k>=0)picked.splice(k,1);else picked.push(c);if(!now&&picked.length===1)now=c;draw();};});
+      box.querySelector('#soNow').onchange=function(e){now=e.target.value;};
+      box.querySelector('#soUndo').onclick=function(){picked=[];now='';draw();};
+      box.querySelector('#soBook').onclick=function(){CSOrder.set(null);if(window.csTrack)csTrack('school-order-clear',{});location.reload();};
+      box.querySelector('#soSave').onclick=function(){
+        if(!picked.length&&!now){CSOrder.set(null);location.reload();return;}
+        var units=picked.length?picked.slice():[now];
+        CSOrder.set({units:units,now:now||units[0],t:Date.now()});
+        if(window.csTrack)csTrack('school-order-set',{order:CSOrder.units().join(','),now:now||units[0]});
+        location.hash='schoolOrder';location.reload();
+      };
+    }
+    draw();
+  }
+  summary();
 })();
