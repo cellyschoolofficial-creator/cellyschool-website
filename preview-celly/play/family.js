@@ -12,7 +12,11 @@
     } catch (e) {}
     return null;
   }
-  function save(f) { try { localStorage.setItem(KEY, JSON.stringify({email: f.email, kids: f.kids || []})); localStorage.setItem('cs_report_email', f.email); } catch (e) {} }
+  function save(f) {
+    var old = get(), tok = f.token || (old && old.email === f.email ? old.token : undefined);
+    try { localStorage.setItem(KEY, JSON.stringify({email: f.email, kids: f.kids || [], token: tok})); localStorage.setItem('cs_report_email', f.email); } catch (e) {}
+    try { if (window.CSSync) window.CSSync.soon(); } catch (e) {}
+  }
   function clear() { try { localStorage.removeItem(KEY); localStorage.removeItem('cs_report_email'); } catch (e) {} }
   function mask(e) { var p = String(e).split('@'); return p[0].slice(0, 2) + '•••@' + (p[1] || ''); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
@@ -41,6 +45,7 @@
       '<button type="button" class="addkid" id="famAdd">+ Add another child</button>' +
       '<label class="tick"><input type="checkbox" id="famP"' + (f.email ? ' checked' : '') + '> <span>I’m the parent or carer of these children, and I agree to Celly School keeping this email and these first names to send me their reports and recaps.</span></label>' +
       '<p class="err" id="famErr" aria-live="polite"></p>' +
+      (window.CSSync && !(f && f.token) ? '<p style="margin:4px 0 10px"><a href="#" id="famLink">🔗 Used Celly School on another device? Bring your family here</a></p>' : '') +
       '<div class="btns"><button class="yes" id="famSave">' + (opts.saveLabel || 'Save') + '</button>' + (opts.onSkip ? '<button id="famSkip">' + (opts.skipLabel || 'Skip') + '</button>' : '') + '</div>' +
       '<p class="small">We keep your email and your children’s first names in our private Google account, only to send you their reports and recaps. We never share them. You can ask us to change or delete them at any time. This device also remembers them, so next time your child just taps their name. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>';
     var K = box.querySelector('#famK');
@@ -62,6 +67,15 @@
       opts.onSave(nf, box.querySelector('#famH').value);
     };
     if (opts.onSkip) box.querySelector('#famSkip').onclick = opts.onSkip;
+    var lk = box.querySelector('#famLink');
+    if (lk) lk.onclick = function (e) {
+      e.preventDefault();
+      window.CSSync.linkUI(box, {email: E.value.trim(),
+        intro: '<h2 style="margin-top:0">Bring your family here</h2><p>Type the email you used before. We’ll email you a 6-digit code, and this device gets your children’s names, your school’s order and their progress.</p>',
+        onDone: function (nf) { opts.onSave(nf, ''); },
+        onCancel: function () { form(box, opts); }});
+      [].forEach.call(box.querySelectorAll('.btns button'), function (b) { b.classList.add('btn'); });
+    };
     setTimeout(function () { (f.email ? box.querySelector('#famSave') : E).focus(); }, 50);
   }
 
@@ -75,9 +89,14 @@
       if (f) {
         panel.innerHTML = '<h2 style="margin-top:0">✅ Reports are set up on this device</h2><p>Reports go to <b>' + esc(mask(f.email)) + '</b>' +
           (f.kids.length ? ' for <b>' + f.kids.map(esc).join(', ') + '</b>' : '') + '. Each game asks “Who’s playing today?”, so your child can play alone.</p>' +
+          (f.token ? '<p>🔗 <b>Linked to your email.</b> Children, school order and progress are the same on all your linked devices.</p>' :
+            '<p>Want the same children, school order and progress on your other devices? <button class="btn" id="famLinkP" type="button">🔗 Link to my email</button></p>') +
           '<div class="btns"><button class="btn" id="famEdit">Change</button><button class="btn" id="famDel">Remove from this device</button></div>';
         panel.querySelector('#famEdit').onclick = edit;
         panel.querySelector('#famDel').onclick = function () { clear(); show(); };
+        var lp = panel.querySelector('#famLinkP');
+        if (lp) lp.onclick = function () { if (!window.CSSync) return; var b = document.createElement('div'); panel.innerHTML = ''; panel.appendChild(b);
+          window.CSSync.linkUI(b, {email: f.email, intro: '<h2 style="margin-top:0">Link to your email</h2><p>We’ll email you a 6-digit code. After that, every device you link shows the same children, school order and progress.</p>', onDone: show, onCancel: show}); };
       } else {
         panel.innerHTML = '<h2 style="margin-top:0">Parents and carers: set up reports once</h2><p>Add your email and your children’s names. After each game you get a short report for the child who played, even when they play alone.</p>' +
           '<div class="btns"><button class="btn primary" id="famStart">Set up reports</button></div>';

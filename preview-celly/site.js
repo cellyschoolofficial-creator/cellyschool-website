@@ -3,7 +3,7 @@
 window.CSOrder=(function(){
   var D=window.CS_DATA||{L:[],U:[]};
   function get(){try{var o=JSON.parse(localStorage.getItem('cs_order')||'null');return o&&o.units&&o.units.length?o:null;}catch(e){return null;}}
-  function set(o){try{if(o)localStorage.setItem('cs_order',JSON.stringify(o));else localStorage.removeItem('cs_order');}catch(e){}}
+  function set(o){try{localStorage.setItem('cs_order',JSON.stringify(o||{units:[],now:'',t:Date.now()}));}catch(e){}try{if(window.CSSync)CSSync.soon();}catch(e){}}
   function book(){return D.U.map(function(u){return u[0];});}
   function units(){var o=get(),b=book();if(!o)return b;var out=o.units.filter(function(c){return b.indexOf(c)>=0;});b.forEach(function(c){if(out.indexOf(c)<0)out.push(c);});return out;}
   function unitOf(code){return String(code).slice(0,2).toUpperCase();}
@@ -87,10 +87,10 @@ window.CSOrder=(function(){
    Saved only in this browser (localStorage "cs_progress"): which lessons were opened or watched,
    which workbooks were downloaded and which games were finished. Nothing is sent anywhere. */
 (function(){
-  var KEY='cs_progress2';
+  // progress is kept per child by sync.js (CSProg); fall back to a simple store if it is missing
   var BASE=(location.pathname.match(/^\/preview-[a-z0-9-]+/)||[''])[0];
-  function load(){try{var p=JSON.parse(localStorage.getItem(KEY)||'null')||{};p.lessons=p.lessons||{};p.games=p.games||{};return p;}catch(e){return {lessons:{},games:{}};}}
-  function save(p){try{localStorage.setItem(KEY,JSON.stringify(p));}catch(e){}}
+  function load(){if(window.CSProg)return CSProg.get();try{var p=JSON.parse(localStorage.getItem('cs_progress2')||'null')||{};p.lessons=p.lessons||{};p.games=p.games||{};return p;}catch(e){return {lessons:{},games:{}};}}
+  function save(p){if(window.CSProg)return CSProg.put(p);try{localStorage.setItem('cs_progress2',JSON.stringify(p));}catch(e){}}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function isDone(p,slug){var l=p.lessons[slug]||{},g=p.games[slug]||{};return !!(l.watched||g.done);}
   // a video counts as watched only after most of it has really played (70%, or 6 minutes if YouTube gives no length)
@@ -179,8 +179,14 @@ window.CSOrder=(function(){
     if(!o){box.querySelector('#soEdit').onclick=editor;return;}
     var us=CSOrder.units(),now=o.now||us[0];
     box.innerHTML='<h2 id="soH">Your school\'s order ✓</h2><p class="so-line">'+us.map(function(c){return '<span class="so-chip'+(c===now?' now':'')+'">'+c+'</span>';}).join('<span aria-hidden="true">→</span>')+'</p>'+
-      '<p>Now on: <b>'+esc(now+' '+CSOrder.unitName(now))+'</b>. Every “Next” button follows this order.</p><p><button class="btn" type="button" id="soEdit">Change</button></p>';
+      '<p>Now on: <b>'+esc(now+' '+CSOrder.unitName(now))+'</b>. Every “Next” button follows this order.</p>'+
+      (window.CSSync&&CSSync.linked()?'<p class="small">🔗 Saved with your email, on all your linked devices.</p>':'<p class="small">Saved on this device. <a href="#" id="soLink">🔗 Save it with my email for all my devices</a></p>')+
+      '<p><button class="btn" type="button" id="soEdit">Change</button></p>';
     box.querySelector('#soEdit').onclick=editor;
+    var sl=box.querySelector('#soLink');
+    if(sl)sl.onclick=function(e){e.preventDefault();var b=document.createElement('div');box.innerHTML='';box.appendChild(b);
+      CSSync.linkUI(b,{intro:'<h2 style="margin-top:0">Save with your email</h2><p>We’ll email you a 6-digit code. Then your school’s order, your children and their progress are the same on every device you link.</p>',
+        onDone:function(){location.reload();},onCancel:function(){location.reload();}});};
   }
   function editor(){
     var o=CSOrder.get(),picked=o?CSOrder.units().slice(0,o.units.length):[],now=o&&o.now||'';
@@ -204,4 +210,16 @@ window.CSOrder=(function(){
     draw();
   }
   summary();
+})();
+
+/* ---------- Whose progress? A small switch in the header when a family has 2 or more children ---------- */
+(function(){
+  if(!window.CSFamily||!window.CSProg)return;
+  var f=CSFamily.get();if(!f||!f.kids||f.kids.length<2)return;
+  var wrap=document.querySelector('header.top .wrap');if(!wrap)return;
+  var cur=CSProg.kid();
+  var b=document.createElement('div');b.className='kid-switch';
+  b.innerHTML='<label for="kidSel">Learning:</label><select id="kidSel">'+f.kids.map(function(k){return '<option'+(k===cur?' selected':'')+'>'+CSFamily.esc(k)+'</option>';}).join('')+'</select>';
+  var mb=document.getElementById('menuBtn');wrap.insertBefore(b,mb||null);
+  b.querySelector('select').onchange=function(e){CSProg.setKid(e.target.value);if(window.csTrack)csTrack('kid-switch',{});location.reload();};
 })();

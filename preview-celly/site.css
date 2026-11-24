@@ -216,3 +216,6 @@ footer a{display:inline-block;padding:.3em 0}
 .so-line{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .so-chip{display:inline-block;padding:.15em .6em;border-radius:999px;border:2px solid var(--rule);background:#fff;font-weight:600}
 .so-chip.now{background:var(--sun);border-color:var(--line)}
+.kid-switch{display:flex;align-items:center;gap:6px;font-size:.95rem;margin-left:auto}
+.kid-switch select{font:inherit;min-height:40px;border:2px solid var(--line);border-radius:999px;padding:.2em .7em;background:#fff;color:var(--ink)}
+@media(max-width:700px){.kid-switch{margin-left:auto}.kid-switch label{display:none}.menu-btn{margin-left:6px}}
