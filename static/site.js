@@ -56,30 +56,52 @@ window.CSOrder=(function(){
   var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Play the lesson video');
   b.style.backgroundImage='url(https://i.ytimg.com/vi/'+vid+'/hqdefault.jpg)';
   b.innerHTML='<span class="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>';
-  b.addEventListener('click',function(){
-    var slug=location.pathname.replace(/^\/(preview-[a-z0-9-]+\/)?/,'').replace(/\.html$/,'');
+  var slug=location.pathname.replace(/^\/(preview-[a-z0-9-]+\/)?/,'').replace(/\.html$/,'');
+  var player=null,startAt=0;
+  function startVideo(at){
+    if(player){try{player.seekTo(at||0,true);player.playVideo();}catch(e){}return;}
+    startAt=at||0;
     if(window.csTrack)csTrack('video-play',{lesson:slug});
-    // The YouTube player API tells us how much is really watched (time spent playing, not just a press of play).
-    var holder=document.createElement('div');holder.id='ytPlayer';box.replaceChild(holder,b);
+    // Celly's own controls: the video plays here, and nothing in it links away to YouTube.
+    box.innerHTML='<div id="ytPlayer"></div><div class="vshield" aria-hidden="true"></div>'+
+      '<div class="vcover"><img src="/img/celly.png" alt=""><p class="vcover-t">Ready?</p><button type="button" class="btn primary vcover-b">▶ Play</button></div>';
+    var ctl=document.createElement('div');ctl.className='vctl';
+    ctl.innerHTML='<button type="button" class="btn" data-v="pp">⏸ Pause</button><button type="button" class="btn" data-v="back">⏪ Back 10 seconds</button><span class="vt"></span>';
+    box.parentNode.insertBefore(ctl,box.nextSibling);
+    var cover=box.querySelector('.vcover'),ct=box.querySelector('.vcover-t'),cb=box.querySelector('.vcover-b'),pp=ctl.querySelector('[data-v=pp]'),vt=ctl.querySelector('.vt');
+    function fmt(x){x=Math.max(0,Math.round(x));return Math.floor(x/60)+':'+('0'+(x%60)).slice(-2);}
+    function play(){if(player&&player.playVideo)player.playVideo();}
+    function pause(){if(player&&player.pauseVideo)player.pauseVideo();}
+    box.querySelector('.vshield').onclick=pause;
+    cb.onclick=function(){if(player&&player.getPlayerState&&player.getPlayerState()===0)player.seekTo(0,true);play();};
+    pp.onclick=function(){if(player&&player.getPlayerState&&player.getPlayerState()===1)pause();else play();};
+    ctl.querySelector('[data-v=back]').onclick=function(){if(player&&player.getCurrentTime){player.seekTo(Math.max(0,player.getCurrentTime()-10),true);play();}};
     function make(){
       var secs=0,dur=0,last=0,timer=null;
-      var p=new YT.Player('ytPlayer',{videoId:vid,host:'https://www.youtube-nocookie.com',
-        playerVars:{autoplay:1,rel:0,modestbranding:1,playsinline:1},
+      player=new YT.Player('ytPlayer',{videoId:vid,host:'https://www.youtube-nocookie.com',
+        playerVars:{autoplay:1,start:startAt,rel:0,modestbranding:1,playsinline:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,cc_load_policy:1},
         events:{onReady:function(e){try{e.target.playVideo();}catch(x){}},
           onStateChange:function(e){
             clearInterval(timer);
-            if(e.data===YT.PlayerState.PLAYING){last=Date.now();timer=setInterval(function(){
+            if(e.data===1){cover.hidden=true;pp.textContent='⏸ Pause';last=Date.now();timer=setInterval(function(){
               var now=Date.now();secs+=Math.min(5,(now-last)/1000);last=now;
-              try{dur=p.getDuration()||dur;}catch(x){}
+              try{dur=player.getDuration()||dur;}catch(x){}
               if(window.csWatched)csWatched(slug,secs,dur);
             },2000);}
+            else if(e.data===2){ct.textContent='Paused';cb.textContent='▶ Carry on watching';cover.hidden=false;pp.textContent='▶ Play';}
+            else if(e.data===0){ct.textContent='✓ Well done! You watched the whole lesson.';cb.textContent='🔁 Watch it again';cover.hidden=false;pp.textContent='▶ Play';}
           }}});
-      var f=box.querySelector('iframe');if(f){f.title='Lesson video';f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');f.setAttribute('allowfullscreen','');}
+      var f=box.querySelector('iframe');if(f){f.title='Lesson video';f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');}
+      setInterval(function(){if(player&&player.getCurrentTime&&player.getDuration){var d=player.getDuration();if(d)vt.textContent=fmt(player.getCurrentTime())+' of '+fmt(d);}},500);
     }
     if(window.YT&&window.YT.Player)make();
     else{var prev=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=function(){if(prev)prev();make();};
       var sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';document.head.appendChild(sc);}
-  });
+  }
+  b.addEventListener('click',function(){startVideo(0);});
+  // chapter times jump inside the video on this page (instead of opening YouTube)
+  document.querySelectorAll('.t[data-s] a').forEach(function(a){a.removeAttribute('target');a.addEventListener('click',function(e){
+    e.preventDefault();startVideo(+a.parentNode.getAttribute('data-s')||0);box.scrollIntoView({behavior:'smooth',block:'center'});});});
   box.appendChild(b);
 })();
 
