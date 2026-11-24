@@ -189,6 +189,10 @@
     gear.onclick = function () { var o = !tools.classList.contains('open'); tools.classList.toggle('open', o); gear.setAttribute('aria-expanded', o ? 'true' : 'false'); };
     var css = document.createElement('style');
     css.textContent = '.cs-gear{display:none}.cs-back{text-decoration:none;display:inline-flex;align-items:center}' +
+      // back and next always in the same place: back top-left, next top-right; room names in between
+      '.trail{position:relative;padding:0 112px;min-height:46px;align-content:flex-start}' +
+      '.trail .step.nav{position:absolute;top:0;min-height:44px;min-width:100px;justify-content:center;font-size:16px}' +
+      '.trail .step.nav:first-child{left:0}.trail .step.nav:last-child{right:0}' +
       '@media (max-width:600px){' +
       'header.top .chip{display:none}' +
       'header.top{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}' +
@@ -197,7 +201,8 @@
       'header .tools.open{display:flex}' +
       'header .tools .tbtn{min-height:44px;justify-content:center}' +
       '.trail .step:not(.nav):not(.now){display:none}' +
-      '.trail{justify-content:space-between;flex-wrap:nowrap}' +
+      '.trail{justify-content:center;flex-wrap:nowrap;padding:0 96px}' +
+      '.trail .step.nav{min-width:86px}' +
       '.trail .step.now{flex:1;justify-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '}';
     document.head.appendChild(css);
