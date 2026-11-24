@@ -25,6 +25,15 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
 .video{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;margin:12px 0}
 .video>div,.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .row{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+/* Celly's own controls: the video can't be clicked through to YouTube */
+.video .shield{position:absolute;inset:0;z-index:2;cursor:pointer;background:transparent}
+.video .vcover{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#FAF6E9;text-align:center;padding:12px}
+.video .vcover[hidden]{display:none}
+.video .vcover img{width:90px;height:auto}
+.video .vcover p{margin:0;font-weight:600;font-size:20px}
+.vctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:-2px 0 4px}
+.vctl .btn{font-size:18px;padding:10px 16px}
+.vctl .vt{color:var(--soft);font-size:17px;margin-left:auto}
 .btn{font:inherit;font-weight:600;font-size:21px;border-radius:16px;padding:14px 22px;cursor:pointer;border:3px solid var(--line);background:#fff;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:8px}
 .btn.go{background:var(--line);color:#fff}
 .btn.go.pulse{animation:pulse 1.2s ease-in-out infinite}
@@ -98,15 +107,38 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
   function clip(s) {
     card.innerHTML = '<p class="muted">Step ' + (at + 1) + ' of ' + steps.length + '</p><h1>▶ Watch: ' + esc(s.n) + '</h1>' +
       '<p>Watch this part carefully. It is about ' + mins(s.c) + ' minute' + (mins(s.c) > 1 ? 's' : '') + '.</p>' +
-      '<div class="video"><div id="yt"></div></div>' +
+      '<div class="video"><div id="yt"></div><div class="shield" id="shield" aria-hidden="true"></div>' +
+      '<div class="vcover" id="cover"><img src="/img/celly.png" alt=""><p id="coverTxt">Ready?</p><button class="btn go" id="coverBtn">▶ Play</button></div></div>' +
+      '<div class="vctl"><button class="btn" id="pp">⏸ Pause</button><button class="btn" id="back10">⏪ Back 10 seconds</button><span class="vt" id="vt"></span></div>' +
       '<div class="row"><button class="btn" id="again">🔁 Watch it again</button><button class="btn go" id="next">Next ▶</button></div>';
-    document.getElementById('next').onclick = function () { track('recap-step', {game: P.g, step: at}); go(at + 1); };
+    var cover = document.getElementById('cover'), coverTxt = document.getElementById('coverTxt'), coverBtn = document.getElementById('coverBtn'),
+        pp = document.getElementById('pp'), vt = document.getElementById('vt'), ended = false, tick = null;
+    function fmt(x) { x = Math.max(0, Math.round(x)); return Math.floor(x / 60) + ':' + ('0' + (x % 60)).slice(-2); }
+    function play() { if (!player || !player.playVideo) return; if (ended) { player.seekTo(s.c[0], true); ended = false; } player.playVideo(); }
+    function pause() { if (player && player.pauseVideo) player.pauseVideo(); }
+    function cov(txt, btn) { coverTxt.textContent = txt; coverBtn.textContent = btn; cover.hidden = false; }
+    document.getElementById('next').onclick = function () { clearInterval(tick); track('recap-step', {game: P.g, step: at}); go(at + 1); };
+    document.getElementById('shield').onclick = function () { pause(); };
+    coverBtn.onclick = function () { play(); };
+    pp.onclick = function () { if (player && player.getPlayerState && player.getPlayerState() === 1) pause(); else play(); };
+    document.getElementById('back10').onclick = function () { if (player && player.getCurrentTime) { player.seekTo(Math.max(s.c[0], player.getCurrentTime() - 10), true); play(); } };
+    document.getElementById('again').onclick = function () { if (player && player.seekTo) { ended = false; player.seekTo(s.c[0], true); player.playVideo(); } };
     api().then(function () {
       player = new YT.Player('yt', {host: 'https://www.youtube-nocookie.com', videoId: P.v,
-        playerVars: {start: s.c[0], end: s.c[1], rel: 0, modestbranding: 1, playsinline: 1, autoplay: 1, cc_load_policy: 1},
-        events: {onStateChange: function (e) { if (e.data === 0) { var n = document.getElementById('next'); if (n) { n.classList.add('pulse'); n.focus(); } } }}});
+        playerVars: {start: s.c[0], end: s.c[1], rel: 0, modestbranding: 1, playsinline: 1, autoplay: 1, cc_load_policy: 1,
+          controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3},
+        events: {onStateChange: function (e) {
+          if (e.data === 1) { cover.hidden = true; pp.textContent = '⏸ Pause'; }
+          else if (e.data === 2) { cov('Paused', '▶ Carry on watching'); pp.textContent = '▶ Play'; }
+          else if (e.data === 0) { ended = true; cov('✓ Well done! That part is finished.', '🔁 Watch it again'); pp.textContent = '▶ Play';
+            var n = document.getElementById('next'); if (n) { n.classList.add('pulse'); n.focus(); } }
+        }}});
+      tick = setInterval(function () {
+        if (!document.getElementById('vt')) return clearInterval(tick);
+        if (!player || !player.getCurrentTime) return;
+        var now = player.getCurrentTime() - s.c[0]; vt.textContent = fmt(Math.min(now, s.c[1] - s.c[0])) + ' of ' + fmt(s.c[1] - s.c[0]);
+      }, 500);
     });
-    document.getElementById('again').onclick = function () { if (player && player.seekTo) { player.seekTo(s.c[0], true); player.playVideo(); } };
   }
   function room(s) {
     card.innerHTML = '<p class="muted">Step ' + (at + 1) + ' of ' + steps.length + '</p><h1>🎮 Play: ' + esc(s.n) + '</h1>' +

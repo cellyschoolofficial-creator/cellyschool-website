@@ -61,17 +61,79 @@
         'Test Bolt': {room: 5, t: 494}, 'Test Zoom': {room: 5, t: 494}, 'Test the campfire': {room: 5, t: 494},
         'Waiting room': {room: 6, t: 494}, 'Clinic lab': {room: 7, t: 571, kw: true}, 'Teach Dr Celly': {room: 8, t: 571, kw: true}},
       kw: [[/respir|limewater|gills|breath/i, 326], [/excret|nutrition|urine/i, 400], [/movement|move|reproduc/i, 162],
-        [/sensitiv|pupil|hot pan/i, 225], [/grow|ring/i, 270], [/symptom|flu|cold|spots/i, 0], [/organism|alive/i, 69]]}
+        [/sensitiv|pupil|hot pan/i, 225], [/grow|ring/i, 270], [/symptom|flu|cold|spots/i, 0], [/organism|alive/i, 69]]},
+    '7Ab': {video: 'UxjKmbYN3jQ',
+      chapters: [[0, 'Hearts, brains and mummies'], [67, 'Word workshop: organ'], [123, 'Brain, skin and heart'], [175, 'Organs for breathing'],
+        [229, 'Follow your lunch'], [289, 'Liver, kidneys and bladder'], [345, 'Brain break'], [358, 'Plants have organs too'], [425, 'Photosynthesis'],
+        [484, 'Storage organs'], [519, 'Doctors solve problems'], [602, 'Thumbs up, thumbs down'], [659, 'Quiz and big ideas'], [742, 'Workbook for grown-ups']],
+      acts: {
+        'Wake up, Mumbles!': {room: 0, t: 0},
+        'Build the word': {room: 1, t: 67, kw: [[/photosynth/i, 425, 6], [/diagnos/i, 519, 7]]},
+        'Follow your lunch': {room: 3, t: 229},
+        'Job cards': {room: 3, t: 229, kw: [[/brain|skin|heart/i, 123], [/lung|windpipe|diaphragm/i, 175], [/liver|kidney|bladder/i, 289]]},
+        'Organ teams': {room: 5, t: 123, kw: [[/lung|breath/i, 175], [/stomach|intestin|gullet/i, 229]]},
+        'Body Town Park': {room: 6, t: 358, kw: [[/light|food|photosynth|carbon/i, 425], [/storage|carrot|potato/i, 484], [/report/i, 519]]},
+        'Body Town Hospital': {room: 7, t: 519, kw: [[/liver/i, 289], [/heart/i, 123]]},
+        'Teach Celly': {room: 8, t: 659}}},
+    '7Ac': {video: '6XNPyFMaGxw',
+      chapters: [[0, 'The mummy mystery'], [70, 'Word workshop: tissue'], [125, 'Inside a heart'], [176, 'Muscle tissue'], [219, 'Draw a tissue'],
+        [273, 'Brain break'], [286, 'Root hair tissue'], [331, 'Word workshop: xylem'], [387, 'Cell to organism'], [447, 'Thumbs up, thumbs down'],
+        [514, 'Quiz and big ideas'], [606, 'Workbook for grown-ups']],
+      acts: {
+        'Tissue Lab': {room: 0, t: 0},
+        'Build the words': {room: 1, t: 70, kw: [[/xylem/i, 331, 3], [/microscope/i, null, 5], [/specimen/i, null, 6], [/magnif/i, null, 8]]},
+        'Team Tissue': {room: 1, t: 70},
+        'Heart detective': {room: 2, t: 125, kw: [[/muscle/i, 176]]},
+        "Barry's carrot": {room: 3, t: 286, kw: [[/xylem/i, 331], [/storage|colour/i, 387]]},
+        'Organ or tissue': {room: 3, t: 387},
+        'Microscope parts': {room: 5, t: null}, 'Make a slide': {room: 6, t: null},
+        'Focus!': {room: 7, t: null}, "Hanky's helpdesk": {room: 7, t: null}, 'Microscope safety': {room: 7, t: null},
+        'Magnification Station': {room: 8, t: null},
+        'Teach Celly': {room: 9, t: 514}}},
+    '7Ad': {video: 'ZIf1F5QKn-I',
+      chapters: [[0, 'What is a cell? Microscopes'], [62, 'Word workshop: microscope, magnify, specimen'], [133, 'Parts of a microscope'],
+        [200, 'Six steps and magnification'], [288, 'Brain break'], [302, 'Word workshop: nucleus, cytoplasm, membrane'], [396, 'Draw an animal cell'],
+        [478, 'Plant cells: wall, vacuole, chloroplast'], [564, 'Thumbs up, thumbs down'], [632, 'Brain break'], [645, 'Specialised cells'],
+        [732, 'One-celled living things'], [792, 'Quiz'], [878, 'Workbook for grown-ups']],
+      acts: {
+        "Hooke's little rooms": {room: 1, t: 0, kw: [[/magnif|×/i, 200]]},
+        'Building blocks': {room: 2, t: 0},
+        'Word workshop': {room: 3, t: 302, kw: [[/microscope|magnif|specimen/i, 62]]},
+        'Fix Celly': {room: 4, t: 396, kw: [[/mitochond|energy/i, 302]]},
+        'Plant cells only, or both?': {room: 5, t: 478}, 'Label a plant cell': {room: 5, t: 478}, 'Photo puzzle': {room: 5, t: 478},
+        'Plant or animal?': {room: 7, t: 478},
+        'Special jobs': {room: 8, t: 645}, 'Mystery cells W to Z': {room: 8, t: 645},
+        'How big really?': {room: 9, t: 200},
+        'Teach Celly': {room: 10, t: 792},
+        'Draw a root hair cell': {room: 11, t: 645}}},
+    '7Ae': {video: 'Klo1RDcyc-o',
+      chapters: [[0, 'Climb the ladder'], [74, 'Word workshop: organ system'], [140, 'The digestive system'], [205, 'The circulatory system'],
+        [268, 'The breathing system'], [323, 'The urinary system'], [386, 'Brain break'], [400, 'The nervous system'], [456, 'The locomotor system'],
+        [509, 'All six systems'], [578, 'Plants have systems too'], [653, 'Biopsy and transplants'], [783, 'Quiz and big ideas'], [873, 'Workbook for grown-ups']],
+      acts: {
+        'Welcome to Body Town': {room: 0, t: 0},
+        'Climb the ladder': {room: 1, t: 0},
+        'Build the words': {room: 2, t: 74, kw: [[/transplant|biops/i, 653, 7]]},
+        'Fix the signposts': {room: 3, t: 509, kw: true},
+        'The town map': {room: 4, t: 509, kw: true},
+        'The garden district': {room: 6, t: 578},
+        'Body Town Hospital': {room: 7, t: 653},
+        'Teach Celly': {room: 8, t: 783}},
+      kw: [[/digest|stomach|gullet|intestin|mouth/i, 140], [/circulat|heart|blood|arter|vein/i, 205], [/breath|lung|windpipe|oxygen/i, 268],
+        [/urin|kidney|bladder/i, 323], [/nerv|brain|spinal/i, 400], [/locomot|bone|muscle|skeleton|joint/i, 456]]}
   };
   function place(r) {
     var g = GUIDES[GAME]; if (!g) return {};
     var a = g.acts[r.act]; if (!a) return {};
-    var t = a.t;
-    if (a.kw) for (var i = 0; i < g.kw.length; i++) if (g.kw[i][0].test(r.item)) { t = g.kw[i][1]; break; }
+    var t = a.t, room = a.room;
+    // per-answer detail: some answers belong to another part of the video (and sometimes another room)
+    var list = Array.isArray(a.kw) ? a.kw : (a.kw ? g.kw : null);
+    if (list) for (var i = 0; i < list.length; i++) if (list[i][0].test(r.item)) { t = list[i][1]; if (list[i][2] != null) room = list[i][2]; break; }
+    var rn = (typeof TRAIL !== 'undefined' && TRAIL[room]) || '';
+    if (t == null) return {room: room, roomName: rn, t: -1, tEnd: 0, chap: ''};   // not covered by this lesson's video
     var ch = g.chapters, name = '', end = 0;
     for (var j = 0; j < ch.length; j++) if (ch[j][0] <= t) { name = ch[j][1]; end = ch[j + 1] ? ch[j + 1][0] : 0; }
-    var rn = (typeof TRAIL !== 'undefined' && TRAIL[a.room]) || '';
-    return {room: a.room, roomName: rn, t: t, tEnd: end, chap: name};
+    return {room: room, roomName: rn, t: t, tEnd: end, chap: name};
   }
 
   /* ---------- recap mode: play one room, then go back to Celly's recap ---------- */
@@ -202,7 +264,7 @@
     return {device: device, browser: browser, os: os, screen: w + 'x' + h, lang: navigator.language || '', tz: tz,
       from: q.get('utm_source') || ss('cs_from') || ref, rooms: rooms, muted: !!(typeof S !== 'undefined' && S.mute) || !!ss(K + '_muted'),
       modeSwitches: +(ss(K + '_modeSwitch') || 0), speech: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
-      version: (ver.split('?')[1] || '').replace('v=', 'v'), family: window.CSFamily && window.CSFamily.get() ? (window.CSFamily.get().kids || []).length : 0};
+      version: (ver.split('?')[1] || '').replace('v=', 'v'), order: schoolOrder().join(','), now: (function () { try { return (JSON.parse(localStorage.getItem('cs_order') || 'null') || {}).now || ''; } catch (e) { return ''; } })(), family: window.CSFamily && window.CSFamily.get() ? (window.CSFamily.get().kids || []).length : 0};
   }
   try { if (!ss('cs_from')) ss('cs_from', new URLSearchParams(location.search).get('utm_source') || (document.referrer ? new URL(document.referrer).hostname : 'direct')); } catch (e) {}
 
@@ -235,13 +297,17 @@
         return {act: r.act, item: r.item, first: r.first, said: r.said, room: p.room, roomName: p.roomName, t: p.t, tEnd: p.tEnd, chap: p.chap};
       })
     };
-    fetch(URL_, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(body)})
-      .then(function () {
+    window.__csRecapWait = true;
+    fetch(URL_, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(body)})
+      .then(function (res) { return res.json().catch(function () { return {}; }); })
+      .then(function (r) {
+        window.__csRecapWait = false; window.__csRecap = r || {};
+        try { window.dispatchEvent(new Event('cs-recap-ready')); } catch (e) {}
         track('report-sent', {game: GAME});
         var p = document.createElement('p'); p.className = 'gu-sent'; p.textContent = '📧 ' + (ss(K + '_child') ? ss(K + '_child') + ', your' : 'Your') + ' grown-up’s report is on its way by email.';
         cert.appendChild(p);
       })
-      .catch(function () { ss(K + '_sent', ''); });
+      .catch(function () { ss(K + '_sent', ''); window.__csRecapWait = false; try { window.dispatchEvent(new Event('cs-recap-ready')); } catch (e) {} });
   }
   // put the child's name on the certificate (they already chose it on "Who's playing today?")
   function nameCert() {
@@ -259,15 +325,31 @@
     '7Ae': {lesson: ['7ca', '7Ca Fitness and breathing'], game: null}
   };
   var BASE = (location.pathname.match(/^\/preview-[a-z0-9-]+/) || [''])[0];
+  function schoolOrder() {
+    var book = ['7A', '7B', '7C', '7D', '7E', '7F', '7G', '7H', '7I', '7J', '7K', '7L'], o = null;
+    try { o = JSON.parse(localStorage.getItem('cs_order') || 'null'); } catch (e) {}
+    if (!o || !o.units || !o.units.length) return [];
+    var out = o.units.filter(function (c) { return book.indexOf(c) >= 0; });
+    book.forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); });
+    return out;
+  }
   function nextSteps(cert) {
     if (RECAP || document.getElementById('csNext')) return;
     var n = NEXTS[GAME]; if (!n) return;
+    var so = schoolOrder();
+    if (so.length && /e$/.test(GAME)) {           // last lesson of a unit: go to the next unit in the school's order
+      var nu = so[so.indexOf(GAME.slice(0, 2)) + 1];
+      n = {lesson: nu ? [nu.toLowerCase() + 'a', nu + 'a, unit ' + nu + ' (your school\'s order)'] : n.lesson, game: n.game};
+    }
     var st = document.createElement('style');
     st.textContent = '.cert .t{letter-spacing:.02em!important;text-transform:none!important;font-size:17px!important}' +
       '#csNext{margin:18px 0 6px;padding:16px 18px;border:2px solid #81A63C;border-radius:16px;background:#F6FAEE}' +
       '#csNext h2{margin:0 0 10px;font-size:22px}#csNext .row{display:flex;flex-wrap:wrap;gap:10px}' +
       '#csNext a{display:inline-flex;align-items:center;gap:.4em;min-height:48px;padding:.6em 1.1em;border-radius:999px;font-weight:600;text-decoration:none;border:2px solid #2E3F6E;color:#1F2A44;background:#fff}' +
-      '#csNext a.go{background:#1F2A44;color:#fff;border-color:#1F2A44}';
+      '#csNext a.go{background:#1F2A44;color:#fff;border-color:#1F2A44}' +
+      '#csNext a.recap{background:#81A63C;border-color:#5E7F22;color:#fff;font-size:1.08em}' +
+      '#csNext .recap-wait{display:inline-flex;align-items:center;min-height:48px;color:#4E7A1E;font-weight:600}' +
+      '#csNext .recap-note{margin:8px 0 0;color:#4A5573;font-size:16px}';
     document.head.appendChild(st);
     var box = document.createElement('div'); box.id = 'csNext';
     var h = '<h2>What next? 🚀</h2><div class="row">' +
@@ -276,6 +358,27 @@
       '<a href="' + BASE + '/' + GAME.toLowerCase() + '">📺 Watch the ' + GAME + ' video again</a></div>';
     box.innerHTML = h;
     cert.parentNode.insertBefore(box, cert.nextSibling);
+    // the report decides: if some parts need practice, Celly's recap comes first (short, and optional)
+    var row = box.querySelector('.row'), hold = null;
+    function showRecap() {
+      var r = window.__csRecap || {};
+      if (hold) { hold.remove(); hold = null; }
+      if (!r.recap || !r.weak || box.querySelector('.recap')) return;
+      var a = document.createElement('a'); a.className = 'go recap'; a.href = r.recap;
+      a.innerHTML = '⭐ Practise the tricky bits with Celly' + (r.mins ? ' (about ' + r.mins + ' min)' : '');
+      row.insertBefore(a, row.firstChild);
+      var lead = row.querySelector('a.go:not(.recap)'); if (lead) lead.className = '';
+      var note = document.createElement('p'); note.className = 'recap-note';
+      note.textContent = 'Or do it tomorrow: your grown-up has the same link in their email.';
+      row.parentNode.insertBefore(note, row.nextSibling);
+      track('recap-offered', {game: GAME, weak: r.weak});
+    }
+    if (window.__csRecapWait) {
+      hold = document.createElement('span'); hold.className = 'recap-wait'; hold.textContent = '⭐ Celly is checking which bits to practise…';
+      row.insertBefore(hold, row.firstChild);
+      window.addEventListener('cs-recap-ready', showRecap);
+      setTimeout(function () { if (hold) { hold.remove(); hold = null; } }, 25000);
+    } else if (window.__csRecap) showRecap();
     box.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a) track('game-next-click', {game: GAME, to: a.getAttribute('href')}); });
   }
   new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) { nameCert(); send(c); nextSteps(c); } })

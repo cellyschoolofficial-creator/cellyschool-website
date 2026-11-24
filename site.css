@@ -188,3 +188,43 @@ footer a{display:inline-block;padding:.3em 0}
   body:has(.nextbar){padding-bottom:76px}
 }
 @media print{.nextbar,.menu-btn{display:none!important}}
+
+/* ---- Stage 2 (Nov 2026): progress ticks, carry on, child-first home ---- */
+.card{position:relative}
+.prog{display:inline-block;margin-top:8px;font-size:.9rem;font-weight:600;border-radius:999px;padding:.15em .7em}
+.prog.done{background:var(--bio-p);color:#33500E}
+.prog.seen{background:var(--sun,#FBE7A1);color:var(--ink)}
+.btn.big{font-size:1.15em;padding:.9em 1.5em;min-height:56px}
+.carry{margin:6px 0 4px;padding:16px 18px;background:var(--paper);border:3px solid var(--bio-m);border-radius:var(--radius)}
+.carry-hi{margin:0 0 8px;font-weight:700;font-size:1.15em}
+.carry-sub{margin:8px 0 0;color:var(--ink2);font-size:.95em}
+.hero-more{margin-top:14px;font-size:.95em;color:var(--ink2)}
+.games-strip .card{padding:16px}
+.games-strip h3{font-size:1.05rem}
+@media(max-width:700px){.hero{padding:22px 0 10px}.heroes{display:none}.hero .btns .btn{width:100%;justify-content:center}}
+@media(max-width:700px){.hero h1{font-size:1.9rem}.hero .lead{font-size:1.02em}.carry{margin:10px 0 2px}}
+/* school order */
+.school-order{margin:18px 0 8px;padding:18px 20px;background:var(--paper);border:2px solid var(--rule);border-radius:var(--radius)}
+.school-order h2{margin-top:0}
+.so-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin:12px 0}
+.so-u{font:inherit;text-align:left;display:flex;align-items:center;gap:10px;min-height:52px;padding:.5em .8em;border:2px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);cursor:pointer}
+.so-u.on{background:var(--bio-p);border-color:var(--bio)}
+.so-n{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-weight:700;background:#fff}
+.so-u.on .so-n{background:var(--ink);color:#fff;border-color:var(--ink)}
+.so-now{display:block;margin:10px 0 14px;font-weight:600}
+.so-now select{font:inherit;display:block;margin-top:6px;min-height:48px;padding:.3em .6em;border:2px solid var(--line);border-radius:12px;background:#fff;max-width:100%}
+.so-line{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.so-chip{display:inline-block;padding:.15em .6em;border-radius:999px;border:2px solid var(--rule);background:#fff;font-weight:600}
+.so-chip.now{background:var(--sun);border-color:var(--line)}
+.kid-switch{display:flex;align-items:center;gap:6px;font-size:.95rem;margin-left:auto}
+.kid-switch select{font:inherit;min-height:40px;border:2px solid var(--line);border-radius:999px;padding:.2em .7em;background:#fff;color:var(--ink)}
+@media(max-width:700px){.kid-switch{margin-left:auto}.kid-switch label{display:none}.menu-btn{margin-left:6px}}
+/* lesson video: Celly's own controls */
+.video .vshield{position:absolute;inset:0;z-index:2;cursor:pointer}
+.video .vcover{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--cream);text-align:center;padding:12px}
+.video .vcover[hidden]{display:none}
+.video .vcover img{width:84px;height:auto}
+.video .vcover p{margin:0;font-weight:600}
+.vctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0 4px}
+.vctl .vt{margin-left:auto;color:var(--ink2);font-size:.95em}
+.video .vcover .btn{position:static;width:auto;height:auto;inset:auto}
