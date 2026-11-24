@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Celly's recap | Celly School</title>
+<link rel="icon" href="/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1F2A44;--soft:#56607A;--cream:#FAF6E9;--paper:#FFFDF6;--edge:#E4DFCF;--bio:#81A63C;--good:#4E7A1E;--line:#2B3A67}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Lexend,"Segoe UI",Arial,sans-serif;font-size:20px;line-height:1.55;letter-spacing:.01em}
+.wrap{max-width:820px;margin:0 auto;padding:18px 16px 40px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+header img{width:64px;height:auto}
+header .t{font-size:15px;color:var(--soft);text-transform:uppercase;letter-spacing:.12em}
+h1{font-size:30px;margin:0 0 6px;line-height:1.25}
+.card{background:var(--paper);border:3px solid var(--line);border-radius:22px;padding:20px 22px}
+.dots{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0;list-style:none}
+.dots li{border:2px solid var(--edge);border-radius:999px;padding:2px 12px;font-size:15px;background:#fff;color:var(--soft)}
+.dots li.now{border-color:var(--line);color:var(--ink);font-weight:600}
+.dots li.done{border-color:var(--bio);color:var(--good)}
+.video{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;margin:12px 0}
+.video>div,.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.btn{font:inherit;font-weight:600;font-size:21px;border-radius:16px;padding:14px 22px;cursor:pointer;border:3px solid var(--line);background:#fff;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn.go{background:var(--line);color:#fff}
+.btn.go.pulse{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.04)}}
+.muted{color:var(--soft);font-size:17px}
+.plan{margin:10px 0 0;padding-left:24px}
+.plan li{margin:6px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+@media (max-width:520px){body{font-size:18px}h1{font-size:25px}.btn{font-size:19px;flex:1 1 100%;justify-content:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="/img/celly.png" alt="Celly"><div><div class="t">Celly School</div><b>Celly’s recap</b></div></header>
+  <ol class="dots" id="dots" aria-label="Recap steps"></ol>
+  <main class="card" id="card" aria-live="polite"></main>
+</div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search), P = null;
+  try {
+    var b = (q.get('p') || '').replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+    P = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b), function (c) { return c.charCodeAt(0); })));
+  } catch (e) { P = null; }
+  var card = document.getElementById('card'), dots = document.getElementById('dots');
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function track(n, p) { try { if (window.umami) umami.track(n, p); } catch (e) {} }
+  if (!P || !/^7[a-l][a-e]?$/.test(P.g || '') || !Array.isArray(P.s) || !P.s.length) {
+    card.innerHTML = '<h1>This recap link isn’t complete</h1><p>Please open it again from the email, or <a href="/play/">choose a game</a>.</p>'; return;
+  }
+  var steps = P.s.filter(function (s) { return (s.c && /^[A-Za-z0-9_-]{11}$/.test(P.v || '')) || s.r >= 0; }).slice(0, 12);
+  var at = Math.max(0, Math.min(steps.length, parseInt(q.get('at') || '0', 10) || 0));
+  var game = '/play/' + P.g + '/';
+  function mins(c) { return Math.max(1, Math.round((c[1] - c[0]) / 60)); }
+  function url(k) { var u = new URL(location.href); u.searchParams.set('at', k); return u.toString(); }
+  function drawDots() {
+    dots.innerHTML = steps.map(function (s, i) {
+      return '<li class="' + (i < at ? 'done' : i === at ? 'now' : '') + '">' + (i < at ? '✓ ' : '') + (s.c ? '▶ ' : '🎮 ') + esc(s.n) + '</li>';
+    }).join('') + '<li class="' + (at >= steps.length ? 'now' : '') + '">🏆 Done</li>';
+  }
+  function go(k) { at = k; history.replaceState(null, '', url(k)); drawDots(); show(); window.scrollTo(0, 0); }
+
+  function show() {
+    if (at === 0 && !q.get('started')) return intro();
+    if (at >= steps.length) return finish();
+    var s = steps[at];
+    if (s.c) return clip(s); return room(s);
+  }
+  function intro() {
+    var v = steps.filter(function (s) { return s.c; }), r = steps.filter(function (s) { return !s.c; });
+    var total = v.reduce(function (a, s) { return a + mins(s.c); }, 0) + r.length * 3;
+    card.innerHTML = '<h1>Let’s fix the tricky bits!</h1><p>Celly picked the parts of the lesson to look at again. Watch a short bit of the video, then play that part of the game.</p>' +
+      '<ul class="plan">' + steps.map(function (s) { return '<li>' + (s.c ? '▶ Watch: ' : '🎮 Play: ') + esc(s.n) + (s.c ? ' <span class="muted">(about ' + mins(s.c) + ' min)</span>' : '') + '</li>'; }).join('') + '</ul>' +
+      '<p class="muted">About ' + total + ' minutes. You can stop and come back to this link any time.</p>' +
+      '<div class="row"><button class="btn go pulse" id="start">Start the recap</button></div>';
+    document.getElementById('start').onclick = function () { q.set('started', '1'); track('recap-start', {game: P.g}); go(0); };
+  }
+  var player = null, apiReady = null;
+  function api() {
+    if (apiReady) return apiReady;
+    apiReady = new Promise(function (res) {
+      window.onYouTubeIframeAPIReady = res;
+      var t = document.createElement('script'); t.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(t);
+    });
+    return apiReady;
+  }
+  function clip(s) {
+    card.innerHTML = '<p class="muted">Step ' + (at + 1) + ' of ' + steps.length + '</p><h1>▶ Watch: ' + esc(s.n) + '</h1>' +
+      '<p>Watch this part carefully. It is about ' + mins(s.c) + ' minute' + (mins(s.c) > 1 ? 's' : '') + '.</p>' +
+      '<div class="video"><div id="yt"></div></div>' +
+      '<div class="row"><button class="btn" id="again">🔁 Watch it again</button><button class="btn go" id="next">Next ▶</button></div>';
+    document.getElementById('next').onclick = function () { track('recap-step', {game: P.g, step: at}); go(at + 1); };
+    api().then(function () {
+      player = new YT.Player('yt', {host: 'https://www.youtube-nocookie.com', videoId: P.v,
+        playerVars: {start: s.c[0], end: s.c[1], rel: 0, modestbranding: 1, playsinline: 1, autoplay: 1, cc_load_policy: 1},
+        events: {onStateChange: function (e) { if (e.data === 0) { var n = document.getElementById('next'); if (n) { n.classList.add('pulse'); n.focus(); } } }}});
+    });
+    document.getElementById('again').onclick = function () { if (player && player.seekTo) { player.seekTo(s.c[0], true); player.playVideo(); } };
+  }
+  function room(s) {
+    card.innerHTML = '<p class="muted">Step ' + (at + 1) + ' of ' + steps.length + '</p><h1>🎮 Play: ' + esc(s.n) + '</h1>' +
+      '<p>Now try this part of the game again. When you finish it, you’ll come straight back here.</p>' +
+      '<div class="row"><a class="btn go pulse" id="play">Play ' + esc(s.n) + '</a><button class="btn" id="skip">Skip this one</button></div>';
+    document.getElementById('play').href = game + '?room=' + s.r + '&recap=' + encodeURIComponent(url(at + 1));
+    document.getElementById('play').onclick = function () { track('recap-step', {game: P.g, step: at}); };
+    document.getElementById('skip').onclick = function () { go(at + 1); };
+  }
+  function finish() {
+    track('recap-done', {game: P.g});
+    card.innerHTML = '<h1>🏆 Recap done!</h1><p>Brilliant work. You looked again at every tricky part. That is exactly how scientists learn.</p>' +
+      '<div class="row"><a class="btn go" href="' + game + '">Play the whole game again</a><a class="btn" href="/' + P.g + '">Back to the lesson</a></div>';
+  }
+  drawDots(); show();
+})();
+</script>
+<script src="/track.js?v=4" defer data-umami="585f0232-f0de-4980-a401-6b8133b6d029" data-clarity="zhgmzz2723" data-posthog="phc_nES5k4NAb39SgFteH7mdCASP4BPWS3vFsJzMTxAB9Vdr" data-ga="G-MZ4TCMRJ72"></script>
+</body>
+</html>

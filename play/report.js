@@ -23,6 +23,56 @@
     if (t.id === 'go' && !ss(K + '_t0')) ss(K + '_t0', String(Date.now()));
   }, true);
 
+
+  /* ---------- where each part of the game is taught in the lesson video ----------
+     chapters: [start in seconds, name]; acts: game activity → {room, t} (t = default video time);
+     kw: words in an item → video time (used when the activity is marked kw:true). */
+  var GUIDES = {
+    '7Aa': {video: 'E_YFTGRxsR4',
+      chapters: [[0, 'Doctors and clues'], [69, 'Word workshop: organism'], [127, 'Meet Mrs Gren'], [162, 'Movement and reproduction'],
+        [225, 'Sensitivity'], [270, 'Growth'], [312, 'Brain break'], [326, 'Respiration'], [400, 'Excretion and nutrition'],
+        [454, 'Say Mrs Gren together'], [494, 'Organism or not?'], [571, 'Quiz and big ideas'], [650, 'Workbook for grown-ups']],
+      acts: {
+        "Doctor's tools": {room: 0, t: 0}, 'Clue detective': {room: 1, t: 0},
+        'Build the word': {room: 2, t: 69, kw: true}, 'Mrs Gren': {room: 3, t: 454}, 'Mrs Gren meanings': {room: 3, t: 127, kw: true},
+        'Test Bolt': {room: 5, t: 494}, 'Test Zoom': {room: 5, t: 494}, 'Test the campfire': {room: 5, t: 494},
+        'Waiting room': {room: 6, t: 494}, 'Clinic lab': {room: 7, t: 571, kw: true}, 'Teach Dr Celly': {room: 8, t: 571, kw: true}},
+      kw: [[/respir|limewater|gills|breath/i, 326], [/excret|nutrition|urine/i, 400], [/movement|move|reproduc/i, 162],
+        [/sensitiv|pupil|hot pan/i, 225], [/grow|ring/i, 270], [/symptom|flu|cold|spots/i, 0], [/organism|alive/i, 69]]}
+  };
+  function place(r) {
+    var g = GUIDES[GAME]; if (!g) return {};
+    var a = g.acts[r.act]; if (!a) return {};
+    var t = a.t;
+    if (a.kw) for (var i = 0; i < g.kw.length; i++) if (g.kw[i][0].test(r.item)) { t = g.kw[i][1]; break; }
+    var ch = g.chapters, name = '', end = 0;
+    for (var j = 0; j < ch.length; j++) if (ch[j][0] <= t) { name = ch[j][1]; end = ch[j + 1] ? ch[j + 1][0] : 0; }
+    var rn = (typeof TRAIL !== 'undefined' && TRAIL[a.room]) || '';
+    return {room: a.room, roomName: rn, t: t, tEnd: end, chap: name};
+  }
+
+  /* ---------- recap mode: play one room, then go back to Celly's recap ---------- */
+  var QS = new URLSearchParams(location.search), RECAP = QS.get('recap') || '';
+  if (RECAP && RECAP.indexOf(location.origin + '/play/recap/') !== 0) RECAP = '';
+  if (RECAP) {
+    var startRoom = +(QS.get('room') || 0), leaving = false;
+    var bk = document.createElement('a'); bk.href = RECAP; bk.textContent = '↩ Back to the recap';
+    bk.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:150;background:#fff;border:3px solid #2B3A67;border-radius:14px;padding:8px 14px;font:600 16px Lexend,Arial,sans-serif;color:#1F2A44;text-decoration:none';
+    document.body.appendChild(bk);
+    setInterval(function () {
+      if (leaving || typeof S === 'undefined' || S.room == null) return;
+      if (S.room !== startRoom || document.querySelector('.cert')) {
+        leaving = true; track('recap-room-done', {game: GAME, room: startRoom});
+        try { if (window.stopVoice) stopVoice(); } catch (e) {}
+        var m = document.createElement('div');
+        m.style.cssText = 'position:fixed;inset:0;z-index:210;background:rgba(31,42,68,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+        m.innerHTML = '<div style="background:#FFFDF6;border:3px solid #1F2A44;border-radius:22px;padding:22px 26px;font:600 22px Lexend,Arial,sans-serif;color:#1F2A44;text-align:center">🎉 Well done!<br><span style="font-weight:400;font-size:18px">Back to your recap…</span></div>';
+        document.body.appendChild(m);
+        setTimeout(function () { location.href = RECAP; }, 2200);
+      }
+    }, 600);
+  }
+
   /* ---------- the grown-up screen ---------- */
   var css = '.gu{position:fixed;inset:0;z-index:200;background:rgba(31,42,68,.55);display:flex;padding:16px;overflow-y:auto;box-sizing:border-box}' +
     '.gu .box{margin:auto;background:#FFFDF6;border:3px solid #1F2A44;border-radius:22px;max-width:560px;width:100%;padding:20px 22px;font-size:18px;line-height:1.55;color:#1F2A44;box-shadow:0 10px 40px rgba(0,0,0,.25)}' +
@@ -70,7 +120,7 @@
 
   /* ---------- send at the certificate ---------- */
   function send(cert) {
-    if (ss(K + '_choice') !== 'yes' || ss(K + '_sent')) return;
+    if (RECAP || ss(K + '_choice') !== 'yes' || ss(K + '_sent')) return;
     var results = []; try { results = (typeof S !== 'undefined' && S.results) || JSON.parse(ss('cs' + GAME.toLowerCase() + '_res') || '[]'); } catch (e) {}
     if (!results.length) return;
     ss(K + '_sent', '1');
@@ -81,7 +131,11 @@
       minutes: t0 ? (Date.now() - t0) / 60000 : 0,
       mode: (typeof S !== 'undefined' && S.mode) || 'tap',
       sayAgain: +(ss(K + '_again') || 0),
-      results: results.map(function (r) { return {act: r.act, item: r.item, first: r.first, said: r.said}; })
+      video: (GUIDES[GAME] || {}).video || '',
+      results: results.map(function (r) {
+        var p = place(r);
+        return {act: r.act, item: r.item, first: r.first, said: r.said, room: p.room, roomName: p.roomName, t: p.t, tEnd: p.tEnd, chap: p.chap};
+      })
     };
     fetch(URL_, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(body)})
       .then(function () {
@@ -94,5 +148,5 @@
   new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) send(c); })
     .observe(document.getElementById('card') || document.body, {childList: true, subtree: true});
 
-  if (!ss(K + '_choice')) ask();
+  if (!RECAP && !ss(K + '_choice')) ask();
 })();
