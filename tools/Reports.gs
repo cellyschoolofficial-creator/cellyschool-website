@@ -14,7 +14,7 @@
  */
 
 var ROOT_ID = '1jSuRoxkYXvwHiUS5sM0zUgq7pfSjSxvm';   // Celly School folder
-var MAX_PER_EMAIL_PER_DAY = 3;
+var MAX_PER_EMAIL_PER_DAY = 10;   // a family with several children may finish several games a day
 var SITE = 'https://www.cellyschool.com';
 
 // Next step after each game
@@ -50,6 +50,7 @@ function doPost(e) {
       mode: d.mode === 'talk' ? 'talking and tapping' : 'tapping only',
       sayAgain: Math.max(0, Math.min(999, Math.round(+d.sayAgain || 0))),
       results: res,
+      child: kid_(d.child),
       video: /^[A-Za-z0-9_-]{11}$/.test(String(d.video || '')) ? String(d.video) : '',
       date: Utilities.formatDate(new Date(), 'Europe/London', 'd MMMM yyyy')
     };
@@ -65,7 +66,7 @@ function doPost(e) {
     MailApp.sendEmail({
       to: email,
       name: 'Celly School',
-      subject: "Your child's Celly School report: " + r.game + ' ' + r.topic,
+      subject: (r.child ? r.child + '’s' : "Your child's") + ' Celly School report: ' + r.game + ' ' + r.topic,
       htmlBody: emailHtml_(r),
       attachments: [pdf]
     });
@@ -127,7 +128,7 @@ function plan_(r) {
   r.recapMins = parts.mins1;
   r.recapParts = parts.p2.length ? 2 : 1;
   r.recap = parts.p1.length ? recapUrl_({g: r.game.toLowerCase(), v: r.video, s: parts.p1, n2: parts.p2,
-    k: r.token || '', p: 1, of: r.recapParts, t: r.title}) : '';
+    k: r.token || '', p: 1, of: r.recapParts, t: r.title, c: r.child}) : '';
 }
 
 var RECAP_MINUTES = 12;
@@ -216,12 +217,12 @@ function recapResult_(d) {
     if (seen[k2] || mins + stepMins_(st) > RECAP_MINUTES + 3) return;
     seen[k2] = 1; steps.push(st); mins += stepMins_(st);
   });
-  var title = clip_(d.title, 80) || 'Talk to Celly', game = d.game;
-  var next = steps.length ? recapUrl_({g: game.toLowerCase(), v: video, s: steps, n2: [], k: d.k, p: 2, of: 2, t: title}) : '';
+  var title = clip_(d.title, 80) || 'Talk to Celly', game = d.game, child = kid_(d.child);
+  var next = steps.length ? recapUrl_({g: game.toLowerCase(), v: video, s: steps, n2: [], k: d.k, p: 2, of: 2, t: title, c: child}) : '';
   var pp = 'font-family:Verdana,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2A44;margin:0 0 12px';
   var html = '<div style="max-width:580px;font-family:Verdana,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2A44">' +
     '<p style="' + pp + '">Hello,</p>' +
-    '<p style="' + pp + '">Your child has just finished <b>Celly’s recap</b> for <b>' + esc_(title) + '</b> (' + esc_(game) + ').</p>' +
+    '<p style="' + pp + '">' + (child ? esc_(child) : 'Your child') + ' has just finished <b>Celly’s recap</b> for <b>' + esc_(title) + '</b> (' + esc_(game) + ').</p>' +
     (nowOk.length ? '<p style="' + pp + '"><b style="color:#4E7A1E">Now secure:</b> ' + esc_(list_(nowOk)) + '. Well done!</p>' : '') +
     (still.length ? '<p style="' + pp + '"><b style="color:#B5651D">Still tricky:</b> ' + esc_(list_(still)) + '. That is fine. Ideas often click after a night’s sleep.</p>' : '') +
     (next ? '<p style="margin:14px 0 6px"><a href="' + next + '" style="display:inline-block;background:#2B3A67;color:#ffffff;text-decoration:none;font-weight:bold;font-size:17px;padding:12px 20px;border-radius:12px">▶ Recap 2, for tomorrow (about ' + mins + ' min)</a></p>' +
@@ -231,7 +232,7 @@ function recapResult_(d) {
     '<p style="font-size:12px;line-height:1.5;color:#56607A;margin-top:20px">You got this because a Celly School recap was finished from a report sent to this address. ' +
     'We never share your email address. To stop these emails or delete your address, reply to this email. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
   if (MailApp.getRemainingDailyQuota() < 3) return out_({ok: false, why: 'quota'});
-  MailApp.sendEmail({to: t.email, name: 'Celly School', subject: 'Celly’s recap result: ' + game + ' ' + (still.length ? '(recap 2 ready)' : '(all secure)'), htmlBody: html});
+  MailApp.sendEmail({to: t.email, name: 'Celly School', subject: (child ? child + '’s recap result: ' : 'Celly’s recap result: ') + game + ' ' + (still.length ? '(recap 2 ready)' : '(all secure)'), htmlBody: html});
   saveEmail_(t.email, game, 'recap');
   try { log_({game: game + ' recap', first: nowOk.length, total: nowOk.length + still.length, minutes: 0, mode: 'recap', sayAgain: 0, practise: still}); } catch (e) {}
   return out_({ok: true});
@@ -301,7 +302,7 @@ function reportHtml_(r) {
     '<div style="border:4px double #81A63C;border-radius:14px;padding:12px 18px;background:#FAF6E9">' +
     '<div style="font-size:9pt;letter-spacing:2px;color:#56607A">CELLY SCHOOL · REPORT FOR GROWN-UPS</div>' +
     '<div style="font-size:17pt;font-weight:bold;margin:4px 0 0">' + esc_(r.title) + '</div>' +
-    '<div style="color:#56607A">Talk to Celly · ' + esc_(r.game + ' ' + r.topic) + ' · ' + esc_(r.date) + '</div></div>' +
+    '<div style="color:#56607A">' + (r.child ? '<b style="color:#1F2A44">Report for ' + esc_(r.child) + '</b> · ' : '') + 'Talk to Celly · ' + esc_(r.game + ' ' + r.topic) + ' · ' + esc_(r.date) + '</div></div>' +
     '<table style="width:100%;margin:10px 0 6px;border-collapse:separate;border-spacing:6px 0;table-layout:fixed"><tr>' +
     box_('Right first time', r.first + ' of ' + r.total) + box_('Overall', r.level.t) + box_('Time', (r.minutes || '<1') + ' min') +
     box_('Played by', r.mode) + box_('"Say it again"', String(r.sayAgain)) + '</tr></table>' +
@@ -327,7 +328,7 @@ function emailHtml_(r) {
   var p = 'font-family:Verdana,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2A44;margin:0 0 12px';
   return '<div style="max-width:580px;font-family:Verdana,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2A44">' +
     '<p style="' + p + '">Hello,</p>' +
-    '<p style="' + p + '">Your child has just finished <b>' + esc_(r.title) + '</b> (' + esc_(r.game + ' ' + r.topic) + ') on Celly School: ' +
+    '<p style="' + p + '">' + who_(r) + ' has just finished <b>' + esc_(r.title) + '</b> (' + esc_(r.game + ' ' + r.topic) + ') on Celly School: ' +
     '<b>' + r.first + ' of ' + r.total + '</b> right first time, in about ' + (r.minutes || 1) + ' minutes.</p>' +
     '<p style="' + p + '"><b style="color:' + r.level.c + '">' + r.level.t + '.</b> ' + esc_(r.level.s) + '</p>' +
     (r.strong.length ? '<p style="' + p + '"><b>Strong in:</b> ' + esc_(list_(r.strong)) + '.</p>' : '') +
@@ -395,6 +396,9 @@ function saveEmail_(email, game, kind) {
     } finally { lock.releaseLock(); }
   } catch (e) { console.error('saveEmail: ' + e); }
 }
+
+function kid_(s) { return clip_(String(s || '').replace(/[<>"\\]/g, ''), 24); }
+function who_(r) { return r.child ? esc_(r.child) : 'Your child'; }
 
 function clip_(s, n) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, n); }
 function cap_(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
