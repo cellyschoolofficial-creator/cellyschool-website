@@ -51,6 +51,7 @@ function doPost(e) {
       sayAgain: Math.max(0, Math.min(999, Math.round(+d.sayAgain || 0))),
       results: res,
       child: kid_(d.child),
+      meta: meta_(d.meta),
       video: /^[A-Za-z0-9_-]{11}$/.test(String(d.video || '')) ? String(d.video) : '',
       date: Utilities.formatDate(new Date(), 'Europe/London', 'd MMMM yyyy')
     };
@@ -378,11 +379,21 @@ function log_(r, email, type) {
       var secs = r.sections || [], cnt = function (st) { return secs.filter(function (x) { return x.status === st; }).length; };
       var weak = uniq_(r.results.filter(function (x) { return x.wrong; }).map(function (x) { return x.item; }));
       var unheard = uniq_(r.results.filter(function (x) { return x.unheard; }).map(function (x) { return x.item; }));
+      var M = r.meta || {}, rooms = (M.rooms || []).slice().sort(function (a, b) { return a.room - b.room; });
+      var slow = rooms.slice().sort(function (a, b) { return b.secs - a.secs; })[0];
       tab_(ss, 'Sessions', ['Date', 'Session', 'Parent email', 'Child', 'Game', 'Topic', 'Type', 'Right first time', 'Out of', '%', 'Level',
-        'Minutes', 'Mode', 'Say it again', 'Parts secure', 'Parts nearly there', 'Parts needing practice', 'Needs another go', 'Celly couldn’t hear', 'Recap minutes', 'Recap parts'])
+        'Minutes', 'Mode', 'Say it again', 'Parts secure', 'Parts nearly there', 'Parts needing practice', 'Needs another go', 'Celly couldn’t hear', 'Recap minutes', 'Recap parts',
+        'Device', 'Browser', 'System', 'Screen', 'Language', 'Time zone', 'Came from', 'Voice muted', 'Talk/tap switches', 'Speech recognition available', 'Game version', 'Children on device', 'Slowest room', 'Room times'])
         .appendRow([now, id, email || '', r.child || '', r.game, r.topic || '', type_, r.first, r.total, pct, (r.level || {}).t || '',
           r.minutes || 0, r.mode || '', r.sayAgain || 0, cnt('Secure'), cnt('Nearly there'), cnt('Needs practice'), weak.join(', '), unheard.join(', '),
-          r.recapMins || 0, r.recapParts || 0]);
+          r.recapMins || 0, r.recapParts || 0,
+          M.device || '', M.browser || '', M.os || '', M.screen || '', M.lang || '', M.tz || '', M.from || '', M.muted ? 'yes' : 'no', M.modeSwitches || 0,
+          M.speech ? 'yes' : 'no', M.version || '', M.family || 0, slow ? slow.name + ' (' + slow.secs + 's)' : '',
+          rooms.map(function (x) { return x.name + ' ' + x.secs + 's' + (x.again ? ' / ' + x.again + ' again' : ''); }).join('; ')]);
+      if (rooms.length) {
+        var rt = tab_(ss, 'Room times', ['Date', 'Session', 'Child', 'Game', 'Room', 'Seconds', 'Say it again', 'Device']);
+        rt.getRange(rt.getLastRow() + 1, 1, rooms.length, 8).setValues(rooms.map(function (x) { return [now, id, r.child || '', r.game, x.name, x.secs, x.again, M.device || '']; }));
+      }
       var ans = tab_(ss, 'Answers', ['Date', 'Session', 'Child', 'Game', 'Type', 'Part of the game', 'Answer', 'Right first time', 'Celly heard it', 'Video part', 'Video time', 'Room']);
       var rows = r.results.map(function (x) {
         return [now, id, r.child || '', r.game, type_, x.act, x.item, x.wrong ? 'no' : 'yes', x.unheard ? 'no' : 'yes', x.chap || '', x.t >= 0 ? mmss_(x.t) : '', x.roomName || ''];
@@ -432,6 +443,15 @@ function saveEmail_(email, game, kind, child) {
   } catch (e) { console.error('saveEmail: ' + e); }
 }
 
+function meta_(m) {
+  m = m && typeof m === 'object' ? m : {};
+  var rooms = (Array.isArray(m.rooms) ? m.rooms : []).slice(0, 30).map(function (x) {
+    return {room: Math.max(0, Math.min(30, Math.round(+x.room) || 0)), name: clip_(x.name, 40), secs: Math.max(0, Math.min(36000, Math.round(+x.secs) || 0)), again: Math.max(0, Math.min(999, Math.round(+x.again) || 0))};
+  });
+  return {device: clip_(m.device, 12), browser: clip_(m.browser, 12), os: clip_(m.os, 12), screen: clip_(m.screen, 12), lang: clip_(m.lang, 12),
+    tz: clip_(m.tz, 40), from: clip_(m.from, 60), rooms: rooms, muted: !!m.muted, modeSwitches: Math.min(99, Math.round(+m.modeSwitches) || 0),
+    speech: !!m.speech, version: clip_(m.version, 12), family: Math.min(9, Math.round(+m.family) || 0)};
+}
 function kid_(s) { return clip_(String(s || '').replace(/[<>"\\]/g, ''), 24); }
 function who_(r) { return r.child ? esc_(r.child) : 'Your child'; }
 
