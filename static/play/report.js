@@ -61,17 +61,79 @@
         'Test Bolt': {room: 5, t: 494}, 'Test Zoom': {room: 5, t: 494}, 'Test the campfire': {room: 5, t: 494},
         'Waiting room': {room: 6, t: 494}, 'Clinic lab': {room: 7, t: 571, kw: true}, 'Teach Dr Celly': {room: 8, t: 571, kw: true}},
       kw: [[/respir|limewater|gills|breath/i, 326], [/excret|nutrition|urine/i, 400], [/movement|move|reproduc/i, 162],
-        [/sensitiv|pupil|hot pan/i, 225], [/grow|ring/i, 270], [/symptom|flu|cold|spots/i, 0], [/organism|alive/i, 69]]}
+        [/sensitiv|pupil|hot pan/i, 225], [/grow|ring/i, 270], [/symptom|flu|cold|spots/i, 0], [/organism|alive/i, 69]]},
+    '7Ab': {video: 'UxjKmbYN3jQ',
+      chapters: [[0, 'Hearts, brains and mummies'], [67, 'Word workshop: organ'], [123, 'Brain, skin and heart'], [175, 'Organs for breathing'],
+        [229, 'Follow your lunch'], [289, 'Liver, kidneys and bladder'], [345, 'Brain break'], [358, 'Plants have organs too'], [425, 'Photosynthesis'],
+        [484, 'Storage organs'], [519, 'Doctors solve problems'], [602, 'Thumbs up, thumbs down'], [659, 'Quiz and big ideas'], [742, 'Workbook for grown-ups']],
+      acts: {
+        'Wake up, Mumbles!': {room: 0, t: 0},
+        'Build the word': {room: 1, t: 67, kw: [[/photosynth/i, 425, 6], [/diagnos/i, 519, 7]]},
+        'Follow your lunch': {room: 3, t: 229},
+        'Job cards': {room: 3, t: 229, kw: [[/brain|skin|heart/i, 123], [/lung|windpipe|diaphragm/i, 175], [/liver|kidney|bladder/i, 289]]},
+        'Organ teams': {room: 5, t: 123, kw: [[/lung|breath/i, 175], [/stomach|intestin|gullet/i, 229]]},
+        'Body Town Park': {room: 6, t: 358, kw: [[/light|food|photosynth|carbon/i, 425], [/storage|carrot|potato/i, 484], [/report/i, 519]]},
+        'Body Town Hospital': {room: 7, t: 519, kw: [[/liver/i, 289], [/heart/i, 123]]},
+        'Teach Celly': {room: 8, t: 659}}},
+    '7Ac': {video: '6XNPyFMaGxw',
+      chapters: [[0, 'The mummy mystery'], [70, 'Word workshop: tissue'], [125, 'Inside a heart'], [176, 'Muscle tissue'], [219, 'Draw a tissue'],
+        [273, 'Brain break'], [286, 'Root hair tissue'], [331, 'Word workshop: xylem'], [387, 'Cell to organism'], [447, 'Thumbs up, thumbs down'],
+        [514, 'Quiz and big ideas'], [606, 'Workbook for grown-ups']],
+      acts: {
+        'Tissue Lab': {room: 0, t: 0},
+        'Build the words': {room: 1, t: 70, kw: [[/xylem/i, 331, 3], [/microscope/i, null, 5], [/specimen/i, null, 6], [/magnif/i, null, 8]]},
+        'Team Tissue': {room: 1, t: 70},
+        'Heart detective': {room: 2, t: 125, kw: [[/muscle/i, 176]]},
+        "Barry's carrot": {room: 3, t: 286, kw: [[/xylem/i, 331], [/storage|colour/i, 387]]},
+        'Organ or tissue': {room: 3, t: 387},
+        'Microscope parts': {room: 5, t: null}, 'Make a slide': {room: 6, t: null},
+        'Focus!': {room: 7, t: null}, "Hanky's helpdesk": {room: 7, t: null}, 'Microscope safety': {room: 7, t: null},
+        'Magnification Station': {room: 8, t: null},
+        'Teach Celly': {room: 9, t: 514}}},
+    '7Ad': {video: 'ZIf1F5QKn-I',
+      chapters: [[0, 'What is a cell? Microscopes'], [62, 'Word workshop: microscope, magnify, specimen'], [133, 'Parts of a microscope'],
+        [200, 'Six steps and magnification'], [288, 'Brain break'], [302, 'Word workshop: nucleus, cytoplasm, membrane'], [396, 'Draw an animal cell'],
+        [478, 'Plant cells: wall, vacuole, chloroplast'], [564, 'Thumbs up, thumbs down'], [632, 'Brain break'], [645, 'Specialised cells'],
+        [732, 'One-celled living things'], [792, 'Quiz'], [878, 'Workbook for grown-ups']],
+      acts: {
+        "Hooke's little rooms": {room: 1, t: 0, kw: [[/magnif|×/i, 200]]},
+        'Building blocks': {room: 2, t: 0},
+        'Word workshop': {room: 3, t: 302, kw: [[/microscope|magnif|specimen/i, 62]]},
+        'Fix Celly': {room: 4, t: 396, kw: [[/mitochond|energy/i, 302]]},
+        'Plant cells only, or both?': {room: 5, t: 478}, 'Label a plant cell': {room: 5, t: 478}, 'Photo puzzle': {room: 5, t: 478},
+        'Plant or animal?': {room: 7, t: 478},
+        'Special jobs': {room: 8, t: 645}, 'Mystery cells W to Z': {room: 8, t: 645},
+        'How big really?': {room: 9, t: 200},
+        'Teach Celly': {room: 10, t: 792},
+        'Draw a root hair cell': {room: 11, t: 645}}},
+    '7Ae': {video: 'Klo1RDcyc-o',
+      chapters: [[0, 'Climb the ladder'], [74, 'Word workshop: organ system'], [140, 'The digestive system'], [205, 'The circulatory system'],
+        [268, 'The breathing system'], [323, 'The urinary system'], [386, 'Brain break'], [400, 'The nervous system'], [456, 'The locomotor system'],
+        [509, 'All six systems'], [578, 'Plants have systems too'], [653, 'Biopsy and transplants'], [783, 'Quiz and big ideas'], [873, 'Workbook for grown-ups']],
+      acts: {
+        'Welcome to Body Town': {room: 0, t: 0},
+        'Climb the ladder': {room: 1, t: 0},
+        'Build the words': {room: 2, t: 74, kw: [[/transplant|biops/i, 653, 7]]},
+        'Fix the signposts': {room: 3, t: 509, kw: true},
+        'The town map': {room: 4, t: 509, kw: true},
+        'The garden district': {room: 6, t: 578},
+        'Body Town Hospital': {room: 7, t: 653},
+        'Teach Celly': {room: 8, t: 783}},
+      kw: [[/digest|stomach|gullet|intestin|mouth/i, 140], [/circulat|heart|blood|arter|vein/i, 205], [/breath|lung|windpipe|oxygen/i, 268],
+        [/urin|kidney|bladder/i, 323], [/nerv|brain|spinal/i, 400], [/locomot|bone|muscle|skeleton|joint/i, 456]]}
   };
   function place(r) {
     var g = GUIDES[GAME]; if (!g) return {};
     var a = g.acts[r.act]; if (!a) return {};
-    var t = a.t;
-    if (a.kw) for (var i = 0; i < g.kw.length; i++) if (g.kw[i][0].test(r.item)) { t = g.kw[i][1]; break; }
+    var t = a.t, room = a.room;
+    // per-answer detail: some answers belong to another part of the video (and sometimes another room)
+    var list = Array.isArray(a.kw) ? a.kw : (a.kw ? g.kw : null);
+    if (list) for (var i = 0; i < list.length; i++) if (list[i][0].test(r.item)) { t = list[i][1]; if (list[i][2] != null) room = list[i][2]; break; }
+    var rn = (typeof TRAIL !== 'undefined' && TRAIL[room]) || '';
+    if (t == null) return {room: room, roomName: rn, t: -1, tEnd: 0, chap: ''};   // not covered by this lesson's video
     var ch = g.chapters, name = '', end = 0;
     for (var j = 0; j < ch.length; j++) if (ch[j][0] <= t) { name = ch[j][1]; end = ch[j + 1] ? ch[j + 1][0] : 0; }
-    var rn = (typeof TRAIL !== 'undefined' && TRAIL[a.room]) || '';
-    return {room: a.room, roomName: rn, t: t, tEnd: end, chap: name};
+    return {room: room, roomName: rn, t: t, tEnd: end, chap: name};
   }
 
   /* ---------- recap mode: play one room, then go back to Celly's recap ---------- */
