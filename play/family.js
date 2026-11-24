@@ -105,8 +105,18 @@
     };
     var edit = function () {
       var box = document.createElement('div'); panel.innerHTML = ''; panel.appendChild(box);
-      form(box, {intro: '<h2 style="margin-top:0">Set up reports</h2>', saveLabel: 'Save', onSave: function () { show(); }, onSkip: show, skipLabel: 'Cancel'});
+      form(box, {intro: '<h2 style="margin-top:0">Set up reports</h2>', saveLabel: 'Save', onSave: function () { orderStep(); }, onSkip: show, skipLabel: 'Cancel'});
       [].forEach.call(panel.querySelectorAll('.btns button'), function (b) { b.classList.add('btn'); if (b.id === 'famSave') b.classList.add('primary'); });
+    };
+    // after saving: one optional question about the school's order of units
+    var orderStep = function () {
+      var o = null; try { o = JSON.parse(localStorage.getItem('cs_order') || 'null'); } catch (e) {}
+      if (o && o.units && o.units.length) { show(); return; }
+      var base = (location.pathname.match(/^\/preview-[a-z0-9-]+/) || [''])[0];
+      panel.innerHTML = '<h2 style="margin-top:0">✅ Saved. One more question (optional)</h2>' +
+        '<p>Does your school teach the Year 7 units in a different order from the book? Set it once, and every “Next” button will follow your school.</p>' +
+        '<div class="btns"><a class="btn primary" href="' + base + '/year-7?setorder=1#schoolOrder">🏫 Set our school’s order</a><button class="btn" id="famBook" type="button">No, the book order is fine</button></div>';
+      panel.querySelector('#famBook').onclick = show;
     };
     show();
   }

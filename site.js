@@ -66,8 +66,8 @@ window.CSOrder=(function(){
     box.innerHTML='<div id="ytPlayer"></div><div class="vshield" aria-hidden="true"></div>'+
       '<div class="vcover"><img src="/img/celly.png" alt=""><p class="vcover-t">Ready?</p><button type="button" class="btn primary vcover-b">▶ Play</button></div>';
     var ctl=document.createElement('div');ctl.className='vctl';
-    ctl.innerHTML='<button type="button" class="btn" data-v="pp">⏸ Pause</button><button type="button" class="btn" data-v="back">⏪ Back 10 seconds</button><button type="button" class="btn" data-v="cc" aria-pressed="false">💬 Subtitles: off</button><span class="vt"></span>';
-    box.parentNode.insertBefore(ctl,box.nextSibling);
+    ctl.innerHTML='<button type="button" class="btn" data-v="pp">⏸ Pause</button><button type="button" class="btn" data-v="back">⏪ Back 10 seconds</button><button type="button" class="btn" data-v="cc" aria-pressed="false">💬 Subtitles: off</button><button type="button" class="btn" data-v="fs">⛶ Full screen</button><span class="vt"></span>';
+    var wrap=document.createElement('div');wrap.className='vwrap';box.parentNode.insertBefore(wrap,box);wrap.appendChild(box);wrap.appendChild(ctl);
     var cover=box.querySelector('.vcover'),ct=box.querySelector('.vcover-t'),cb=box.querySelector('.vcover-b'),pp=ctl.querySelector('[data-v=pp]'),vt=ctl.querySelector('.vt');
     function fmt(x){x=Math.max(0,Math.round(x));return Math.floor(x/60)+':'+('0'+(x%60)).slice(-2);}
     function play(){if(player&&player.playVideo)player.playVideo();}
@@ -75,6 +75,18 @@ window.CSOrder=(function(){
     box.querySelector('.vshield').onclick=pause;
     cb.onclick=function(){if(player&&player.getPlayerState&&player.getPlayerState()===0)player.seekTo(0,true);play();};
     pp.onclick=function(){if(player&&player.getPlayerState&&player.getPlayerState()===1)pause();else play();};
+    // full screen: the whole player with Celly's controls (real full screen where the browser allows it, otherwise fill the window)
+    var fsB=ctl.querySelector('[data-v=fs]');
+    function isFs(){return document.fullscreenElement===wrap||document.webkitFullscreenElement===wrap||wrap.classList.contains('fake');}
+    function fsLabel(){fsB.textContent=isFs()?'✕ Exit full screen':'⛶ Full screen';}
+    fsB.onclick=function(){
+      if(isFs()){if(wrap.classList.contains('fake')){wrap.classList.remove('fake');document.documentElement.classList.remove('vfake');}else(document.exitFullscreen||document.webkitExitFullscreen).call(document);fsLabel();return;}
+      var rq=wrap.requestFullscreen||wrap.webkitRequestFullscreen;
+      if(rq){try{var pr=rq.call(wrap);if(pr&&pr.catch)pr.catch(function(){wrap.classList.add('fake');document.documentElement.classList.add('vfake');fsLabel();});}catch(e){wrap.classList.add('fake');document.documentElement.classList.add('vfake');}}
+      else{wrap.classList.add('fake');document.documentElement.classList.add('vfake');}
+      fsLabel();if(window.csTrack)csTrack('video-fullscreen',{lesson:slug});
+    };
+    document.addEventListener('fullscreenchange',fsLabel);document.addEventListener('webkitfullscreenchange',fsLabel);
     var ccOn=false,ccB=ctl.querySelector('[data-v=cc]');
     ccB.onclick=function(){if(!player)return;ccOn=!ccOn;try{if(ccOn){player.loadModule('captions');player.setOption('captions','track',{languageCode:'en'});}else player.unloadModule('captions');}catch(e){}
       ccB.textContent='💬 Subtitles: '+(ccOn?'on':'off');ccB.setAttribute('aria-pressed',ccOn?'true':'false');if(window.csTrack)csTrack('subtitles',{on:ccOn});};
@@ -236,7 +248,11 @@ window.CSOrder=(function(){
     draw();
   }
   summary();
+  // opened from "Set our school's order" links
+  if(/[?&]setorder=1/.test(location.search)&&!CSOrder.custom()){editor();setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'start'});},200);}
 })();
+/* home page: hide the "set your school's order" link once an order is set */
+(function(){var h=document.getElementById('heroOrder');if(h&&window.CSOrder&&CSOrder.custom())h.hidden=true;})();
 
 /* ---------- Whose progress? A small switch in the header when a family has 2 or more children ---------- */
 (function(){
