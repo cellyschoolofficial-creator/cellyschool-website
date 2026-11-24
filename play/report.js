@@ -17,9 +17,25 @@
   if (!ss(K + '_title') && h1 && !/[?]room=/.test(location.search)) ss(K + '_title', h1.textContent.trim());
 
   // count "say it again" and remember when play started (rooms reload the page)
+  // time in each room and "say it again" per room (kept for the session, rooms reload the page)
+  function roomLog() { try { return JSON.parse(ss(K + '_rooms') || '{}'); } catch (e) { return {}; } }
+  var curRoom = null, roomT0 = Date.now();
+  setInterval(function () {
+    if (typeof S === 'undefined' || !S.started) return;
+    var r = +S.room || 0;
+    if (curRoom === null) { curRoom = r; roomT0 = Date.now(); return; }
+    var lg = roomLog(), k = String(curRoom); lg[k] = lg[k] || {s: 0, a: 0};
+    lg[k].s += (Date.now() - roomT0) / 1000; roomT0 = Date.now(); ss(K + '_rooms', JSON.stringify(lg));
+    curRoom = r;
+  }, 2000);
   document.addEventListener('click', function (e) {
     var t = e.target.closest && e.target.closest('button'); if (!t) return;
-    if (t.id === 'again') ss(K + '_again', String(+(ss(K + '_again') || 0) + 1));
+    if (t.id === 'again') {
+      ss(K + '_again', String(+(ss(K + '_again') || 0) + 1));
+      var lg = roomLog(), k = String((typeof S !== 'undefined' && +S.room) || 0); lg[k] = lg[k] || {s: 0, a: 0}; lg[k].a++; ss(K + '_rooms', JSON.stringify(lg));
+    }
+    if (t.id === 'muteBtn') ss(K + '_muted', '1');
+    if (t.id === 'modeTap' || t.id === 'modeTalk') ss(K + '_modeSwitch', String(+(ss(K + '_modeSwitch') || 0) + 1));
     if (t.id === 'go' && !ss(K + '_t0')) ss(K + '_t0', String(Date.now()));
   }, true);
 
@@ -165,6 +181,24 @@
     if (f) who(d, f); else setup(d);
   }
 
+  /* ---------- what we learn about how the game is used (no names, nothing typed) ---------- */
+  function meta() {
+    var ua = navigator.userAgent || '', w = screen.width || 0, h = screen.height || 0;
+    var device = /iPad|Tablet/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua)) ? 'tablet' : /Mobi|iPhone|Android/i.test(ua) ? 'phone' : 'computer';
+    var browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /SamsungBrowser/.test(ua) ? 'Samsung' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'other';
+    var os = /Windows/.test(ua) ? 'Windows' : /iPhone|iPad|iPod/.test(ua) ? 'iOS' : /Mac OS X/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /CrOS/.test(ua) ? 'ChromeOS' : /Linux/.test(ua) ? 'Linux' : 'other';
+    var ref = ''; try { ref = document.referrer ? new URL(document.referrer).hostname : ''; } catch (e) {}
+    var q = new URLSearchParams(location.search), lg = roomLog(), names = (typeof TRAIL !== 'undefined' && TRAIL) || [];
+    var rooms = Object.keys(lg).map(function (k) { return {room: +k, name: names[+k] || ('Room ' + k), secs: Math.round(lg[k].s), again: lg[k].a}; });
+    var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    var ver = ((document.querySelector('script[src*="app.js"]') || {}).getAttribute || function () { return ''; }).call(document.querySelector('script[src*="app.js"]'), 'src') || '';
+    return {device: device, browser: browser, os: os, screen: w + 'x' + h, lang: navigator.language || '', tz: tz,
+      from: q.get('utm_source') || ss('cs_from') || ref, rooms: rooms, muted: !!(typeof S !== 'undefined' && S.mute) || !!ss(K + '_muted'),
+      modeSwitches: +(ss(K + '_modeSwitch') || 0), speech: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
+      version: (ver.split('?')[1] || '').replace('v=', 'v'), family: window.CSFamily && window.CSFamily.get() ? (window.CSFamily.get().kids || []).length : 0};
+  }
+  try { if (!ss('cs_from')) ss('cs_from', new URLSearchParams(location.search).get('utm_source') || (document.referrer ? new URL(document.referrer).hostname : 'direct')); } catch (e) {}
+
   /* ---------- send at the certificate ---------- */
   function send(cert) {
     if (RECAP || ss(K + '_choice') !== 'yes' || ss(K + '_sent')) return;
@@ -179,6 +213,7 @@
       mode: (typeof S !== 'undefined' && S.mode) || 'tap',
       sayAgain: +(ss(K + '_again') || 0),
       video: (GUIDES[GAME] || {}).video || '',
+      meta: meta(),
       results: results.map(function (r) {
         var p = place(r);
         return {act: r.act, item: r.item, first: r.first, said: r.said, room: p.room, roomName: p.roomName, t: p.t, tEnd: p.tEnd, chap: p.chap};
