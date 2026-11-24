@@ -24,8 +24,11 @@
     if (typeof S === 'undefined' || !S.started) return;
     var r = +S.room || 0;
     if (curRoom === null) { curRoom = r; roomT0 = Date.now(); return; }
+    // count only time the game is on screen, so a tab left open does not add an hour
+    var dt = Math.min(10000, Date.now() - roomT0); roomT0 = Date.now();
+    if (document.visibilityState === 'hidden') { curRoom = r; return; }
     var lg = roomLog(), k = String(curRoom); lg[k] = lg[k] || {s: 0, a: 0};
-    lg[k].s += (Date.now() - roomT0) / 1000; roomT0 = Date.now(); ss(K + '_rooms', JSON.stringify(lg));
+    lg[k].s += dt / 1000; ss(K + '_rooms', JSON.stringify(lg));
     curRoom = r;
   }, 2000);
   document.addEventListener('click', function (e) {
@@ -36,7 +39,11 @@
     }
     if (t.id === 'muteBtn') ss(K + '_muted', '1');
     if (t.id === 'modeTap' || t.id === 'modeTalk') ss(K + '_modeSwitch', String(+(ss(K + '_modeSwitch') || 0) + 1));
-    if (t.id === 'go' && !ss(K + '_t0')) ss(K + '_t0', String(Date.now()));
+    if (t.id === 'go') {
+      // a fresh attempt (nothing answered yet): start the clock and the room times again
+      var fresh = !(typeof S !== 'undefined' && S.results && S.results.length);
+      if (fresh || !ss(K + '_t0')) { ss(K + '_t0', String(Date.now())); ss(K + '_rooms', '{}'); ss(K + '_again', '0'); ss(K + '_sent', ''); curRoom = null; }
+    }
   }, true);
 
 
@@ -205,11 +212,20 @@
     var results = []; try { results = (typeof S !== 'undefined' && S.results) || JSON.parse(ss('cs' + GAME.toLowerCase() + '_res') || '[]'); } catch (e) {}
     if (!results.length) return;
     ss(K + '_sent', '1');
-    var t0 = +(ss(K + '_t0') || 0);
+    var t0 = +(ss(K + '_t0') || 0), lg = roomLog(), act = 0;
+    Object.keys(lg).forEach(function (k) { act += lg[k].s || 0; });
+    // every room of the game (not the brain break or the certificate): played, or skipped
+    var names = (typeof TRAIL !== 'undefined' && TRAIL) || [], trail = [];
+    names.slice(0, -1).forEach(function (n, i) {
+      if (/brain break/i.test(n)) return;
+      var secs = lg[String(i)] ? lg[String(i)].s : 0;
+      trail.push({room: i, name: n, played: secs >= 20 || results.some(function (r) { return place(r).room === i; })});
+    });
     var body = {
       email: ss(K + '_email'), child: ss(K + '_child') || '', parent: true, hp: ss(K + '_hp') || '', game: GAME,
       title: ss(K + '_title') || 'Talk to Celly', topic: topic,
-      minutes: t0 ? (Date.now() - t0) / 60000 : 0,
+      minutes: act ? act / 60 : t0 ? Math.min(90, (Date.now() - t0) / 60000) : 0,
+      trail: trail,
       mode: (typeof S !== 'undefined' && S.mode) || 'tap',
       sayAgain: +(ss(K + '_again') || 0),
       video: (GUIDES[GAME] || {}).video || '',
