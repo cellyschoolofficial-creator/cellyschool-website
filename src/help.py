@@ -105,7 +105,7 @@ GUIDES = [
      'Physics, chemistry and biology for all 12 Year 7 units, in the Exploring Science topic order.']),
    ('Using and sharing', [
      'All lessons and workbooks are free for home and classroom use. Please share links rather than re-uploading the files.',
-     'The full course, with progress tracking, is free on our course platform.']),
+     'Progress is saved for each child, and you can set your school’s order of units on the Year 7 page.']),
   ],
   'try': ['7ea', '7ja', '7ka'],
   'faq': [
@@ -159,7 +159,7 @@ def build_help(page, E, SITE, L):
         if tries:
             b.append('<div class="card"><h2 style="margin-top:0">Try it with a free lesson</h2><ul>' +
                      ''.join(f'<li><a href="/{d["slug"]}">{d["code"]} {E(d["title"])}</a> (video, key words and <a href="/{d["slug"]}-workbook">free workbook</a>)</li>' for d in tries) +
-                     '</ul><p><a class="btn" href="/course">Take the full course (free)</a></p></div>')
+                     '</ul><p><a class="btn" href="/year-7">See all Year 7 lessons</a></p></div>')
         b.append('<section id="faq"><h2>Questions parents ask</h2>' + ''.join(
             f'<details class="q"><summary>{E(q)}</summary><p class="a">{E(a)}</p></details>' for q, a in g['faq']) + '</section>')
         b.append('<p style="margin-top:28px"><a href="/help">← All guides for grown-ups</a></p>'

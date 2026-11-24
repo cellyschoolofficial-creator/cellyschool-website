@@ -232,7 +232,6 @@ def build_lesson(d, prev, nxt):
         b.append('</section>')
     b.append(f'<section id="workbook"><h2>Free printable workbook</h2><p>Practise at home with the free {d["code"]} workbook: picture activities, word games with syllable taps, test-style questions and answers. Each part has a QR code that takes you straight back to the right part of the video.</p>'
              f'<p><a class="btn primary" href="/{d["slug"]}-workbook">{ICON_DL} Get the {d["code"]} workbook</a></p></section>')
-    b.append(f'<section class="course-cta"><h2>Follow the whole course, in order</h2><p>All Year 7 lessons in one place, in the Exploring Science order, with every workbook and your progress saved. Free.</p><p><a class="btn" href="{COURSE_URL}">Take the full course (free)</a></p></section>')
     # pager
     pg = '<nav class="pager" aria-label="Lessons">'
     if prev: pg += f'<a class="card" href="/{prev["slug"]}"><span class="dir">← Previous lesson</span><strong>{prev["code"]} {E(prev["title"])}</strong></a>'
@@ -319,7 +318,7 @@ def build_year7():
         cards = ''.join(f'<a class="card" href="/year-7/{u["code"].lower()}"><span class="chip {sj}">{u["code"]}</span><h3 style="margin-top:.5em">{E(u["name"])}</h3><p class="muted">{E(UNIT_BLURB[u["code"]])}</p></a>' for u in UNITS if u['subject'] == sj)
         secs_.append(f'<section class="subj {sj}"><div class="subj-head"><img src="/img/{hero}.png" alt="{heroname}" width="64" height="56"><h2>{subj} <span class="small">with {heroname}</span></h2></div><div class="grid">{cards}</div></section>')
     body = f'''<div class="wrap"><h1 style="margin-top:36px">Year 7 Science</h1>
-<p class="lead">A free online Year 7 science course in the Exploring Science order: all 12 units, 60 video lessons, and a free printable workbook with answers for every lesson. Prefer everything in one place with progress saved? <a href="/course">Take the full course (free)</a>.</p>
+<p class="lead">A free online Year 7 science course in the Exploring Science order: all 12 units, 60 video lessons, and a free printable workbook with answers for every lesson. Your child’s progress is saved as they go, and you can set your school’s order of units below.</p>
 {carry_on_box()}
 <section id="schoolOrder" class="school-order" aria-labelledby="soH"><h2 id="soH">Your school's order</h2>
 <p>Schools often teach the units in a different order from the book. Set your school's order once, and every “Next” button on this site will follow it. It is saved on this device.</p>
@@ -363,7 +362,7 @@ def build_home():
 {carry_on_box()}
 <div class="btns"><a class="btn primary big" id="heroGo" href="/7aa">▶ Start with lesson 7Aa</a><a class="btn" href="/play">🎮 Play a Celly game</a></div>
 <p class="hero-order" id="heroOrder">🏫 Grown-ups: does your school teach a different order? <a href="/year-7?setorder=1#schoolOrder">Set it here</a></p>
-<p class="hero-more"><a href="/year-7">All Year 7 lessons</a> · <a href="/workbooks">Free workbooks</a> · <a href="{COURSE_URL}">Full course (free)</a></p></div>
+<p class="hero-more"><a href="/year-7">All Year 7 lessons</a> · <a href="/workbooks">Free workbooks</a></p></div>
 <div class="heroes" aria-hidden="true"><img class="h1" src="/img/celly.png" alt=""><img class="h2" src="/img/atomy.png" alt=""><img class="h3" src="/img/volty.png" alt=""></div>
 </div></section>
 <div class="wrap">
@@ -433,8 +432,8 @@ def build_static_pages():
 <li><strong>Pause and recall.</strong> Questions with thinking time, thumbs up or thumbs down, and a quiz at the end.</li>
 <li><strong>A friendly mistake-maker.</strong> Bolt the robot gets things wrong, so children practise spotting and fixing mistakes.</li>
 <li><strong>Free workbooks.</strong> Printable practice for home, with answers and QR codes back to the video.</li></ul>
-<h2>The full course, in order</h2>
-<p>Prefer one place with everything in order? The free Celly School course has every Year 7 lesson, every workbook, and saves your child\'s progress. <a href="{COURSE_URL}">Take the full course (free)</a>.</p>
+<h2>Everything in one place, in order</h2>
+<p>Every Year 7 lesson, workbook and Talk to Celly game is here on www.cellyschool.com. Progress is saved for each child, “Carry on” takes them to the next step, and you can set your school’s order of units on the <a href="/year-7">Year 7 page</a>.</p>
 <h2>Guides for grown-ups</h2>
 <p>Short guides on <a href="/help/dyslexia-year-7-science">helping a dyslexic child with Year 7 science at home</a>, <a href="/help/remember-science-words">remembering long science words</a>, <a href="/help/orton-gillingham-science">multisensory teaching</a> and <a href="/help/for-sencos">resources for SENCOs</a>. <a href="/help">All guides</a>.</p>
 <h2>Using the lessons at home</h2>
@@ -463,7 +462,8 @@ def build_static_pages():
 <div class="btns" style="justify-content:center"><a class="btn primary" href="/year-7">Year 7 Science</a><a class="btn" href="/workbooks">Free workbooks</a></div></div>'''
     page('404.html', 'Page not found | Celly School', 'This page could not be found.', nf)
     # old Google Sites address /home -> /
-    open(os.path.join(OUT, 'course.html'), 'w').write(f'<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Celly School course</title><meta http-equiv="refresh" content="0; url={THINKIFIC_URL}"><script>try{{window.umami&&umami.track("course-redirect")}}catch(e){{}};location.replace("{THINKIFIC_URL}")</script><p style="font-family:sans-serif">Opening the Celly School course… <a href="{THINKIFIC_URL}">Continue</a></p>')
+    # old /course links and QR codes now open the Year 7 course on this site
+    open(os.path.join(OUT, 'course.html'), 'w').write('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Celly School Year 7 course</title><link rel="canonical" href="' + SITE + '/year-7"><meta http-equiv="refresh" content="0; url=/year-7"><script>location.replace("/year-7")</script><p style="font-family:sans-serif">Opening the Year 7 course… <a href="/year-7">Continue</a></p>')
     open(os.path.join(OUT, 'home.html'), 'w').write(f'<!doctype html><meta charset="utf-8"><title>Celly School</title><link rel="canonical" href="{SITE}/"><meta http-equiv="refresh" content="0; url=/"><a href="/">Celly School</a>')
 
 
