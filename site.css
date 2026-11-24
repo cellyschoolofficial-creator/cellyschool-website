@@ -243,8 +243,12 @@ html.vfake{overflow:hidden}
 .su-n{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;margin-right:8px}
 .su-tag{display:inline-block;margin-left:6px;padding:.1em .6em;border-radius:999px;background:var(--sun);font-weight:700;font-size:.85rem}
 .school-units .card.su-now{border-color:var(--ink);box-shadow:0 0 0 3px var(--sun)}
-.school-units .su-biology{border-top:6px solid var(--bio)}
-.school-units .su-chemistry{border-top:6px solid var(--chem)}
-.school-units .su-physics{border-top:6px solid var(--phys)}
+.school-units .su-biology{background:var(--bio-p);border-color:var(--bio-m);border-top:6px solid var(--bio)}
+.school-units .su-chemistry{background:var(--chem-p);border-color:var(--chem-m);border-top:6px solid var(--chem)}
+.school-units .su-physics{background:var(--phys-p);border-color:var(--phys-m);border-top:6px solid var(--phys)}
 .by-subject{margin:26px 0}
 .by-subject>summary{cursor:pointer;font-weight:700;font-size:1.1em;padding:.6em 0;min-height:44px}
+.su-subj{display:flex;align-items:center;gap:6px;margin:8px 0 0;font-size:.85rem;font-weight:600}
+.su-subj img{width:26px;height:auto}
+.su-biology .su-subj{color:var(--bio)}.su-chemistry .su-subj{color:var(--chem)}.su-physics .su-subj{color:var(--phys)}
+.school-units .card.su-now{box-shadow:0 0 0 4px var(--sun)}

@@ -266,6 +266,8 @@ window.CSOrder=(function(){
   var g=sec.querySelector('.grid');
   CSOrder.units().forEach(function(u,i){var c=cards[u];if(!c)return;var a=c.a.cloneNode(true);a.classList.add('su-'+c.cls);
     var n=document.createElement('span');n.className='su-n';n.textContent=String(i+1);a.insertBefore(n,a.firstChild);
+    var who={biology:['Biology','celly','Celly'],chemistry:['Chemistry','atomy','Atomy'],physics:['Physics','volty','Volty']}[c.cls];
+    if(who){var sj=document.createElement('p');sj.className='su-subj';sj.innerHTML='<img src="'+BASE+'/img/'+who[1]+'.png" alt="">'+who[0]+' with '+who[2];a.appendChild(sj);}
     if(u===now){a.classList.add('su-now');var t=document.createElement('span');t.className='su-tag';t.textContent='Now';a.insertBefore(t,n.nextSibling);}
     g.appendChild(a);});
   box.parentNode.insertBefore(sec,box.nextSibling);
