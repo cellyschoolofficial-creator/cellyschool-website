@@ -91,7 +91,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 <meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{canonical}"><meta property="og:image" content="{SITE}/img/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/img/favicon.png" type="image/png">
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/img/icon-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="preload" href="/fonts/lexend-regular.woff" as="font" type="font/woff" crossorigin>
 <link rel="stylesheet" href="/site.css?v=3">
 {extra_head}{ld}
@@ -354,7 +354,7 @@ def build_home():
     ld = [{'@context': 'https://schema.org', '@type': 'EducationalOrganization', 'name': 'Celly School', 'url': SITE,
            'logo': SITE + '/img/favicon.png', 'sameAs': [YT], 'email': EMAIL,
            'description': 'Free dyslexia-friendly KS3 science lessons and printable workbooks.'},
-          {'@context': 'https://schema.org', '@type': 'WebSite', 'name': 'Celly School', 'url': SITE}]
+          {'@context': 'https://schema.org', '@type': 'WebSite', 'name': 'Celly School', 'alternateName': ['CellySchool', 'Celly School science'], 'url': SITE + '/'}]
     page('index.html', 'Celly School | Free dyslexia-friendly Year 7 science course, videos and workbooks',
          'A free online Year 7 science course for children with dyslexia, in the Exploring Science order: video lessons in short parts, syllable taps, memory tricks and free printable workbooks with answers.', body, '', jsonld=ld)
 
