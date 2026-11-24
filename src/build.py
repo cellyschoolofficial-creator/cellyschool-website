@@ -182,8 +182,10 @@ def build_lesson(d, prev, nxt):
     b.append(f'<div class="video"{vattr}><div class="soon"><img src="/img/{hero}.png" alt=""><p>The video for this lesson goes live on<br><strong class="when">{nice_date(d)}, 6 pm (Qatar)</strong>.<br>The free workbook is ready now.</p></div></div>')
     if d['age_restricted']:
         b.append('<p class="note warn">Unit 7B covers human reproduction. On YouTube these videos are age-restricted, so they open on YouTube. Please watch together with a parent or teacher.</p>')
+    game_btn = f'<a class="btn" href="/play/{d["slug"]}/">🎮 Play the Talk to Celly game</a>' if d["slug"] in [g[0] for g in GAMES] else ''
     b.append('<div class="btns">'
              f'<a class="btn primary" href="/{d["slug"]}-workbook">{ICON_DL} Free workbook (PDF)</a>'
+             + game_btn +
              f'<a class="btn yt-link" href="https://www.youtube.com/watch?v={d["video"]}" rel="noopener" hidden>{ICON_YT} Watch on YouTube</a>'
              '</div>')
     # chapters
@@ -357,13 +359,33 @@ def build_home():
          'A free online Year 7 science course for children with dyslexia, in the Exploring Science order: video lessons in short parts, syllable taps, memory tricks and free printable workbooks with answers.', body, '', jsonld=ld)
 
 
+GAMES = [
+    ('7aa', '7Aa', 'Life processes', "Dr Celly's Clinic", 'A robot called Bolt thinks he is alive. Help Dr Celly find out, using MRS GREN.'),
+    ('7ab', '7Ab', 'Organs', 'The Body Town Tour', 'Every organ is a building in Body Town, and Celly is your tour guide.'),
+    ('7ac', '7Ac', 'Tissues', 'The Tissue Lab', 'Celly is a pathologist today. A box of samples has arrived… and something else!'),
+    ('7ad', '7Ad', 'Cells', "Celly's Cell Museum", 'A big sneeze has scattered Celly’s parts. Find them, room by room.'),
+    ('7ae', '7Ae', 'Organ systems', 'Body Town Grand Opening', 'Snooze the sleepy dog has muddled every signpost. Be Celly’s Chief Engineer.'),
+]
+
+
 def build_play():
-    body = f'''<div class="wrap"><h1 style="margin-top:36px">Talk to Celly <span class="chip">Coming soon</span></h1>
-<p class="lead">Interactive science games are on their way. In each game Celly talks to you, listens to your answers and helps you say, tap and remember the key words.</p>
-<p>We are getting them ready now. Until then, every lesson has a video in short parts, a quick quiz and a free printable workbook.</p>
-<div class="btns"><a class="btn primary" href="/year-7">Go to the lessons</a><a class="btn" href="/workbooks">{ICON_DL} Free workbooks</a></div></div>'''
-    page('play.html', 'Talk to Celly: interactive science games (coming soon) | Celly School',
-         'Interactive, dyslexia-friendly Year 7 science games where Celly talks and listens are coming soon to Celly School.', body, 'pl')
+    cards = ''.join(f'''<a class="card game" href="/play/{g}/"><span class="chip bio">{code} · {E(topic)}</span>
+<h2 style="margin:.4em 0 .2em">{E(name)}</h2><p>{E(blurb)}</p><p class="muted">About 15 minutes · talk or tap</p><span class="btn primary">▶ Play</span></a>''' for g, code, topic, name, blurb in GAMES)
+    body = f'''<div class="wrap"><h1 style="margin-top:36px">Talk to Celly</h1>
+<p class="lead">Science games where Celly talks to you, listens to your answers and helps you say, tap and remember the key words. Each game goes with one lesson video.</p>
+<p class="note"><b>Free while we test them.</b> Works best in Chrome or Edge. When the browser asks for the microphone, choose “Allow”. You can also play by tapping only. A grown-up can get a short report by email at the end.</p>
+<h2>Unit 7A · Cells, tissues, organs and systems</h2>
+<div class="games">{cards}</div>
+<p class="muted" style="margin-top:24px">More games are on the way, starting with 7C Muscles and bones.</p></div>
+<style>.games{{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:12px}}
+.card.game{{display:block;text-decoration:none;color:inherit;border:3px solid var(--line,#2B3A67);border-radius:20px;padding:16px 18px;background:#FFFDF6}}
+.card.game:hover{{transform:translateY(-2px)}}.card.game .btn{{margin-top:6px}}</style>'''
+    page('play.html', 'Talk to Celly: free interactive Year 7 science games | Celly School',
+         'Free dyslexia-friendly Year 7 science games where Celly talks, listens and helps children say, tap and remember key words. Five games for unit 7A.', body, 'pl')
+    # /play and /play/ both open this page (the games live in /play/<code>/)
+    import shutil
+    os.makedirs(os.path.join(OUT, 'play'), exist_ok=True)
+    shutil.copy(os.path.join(OUT, 'play.html'), os.path.join(OUT, 'play', 'index.html'))
 
 
 def build_static_pages():
@@ -412,7 +434,7 @@ def build_static_pages():
 
 
 def build_meta():
-    urls = ['', 'year-7', 'play', 'workbooks', 'about', 'privacy'] + HELP_URLS + [f'year-7/{u["code"].lower()}' for u in UNITS]
+    urls = ['', 'year-7', 'play', 'workbooks', 'about', 'privacy'] + [f'play/{g[0]}/' for g in GAMES] + HELP_URLS + [f'year-7/{u["code"].lower()}' for u in UNITS]
     for d in L: urls += [d['slug'], d['slug'] + '-workbook']
     today = NOW.strftime('%Y-%m-%d')
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(
