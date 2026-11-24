@@ -115,7 +115,7 @@
     var E = d.querySelector('#guE'), P = d.querySelector('#guP'), err = d.querySelector('#guErr');
     E.value = saved; if (saved) P.checked = true;
     setTimeout(function () { (saved ? d.querySelector('#guYes') : E).focus(); }, 50);
-    function close(choice) { d.remove(); ss(K + '_choice', choice); var go = document.getElementById('go'); if (go) go.focus(); }
+    function close(choice) { d.remove(); ss(K + '_choice', choice); var go = document.getElementById('go'); if (go) go.focus(); try { window.dispatchEvent(new Event('cs-grownup-done')); } catch (e) {} }
     d.querySelector('#guYes').onclick = function () {
       var v = E.value.trim();
       if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) { err.textContent = 'Please check the email address.'; E.focus(); return; }
