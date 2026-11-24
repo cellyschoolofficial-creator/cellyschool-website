@@ -109,7 +109,7 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
       '<p>Watch this part carefully. It is about ' + mins(s.c) + ' minute' + (mins(s.c) > 1 ? 's' : '') + '.</p>' +
       '<div class="video"><div id="yt"></div><div class="shield" id="shield" aria-hidden="true"></div>' +
       '<div class="vcover" id="cover"><img src="/img/celly.png" alt=""><p id="coverTxt">Ready?</p><button class="btn go" id="coverBtn">▶ Play</button></div></div>' +
-      '<div class="vctl"><button class="btn" id="pp">⏸ Pause</button><button class="btn" id="back10">⏪ Back 10 seconds</button><span class="vt" id="vt"></span></div>' +
+      '<div class="vctl"><button class="btn" id="pp">⏸ Pause</button><button class="btn" id="back10">⏪ Back 10 seconds</button><button class="btn" id="cc" aria-pressed="false">💬 Subtitles: off</button><span class="vt" id="vt"></span></div>' +
       '<div class="row"><button class="btn" id="again">🔁 Watch it again</button><button class="btn go" id="next">Next ▶</button></div>';
     var cover = document.getElementById('cover'), coverTxt = document.getElementById('coverTxt'), coverBtn = document.getElementById('coverBtn'),
         pp = document.getElementById('pp'), vt = document.getElementById('vt'), ended = false, tick = null;
@@ -121,13 +121,18 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
     document.getElementById('shield').onclick = function () { pause(); };
     coverBtn.onclick = function () { play(); };
     pp.onclick = function () { if (player && player.getPlayerState && player.getPlayerState() === 1) pause(); else play(); };
+    var ccOn = false, ccB = document.getElementById('cc');
+    ccB.onclick = function () { if (!player) return; ccOn = !ccOn;
+      try { if (ccOn) { player.loadModule('captions'); player.setOption('captions', 'track', {languageCode: 'en'}); } else player.unloadModule('captions'); } catch (e) {}
+      ccB.textContent = '💬 Subtitles: ' + (ccOn ? 'on' : 'off'); ccB.setAttribute('aria-pressed', ccOn ? 'true' : 'false'); };
     document.getElementById('back10').onclick = function () { if (player && player.getCurrentTime) { player.seekTo(Math.max(s.c[0], player.getCurrentTime() - 10), true); play(); } };
     document.getElementById('again').onclick = function () { if (player && player.seekTo) { ended = false; player.seekTo(s.c[0], true); player.playVideo(); } };
     api().then(function () {
       player = new YT.Player('yt', {host: 'https://www.youtube-nocookie.com', videoId: P.v,
-        playerVars: {start: s.c[0], end: s.c[1], rel: 0, modestbranding: 1, playsinline: 1, autoplay: 1, cc_load_policy: 1,
+        playerVars: {start: s.c[0], end: s.c[1], rel: 0, modestbranding: 1, playsinline: 1, autoplay: 1, cc_load_policy: 0,
           controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3},
         events: {onStateChange: function (e) {
+          if (e.data === 1 && !ccOn) { try { player.unloadModule('captions'); } catch (x) {} }
           if (e.data === 1) { cover.hidden = true; pp.textContent = '⏸ Pause'; }
           else if (e.data === 2) { cov('Paused', '▶ Carry on watching'); pp.textContent = '▶ Play'; }
           else if (e.data === 0) { ended = true; cov('✓ Well done! That part is finished.', '🔁 Watch it again'); pp.textContent = '▶ Play';

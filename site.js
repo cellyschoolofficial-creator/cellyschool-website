@@ -66,7 +66,7 @@ window.CSOrder=(function(){
     box.innerHTML='<div id="ytPlayer"></div><div class="vshield" aria-hidden="true"></div>'+
       '<div class="vcover"><img src="/img/celly.png" alt=""><p class="vcover-t">Ready?</p><button type="button" class="btn primary vcover-b">▶ Play</button></div>';
     var ctl=document.createElement('div');ctl.className='vctl';
-    ctl.innerHTML='<button type="button" class="btn" data-v="pp">⏸ Pause</button><button type="button" class="btn" data-v="back">⏪ Back 10 seconds</button><span class="vt"></span>';
+    ctl.innerHTML='<button type="button" class="btn" data-v="pp">⏸ Pause</button><button type="button" class="btn" data-v="back">⏪ Back 10 seconds</button><button type="button" class="btn" data-v="cc" aria-pressed="false">💬 Subtitles: off</button><span class="vt"></span>';
     box.parentNode.insertBefore(ctl,box.nextSibling);
     var cover=box.querySelector('.vcover'),ct=box.querySelector('.vcover-t'),cb=box.querySelector('.vcover-b'),pp=ctl.querySelector('[data-v=pp]'),vt=ctl.querySelector('.vt');
     function fmt(x){x=Math.max(0,Math.round(x));return Math.floor(x/60)+':'+('0'+(x%60)).slice(-2);}
@@ -75,14 +75,18 @@ window.CSOrder=(function(){
     box.querySelector('.vshield').onclick=pause;
     cb.onclick=function(){if(player&&player.getPlayerState&&player.getPlayerState()===0)player.seekTo(0,true);play();};
     pp.onclick=function(){if(player&&player.getPlayerState&&player.getPlayerState()===1)pause();else play();};
+    var ccOn=false,ccB=ctl.querySelector('[data-v=cc]');
+    ccB.onclick=function(){if(!player)return;ccOn=!ccOn;try{if(ccOn){player.loadModule('captions');player.setOption('captions','track',{languageCode:'en'});}else player.unloadModule('captions');}catch(e){}
+      ccB.textContent='💬 Subtitles: '+(ccOn?'on':'off');ccB.setAttribute('aria-pressed',ccOn?'true':'false');if(window.csTrack)csTrack('subtitles',{on:ccOn});};
     ctl.querySelector('[data-v=back]').onclick=function(){if(player&&player.getCurrentTime){player.seekTo(Math.max(0,player.getCurrentTime()-10),true);play();}};
     function make(){
       var secs=0,dur=0,last=0,timer=null;
       player=new YT.Player('ytPlayer',{videoId:vid,host:'https://www.youtube-nocookie.com',
-        playerVars:{autoplay:1,start:startAt,rel:0,modestbranding:1,playsinline:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,cc_load_policy:1},
+        playerVars:{autoplay:1,start:startAt,rel:0,modestbranding:1,playsinline:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,cc_load_policy:0},
         events:{onReady:function(e){try{e.target.playVideo();}catch(x){}},
           onStateChange:function(e){
             clearInterval(timer);
+            if(e.data===1&&!ccOn){try{player.unloadModule('captions');}catch(x){}}
             if(e.data===1){cover.hidden=true;pp.textContent='⏸ Pause';last=Date.now();timer=setInterval(function(){
               var now=Date.now();secs+=Math.min(5,(now-last)/1000);last=now;
               try{dur=player.getDuration()||dur;}catch(x){}
