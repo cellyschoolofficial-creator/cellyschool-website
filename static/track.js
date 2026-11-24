@@ -61,12 +61,11 @@
     (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
       t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;
       y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,'clarity','script',CL);
-    window.clarity('consent');
   }
   function loadPostHog(){
     if(!PH||window.posthog&&window.posthog.__loaded)return;
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled getFeatureFlag onFeatureFlags getSurveys getActiveMatchingSurveys renderSurvey identify setPersonProperties group".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-    posthog.init(PH,{api_host:'https://eu.i.posthog.com',person_profiles:'identified_only',
+    posthog.init(PH,{api_host:'https://eu.i.posthog.com',person_profiles:'identified_only',persistence:'localStorage',
       capture_pageview:true,capture_pageleave:true,autocapture:true,
       disable_session_recording:true,               // Clarity already does recordings
       mask_all_text:false,mask_all_element_attributes:false,
@@ -76,22 +75,20 @@
     if(!GA||window.gtag)return;
     var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA;document.head.appendChild(s);
     window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};
+    var EEA=['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IS','IE','IT','LV','LI','LT','LU','MT','NL','NO','PL','PT','RO','SK','SI','ES','SE','GB','CH'];
+    gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',region:EEA});
+    gtag('consent','default',{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
     gtag('js',new Date());
     gtag('config',GA,{allow_google_signals:false,allow_ad_personalization_signals:false});
   }
   function loadAll(){loadClarity();loadPostHog();loadGA();}
-  var choice=get();
-  if(choice==='yes'){loadAll();}
-  else if(choice!=='no'){
-    var bar=document.createElement('div');bar.className='consent';bar.setAttribute('role','region');bar.setAttribute('aria-label','Help us improve');
-    bar.innerHTML='<p><strong>For grown-ups:</strong> can we record how this page is used, to make the lessons easier? '+
-      'Microsoft Clarity, PostHog and Google Analytics record clicks, scrolling and how the games are used, with typing hidden. They use cookies. <a href="/privacy">More</a></p>'+
-      '<div class="consent-btns"><button type="button" class="btn primary" data-c="yes">Yes, that\'s fine</button><button type="button" class="btn" data-c="no">No thanks</button></div>';
-    bar.addEventListener('click',function(e){var v=e.target.getAttribute&&e.target.getAttribute('data-c');if(!v)return;
-      put(v);bar.remove();csTrack('consent-'+v,{page:page});if(v==='yes')loadAll();});
-    document.body.appendChild(bar);
-  }
-  // Let people change their mind from the privacy page
-  document.querySelectorAll('[data-consent-reset]').forEach(function(b){b.hidden=false;b.addEventListener('click',function(){
-    try{localStorage.removeItem(KEY)}catch(e){}; if(window.clarity){try{clarity('consent',false)}catch(e){}} if(window.posthog&&posthog.opt_out_capturing){try{posthog.opt_out_capturing()}catch(e){}} location.reload();});});
+  // Testing phase (owner's choice, 24 Nov 2026): no banner, the tools load for every visit.
+  // Clarity stays cookieless for UK/EU visitors (no consent signal is sent); Google Analytics keeps
+  // cookies off in the UK/EU (consent mode default 'denied' there, modelled data only).
+  if(get()!=='no') loadAll();
+  // Opt-out button on the privacy page: stops the three tools on this device
+  document.querySelectorAll('[data-consent-reset]').forEach(function(b){b.hidden=false;
+    b.textContent=get()==='no'?'Turn them back on':'Turn them off on this device';
+    b.addEventListener('click',function(){ if(get()==='no'){try{localStorage.removeItem(KEY)}catch(e){}} else {put('no');
+      if(window.posthog&&posthog.opt_out_capturing){try{posthog.opt_out_capturing()}catch(e){}}} location.reload();});});
 })();

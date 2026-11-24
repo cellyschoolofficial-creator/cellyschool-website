@@ -113,7 +113,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=2" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=3" defer></script>
+<script src="/track.js?v=3" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=3" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
@@ -395,12 +395,12 @@ def build_static_pages():
 <li>No advertising cookies on this website.</li>
 <li>The “Easier reading” setting is saved only in your own browser, on your device. It is never sent to us.</li>
 <li>We count which pages are visited and which buttons are used (for example “download the workbook”, “play the video” or “finished a game”) with Umami. Umami uses no cookies and collects no personal information; we only see totals.</li>
-<li>Only if a grown-up presses “Yes” on the message at the bottom of the page, we use three tools to understand how the website and games are used: Microsoft Clarity (clicks, scrolling and where people get stuck), PostHog (which pages and game rooms are used, where people stop, and short optional questions for grown-ups; its data is kept in the EU) and Google Analytics (which websites and searches bring visitors). They use cookies, hide anything typed, and do not record names or contact details. Google Analytics' advertising and Google-signals features are switched off. If nobody presses “Yes”, none of them load. The privacy statements of Microsoft, PostHog and Google apply to their tools. <button type="button" class="btn" data-consent-reset hidden>Change my choice</button></li>
+<li>To make the lessons and games easier to use, we use three tools that look at how the website is used: Microsoft Clarity (clicks, scrolling and where people get stuck), PostHog (which pages and game rooms are used and where people stop; its data is kept in the EU) and Google Analytics (which websites and searches bring visitors). They hide anything typed and do not record names or contact details. Google Analytics' advertising and Google-signals features are switched off, and for visitors in the UK and Europe Clarity and Google Analytics do not set cookies. The privacy statements of Microsoft, PostHog and Google apply to their tools. You can switch these tools off on your device here: <button type="button" class="btn" data-consent-reset hidden>Turn them off on this device</button></li>
 <li>We count visits with Cloudflare Web Analytics. It uses no cookies, does not collect personal information and does not follow you to other websites. It only tells us totals, such as how many people visited a page and which country or website they came from.</li>
 <li>Lesson videos are hosted on YouTube. A video only loads from YouTube (in privacy-enhanced mode, youtube-nocookie.com) when you press play. YouTube's own privacy policy then applies.</li>
 <li>The website is hosted on GitHub Pages, which may keep basic technical logs (such as IP addresses) for security.</li></ul>
 <p>Questions: <a href="mailto:{EMAIL}">{EMAIL}</a></p></div>'''
-    page('privacy.html', 'Privacy | Celly School', 'Celly School collects no personal data: no accounts and no ads. Visits are counted without cookies; visit recordings only with a grown-up\'s permission.', privacy)
+    page('privacy.html', 'Privacy | Celly School', 'Celly School collects no personal data: no accounts and no ads. Visits are counted to improve the lessons; no names or contact details are collected.', privacy)
     nf = '''<div class="wrap narrow center" style="padding:60px 20px"><img src="/img/celly.png" alt="" width="160"><h1>Oops, this page is missing</h1>
 <p style="margin:0 auto 1em">Celly looked everywhere. Try the Year 7 lessons or the free workbooks.</p>
 <div class="btns" style="justify-content:center"><a class="btn primary" href="/year-7">Year 7 Science</a><a class="btn" href="/workbooks">Free workbooks</a></div></div>'''
