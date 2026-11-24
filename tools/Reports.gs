@@ -32,17 +32,12 @@ function doPost(e) {
   try {
     var d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (d.hp) return out_({ok: true});                              // hidden spam trap was filled in
+    if (d.type === 'recap') return recapResult_(d);
     var email = String(d.email || '').trim().toLowerCase();
     if (!/^[^\s@<>()",;]+@[^\s@<>()",;]+\.[a-z]{2,}$/.test(email) || email.length > 120) return out_({ok: false, why: 'email'});
     if (d.parent !== true) return out_({ok: false, why: 'parent'});
     if (!/^7[A-L][a-e]?$/.test(String(d.game || ''))) return out_({ok: false, why: 'game'});
-    var res = (Array.isArray(d.results) ? d.results : []).slice(0, 200).map(function (r) {
-      var t = Math.round(+r.t), te = Math.round(+r.tEnd), rm = Math.round(+r.room);
-      return {act: clip_(r.act, 60), item: clip_(r.item, 70), ok: !!r.first && r.said !== false,
-        wrong: !r.first, unheard: !!r.first && r.said === false,
-        room: rm >= 0 && rm <= 30 ? rm : -1, roomName: clip_(r.roomName, 40),
-        t: t >= 0 && t <= 7200 ? t : -1, tEnd: te > 0 && te <= 7200 ? te : 0, chap: clip_(r.chap, 60)};
-    });
+    var res = parseResults_(d.results);
     if (!res.length) return out_({ok: false, why: 'empty'});
 
     if (!allow_(email)) return out_({ok: false, why: 'limit'});
@@ -61,6 +56,7 @@ function doPost(e) {
     r.total = res.length;
     r.practise = uniq_(res.filter(function (x) { return !x.ok; }).map(function (x) { return x.item; }));
     r.next = NEXT[r.game] || {t: 'the next lesson', u: '/year-7'};
+    r.token = makeToken_(email);
     plan_(r);
 
     var pdf = Utilities.newBlob(reportHtml_(r), 'text/html', 'report.html').getAs('application/pdf')
@@ -78,6 +74,16 @@ function doPost(e) {
     console.error(err);
     return out_({ok: false, why: 'error'});
   }
+}
+
+function parseResults_(a) {
+  return (Array.isArray(a) ? a : []).slice(0, 200).map(function (r) {
+    var t = Math.round(+r.t), te = Math.round(+r.tEnd), rm = Math.round(+r.room);
+    return {act: clip_(r.act, 60), item: clip_(r.item, 70), ok: !!r.first && r.said !== false,
+      wrong: !r.first, unheard: !!r.first && r.said === false,
+      room: rm >= 0 && rm <= 30 ? rm : -1, roomName: clip_(r.roomName, 40),
+      t: t >= 0 && t <= 7200 ? t : -1, tEnd: te > 0 && te <= 7200 ? te : 0, chap: clip_(r.chap, 60)};
+  });
 }
 
 /* ---------- what the results mean, and what to do next ---------- */
@@ -114,19 +120,120 @@ function plan_(r) {
   r.play.forEach(function (p) {
     p.url = SITE + '/play/' + r.game.toLowerCase() + '/' + (p.room > 0 ? '?room=' + p.room : '');
   });
-  // one automatic recap: each weak video part, then the game room that practises it, in game order
-  var steps = [], seen = {};
-  r.results.filter(function (x) { return !x.ok; }).sort(function (a, b) { return a.room - b.room; }).forEach(function (x) {
-    if (x.wrong && x.t >= 0 && r.video && !seen['c' + x.t]) {
-      seen['c' + x.t] = 1; steps.push({c: [x.t, x.tEnd > x.t ? x.tEnd : x.t + 90], n: x.chap || 'the lesson'});
-    }
-    if (x.room >= 0 && !seen['r' + x.room]) { seen['r' + x.room] = 1; steps.push({r: x.room, n: x.roomName || x.act}); }
-  });
-  steps = steps.slice(0, 12);
-  r.recapMins = steps.reduce(function (a, s) { return a + (s.c ? Math.max(1, Math.round((s.c[1] - s.c[0]) / 60)) : 3); }, 0);
-  r.recap = steps.length ? SITE + '/play/recap/?p=' + Utilities.base64EncodeWebSafe(Utilities.newBlob(JSON.stringify(
-    {g: r.game.toLowerCase(), v: r.video, s: steps})).getBytes()).replace(/=+$/, '') : '';
+  // Celly's recap: built per part of the game, weakest first, about 12 minutes at a time
+  var parts = recapParts_(r.results, r.video);
+  r.recapMins = parts.mins1;
+  r.recapParts = parts.p2.length ? 2 : 1;
+  r.recap = parts.p1.length ? recapUrl_({g: r.game.toLowerCase(), v: r.video, s: parts.p1, n2: parts.p2,
+    k: r.token || '', p: 1, of: r.recapParts, t: r.title}) : '';
 }
+
+var RECAP_MINUTES = 12;
+function stepMins_(s) { return s.c ? Math.max(1, Math.round((s.c[1] - s.c[0]) / 60)) : 3; }
+/* A part under half right gets the video part and its room. A part with one slip ("Nearly there") gets
+   the room only. Secure parts are left out. Rooms are grouped, weakest first, and packed into recaps of
+   about 12 minutes: part 1 now, part 2 for the next day. */
+function recapParts_(results, video) {
+  var acts = uniq_(results.map(function (x) { return x.act; })), score = {};
+  acts.forEach(function (a) {
+    var xs = results.filter(function (x) { return x.act === a; });
+    score[a] = xs.filter(function (x) { return x.ok; }).length / xs.length;
+  });
+  var units = {}, order = [];
+  results.forEach(function (x) {
+    if (x.ok || score[x.act] === 1 || x.room < 0) return;
+    var u = units[x.room];
+    if (!u) { u = units[x.room] = {room: x.room, name: x.roomName || x.act, clips: [], score: 1}; order.push(u); }
+    u.score = Math.min(u.score, score[x.act]);
+    if (score[x.act] < 0.5 && x.wrong && x.t >= 0 && video &&
+        !u.clips.some(function (c) { return c.c[0] === x.t; }))
+      u.clips.push({c: [x.t, x.tEnd > x.t ? x.tEnd : x.t + 90], n: x.chap || 'the lesson'});
+  });
+  order.sort(function (a, b) { return a.score - b.score || a.room - b.room; });
+  var p1 = [], p2 = [], m1 = 0, seen = {};
+  order.forEach(function (u) {
+    var steps = u.clips.filter(function (c) { return !seen[c.c[0]]; });
+    steps.forEach(function (c) { seen[c.c[0]] = 1; });
+    steps = steps.concat([{r: u.room, n: u.name}]);
+    var m = steps.reduce(function (a, s) { return a + stepMins_(s); }, 0);
+    if (!p1.length || m1 + m <= RECAP_MINUTES) { p1 = p1.concat(steps); m1 += m; }
+    else if (p2.length < 12) p2 = p2.concat(steps).slice(0, 12);
+  });
+  return {p1: p1, p2: p2, mins1: m1};
+}
+function recapUrl_(o) {
+  return SITE + '/play/recap/?p=' + Utilities.base64EncodeWebSafe(Utilities.newBlob(JSON.stringify(o)).getBytes()).replace(/=+$/, '');
+}
+
+/* ---------- the email travels inside the recap link, scrambled and signed (never stored here) ---------- */
+function secret_() {
+  var props = PropertiesService.getScriptProperties(), k = props.getProperty('LINK_SECRET');
+  if (!k) { k = Utilities.getUuid() + Utilities.getUuid(); props.setProperty('LINK_SECRET', k); }
+  return k;
+}
+function keystream_(id, n) {
+  var out = [], i = 0;
+  while (out.length < n) { out = out.concat(Utilities.computeHmacSha256Signature(id + ':' + i, secret_())); i++; }
+  return out.slice(0, n);
+}
+function makeToken_(email) {
+  var id = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+  var b = Utilities.newBlob(email).getBytes(), ks = keystream_(id, b.length);
+  var enc = Utilities.base64EncodeWebSafe(b.map(function (x, i) { return (x ^ ks[i]) << 24 >> 24; })).replace(/=+$/, '');
+  return id + '.' + enc + '.' + sign_(id + '.' + enc);
+}
+function sign_(s) { return Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(s, secret_())).slice(0, 16); }
+function readToken_(tok) {
+  var m = /^([a-f0-9]{12})\.([A-Za-z0-9_-]{2,200})\.([A-Za-z0-9_-]{16})$/.exec(String(tok || ''));
+  if (!m || sign_(m[1] + '.' + m[2]) !== m[3]) return null;
+  var pad = m[2] + '==='.slice((m[2].length + 3) % 4), b = Utilities.base64DecodeWebSafe(pad), ks = keystream_(m[1], b.length);
+  return {id: m[1], email: Utilities.newBlob(b.map(function (x, i) { return (x ^ ks[i]) << 24 >> 24; })).getDataAsString()};
+}
+
+/* ---------- after a recap: what is secure now, and a short recap 2 for tomorrow ---------- */
+function recapResult_(d) {
+  var t = readToken_(d.k);
+  if (!t) return out_({ok: false, why: 'token'});
+  if (!/^7[A-L][a-e]?$/.test(String(d.game || ''))) return out_({ok: false, why: 'game'});
+  var props = PropertiesService.getScriptProperties(), key = 'rk_' + t.id, n = +(props.getProperty(key) || 0);
+  if (n >= 3) return out_({ok: false, why: 'limit'});
+  props.setProperty(key, String(n + 1));
+  var res = parseResults_(d.results);
+  if (!res.length) return out_({ok: false, why: 'empty'});
+  var video = /^[A-Za-z0-9_-]{11}$/.test(String(d.video || '')) ? String(d.video) : '';
+  var nowOk = uniq_(res.filter(function (x) { return x.ok; }).map(function (x) { return x.item; }));
+  var still = uniq_(res.filter(function (x) { return !x.ok; }).map(function (x) { return x.item; }));
+  // recap 2 = whatever is still weak now, then the rest of the original plan, capped again at about 12 minutes
+  var parts = recapParts_(res, video), steps = parts.p1, seen = {}, mins = parts.mins1;
+  steps.forEach(function (s) { seen[s.c ? 'c' + s.c[0] : 'r' + s.r] = 1; });
+  (Array.isArray(d.n2) ? d.n2 : []).slice(0, 12).forEach(function (s) {
+    var st = s && s.c && s.c.length === 2 ? {c: [Math.round(+s.c[0]) || 0, Math.round(+s.c[1]) || 0], n: clip_(s.n, 60)}
+      : s && s.r >= 0 && s.r <= 30 ? {r: Math.round(+s.r), n: clip_(s.n, 40)} : null;
+    if (!st) return;
+    var k2 = st.c ? 'c' + st.c[0] : 'r' + st.r;
+    if (seen[k2] || mins + stepMins_(st) > RECAP_MINUTES + 3) return;
+    seen[k2] = 1; steps.push(st); mins += stepMins_(st);
+  });
+  var title = clip_(d.title, 80) || 'Talk to Celly', game = d.game;
+  var next = steps.length ? recapUrl_({g: game.toLowerCase(), v: video, s: steps, n2: [], k: d.k, p: 2, of: 2, t: title}) : '';
+  var pp = 'font-family:Verdana,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2A44;margin:0 0 12px';
+  var html = '<div style="max-width:580px;font-family:Verdana,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2A44">' +
+    '<p style="' + pp + '">Hello,</p>' +
+    '<p style="' + pp + '">Your child has just finished <b>Celly’s recap</b> for <b>' + esc_(title) + '</b> (' + esc_(game) + ').</p>' +
+    (nowOk.length ? '<p style="' + pp + '"><b style="color:#4E7A1E">Now secure:</b> ' + esc_(list_(nowOk)) + '. Well done!</p>' : '') +
+    (still.length ? '<p style="' + pp + '"><b style="color:#B5651D">Still tricky:</b> ' + esc_(list_(still)) + '. That is fine. Ideas often click after a night’s sleep.</p>' : '') +
+    (next ? '<p style="margin:14px 0 6px"><a href="' + next + '" style="display:inline-block;background:#2B3A67;color:#ffffff;text-decoration:none;font-weight:bold;font-size:17px;padding:12px 20px;border-radius:12px">▶ Recap 2, for tomorrow (about ' + mins + ' min)</a></p>' +
+      '<p style="' + pp + '">It covers what is still tricky' + (Array.isArray(d.n2) && d.n2.length ? ' and the parts that did not fit in today’s recap' : '') + '. Short and often works best.</p>'
+      : '<p style="' + pp + '"><b>Everything from the report is secure now.</b> Your child is ready for ' + esc_((NEXT[game] || {t: 'the next lesson'}).t) + '.</p>') +
+    '<p style="' + pp + '">Celly School</p>' +
+    '<p style="font-size:12px;line-height:1.5;color:#56607A;margin-top:20px">You got this because a Celly School recap was finished from a report sent to this address. ' +
+    'We don’t keep your email address: it travels inside the recap link in scrambled form. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
+  if (MailApp.getRemainingDailyQuota() < 3) return out_({ok: false, why: 'quota'});
+  MailApp.sendEmail({to: t.email, name: 'Celly School', subject: 'Celly’s recap result: ' + game + ' ' + (still.length ? '(recap 2 ready)' : '(all secure)'), htmlBody: html});
+  try { log_({game: game + ' recap', first: nowOk.length, total: nowOk.length + still.length, minutes: 0, mode: 'recap', sayAgain: 0, practise: still}); } catch (e) {}
+  return out_({ok: true});
+}
+
 function mmss_(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 function list_(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
 function dot_(s) { return /[.!?]$/.test(s) ? s : s + '.'; }
@@ -136,6 +243,7 @@ function planHtml_(r, big) {
   if (r.recap) {
     h += '<p style="margin:14px 0 6px"><a href="' + r.recap + '" style="display:inline-block;background:#2B3A67;color:#ffffff;text-decoration:none;font-weight:bold;' +
       'font-size:' + (big ? '13pt' : '17px') + ';padding:12px 20px;border-radius:12px">▶ Start Celly’s recap (about ' + r.recapMins + ' min)</a></p>' +
+      (r.recapParts > 1 ? '<p style="margin:0 0 6px"><b>This is recap 1 of 2.</b> It starts with the trickiest parts. Recap 2 comes by email when recap 1 is finished, for the next day.</p>' : '') +
       '<p style="margin:0 0 6px">One link does it all. It plays each tricky part of the video, then opens the matching room of the game, in order. ' +
       'When a room is finished it comes back by itself, so your child just presses <b>Next</b>.</p>' +
       '<p style="margin:14px 0 0;color:#56607A">Or pick a part yourself:</p>';

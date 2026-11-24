@@ -55,7 +55,8 @@
   var QS = new URLSearchParams(location.search), RECAP = QS.get('recap') || '';
   if (RECAP && RECAP.indexOf(location.origin + '/play/recap/') !== 0) RECAP = '';
   if (RECAP) {
-    var startRoom = +(QS.get('room') || 0), leaving = false;
+    var startRoom = +(QS.get('room') || 0), leaving = false, RK = (QS.get('rk') || '').replace(/[^A-Za-z0-9_]/g, '');
+    var L0 = (typeof S !== 'undefined' && S.results) ? S.results.length : 0;
     var bk = document.createElement('a'); bk.href = RECAP; bk.textContent = '↩ Back to the recap';
     bk.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:150;background:#fff;border:3px solid #2B3A67;border-radius:14px;padding:8px 14px;font:600 16px Lexend,Arial,sans-serif;color:#1F2A44;text-decoration:none';
     document.body.appendChild(bk);
@@ -63,6 +64,14 @@
       if (leaving || typeof S === 'undefined' || S.room == null) return;
       if (S.room !== startRoom || document.querySelector('.cert')) {
         leaving = true; track('recap-room-done', {game: GAME, room: startRoom});
+        if (RK) try {
+          var got = JSON.parse(ss('cs_rr_' + RK) || '[]');
+          S.results.slice(L0).forEach(function (r) {
+            var p = place(r);
+            got.push({act: r.act, item: r.item, first: r.first, said: r.said, room: p.room, roomName: p.roomName, t: p.t, tEnd: p.tEnd, chap: p.chap});
+          });
+          ss('cs_rr_' + RK, JSON.stringify(got.slice(-120)));
+        } catch (e) {}
         try { if (window.stopVoice) stopVoice(); } catch (e) {}
         var m = document.createElement('div');
         m.style.cssText = 'position:fixed;inset:0;z-index:210;background:rgba(31,42,68,.6);display:flex;align-items:center;justify-content:center;padding:16px';
