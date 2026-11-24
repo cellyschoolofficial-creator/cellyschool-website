@@ -58,6 +58,27 @@
     };
   }
 
+  /* ---------- "say it again" while Celly is talking: replay the line, then carry on (no two voices at once) ----------
+     Before: the button stopped the line and replayed it, but the game went straight on to the next line, so both played. */
+  if (typeof say === 'function') {
+    var _say = say;
+    say = async function (ids, opts) {
+      for (var n = 0; n < 5; n++) {
+        S.__again = false; S.__inSay = (S.__inSay || 0) + 1;
+        try { await _say(ids, opts); } finally { S.__inSay--; }
+        if (!S.__again) return;        // replay asked for while this line was playing: say it again from the start
+      }
+    };
+    var againBtn = document.getElementById('again');
+    if (againBtn) {
+      var origAgain = againBtn.onclick;
+      againBtn.onclick = function (e) {
+        if (S.__inSay > 0) { S.__again = true; stopVoice(); return; }
+        return origAgain && origAgain.call(this, e);
+      };
+    }
+  }
+
   /* ---------- 2. levels ---------- */
   var BB = -1; TRAIL.forEach(function (t, i) { if (BB < 0 && /brain break/i.test(t)) BB = i; });
   var LAST = TRAIL.length - 1;
