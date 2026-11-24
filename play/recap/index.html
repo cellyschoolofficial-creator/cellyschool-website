@@ -50,6 +50,9 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
     P = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b), function (c) { return c.charCodeAt(0); })));
   } catch (e) { P = null; }
   var card = document.getElementById('card'), dots = document.getElementById('dots');
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbwYsiK2ZrKioF6k0YO_y_m_GhEVFV4ZkxaXX4NvWdqmMY5pcNaCRiwAKmNf4UgOME8DKQ/exec';
+  var RK = String(P && P.k ? P.k.slice(0, 12) : 'local').replace(/[^a-z0-9]/gi, '') + '_' + ((P && P.p) || 1);
+  function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
   function track(n, p) { try { if (window.umami) umami.track(n, p); } catch (e) {} }
   if (!P || !/^7[a-l][a-e]?$/.test(P.g || '') || !Array.isArray(P.s) || !P.s.length) {
@@ -76,7 +79,8 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
   function intro() {
     var v = steps.filter(function (s) { return s.c; }), r = steps.filter(function (s) { return !s.c; });
     var total = v.reduce(function (a, s) { return a + mins(s.c); }, 0) + r.length * 3;
-    card.innerHTML = '<h1>Let’s fix the tricky bits!</h1><p>Celly picked the parts of the lesson to look at again. Watch a short bit of the video, then play that part of the game.</p>' +
+    var partLbl = P.of > 1 ? '<p class="muted">Recap ' + (P.p || 1) + ' of ' + P.of + '</p>' : '';
+    card.innerHTML = partLbl + '<h1>Let’s fix the tricky bits!</h1><p>Celly picked the parts of the lesson to look at again. Watch a short bit of the video, then play that part of the game.</p>' +
       '<ul class="plan">' + steps.map(function (s) { return '<li>' + (s.c ? '▶ Watch: ' : '🎮 Play: ') + esc(s.n) + (s.c ? ' <span class="muted">(about ' + mins(s.c) + ' min)</span>' : '') + '</li>'; }).join('') + '</ul>' +
       '<p class="muted">About ' + total + ' minutes. You can stop and come back to this link any time.</p>' +
       '<div class="row"><button class="btn go pulse" id="start">Start the recap</button></div>';
@@ -108,14 +112,35 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
     card.innerHTML = '<p class="muted">Step ' + (at + 1) + ' of ' + steps.length + '</p><h1>🎮 Play: ' + esc(s.n) + '</h1>' +
       '<p>Now try this part of the game again. When you finish it, you’ll come straight back here.</p>' +
       '<div class="row"><a class="btn go pulse" id="play">Play ' + esc(s.n) + '</a><button class="btn" id="skip">Skip this one</button></div>';
-    document.getElementById('play').href = game + '?room=' + s.r + '&recap=' + encodeURIComponent(url(at + 1));
+    document.getElementById('play').href = game + '?room=' + s.r + '&rk=' + RK + '&recap=' + encodeURIComponent(url(at + 1));
     document.getElementById('play').onclick = function () { track('recap-step', {game: P.g, step: at}); };
     document.getElementById('skip').onclick = function () { go(at + 1); };
   }
   function finish() {
     track('recap-done', {game: P.g});
-    card.innerHTML = '<h1>🏆 Recap done!</h1><p>Brilliant work. You looked again at every tricky part. That is exactly how scientists learn.</p>' +
-      '<div class="row"><a class="btn go" href="' + game + '">Play the whole game again</a><a class="btn" href="/' + P.g + '">Back to the lesson</a></div>';
+    var res = []; try { res = JSON.parse(ss('cs_rr_' + RK) || '[]'); } catch (e) {}
+    var ok = [], still = [];
+    res.forEach(function (r) { var good = r.first && r.said !== false; (good ? ok : still).push(r.item); });
+    ok = ok.filter(function (x, i) { return ok.indexOf(x) === i && still.indexOf(x) < 0; });
+    still = still.filter(function (x, i) { return still.indexOf(x) === i; });
+    var g = '7' + P.g.charAt(1).toUpperCase() + P.g.slice(2);
+    if (P.k && res.length && !ss('cs_rr_sent_' + RK)) {
+      ss('cs_rr_sent_' + RK, '1');
+      fetch(ENDPOINT, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'},
+        body: JSON.stringify({type: 'recap', k: P.k, game: g, video: P.v, title: P.t || '', results: res, n2: P.n2 || []})}).catch(function () { ss('cs_rr_sent_' + RK, ''); });
+    }
+    var more = still.length || (P.n2 && P.n2.length);
+    card.innerHTML = '<h1>🏆 Recap done!</h1><p>Brilliant work. You looked again at the tricky parts. That is exactly how scientists learn.</p>' +
+      (ok.length ? '<p><b>Now you’ve got:</b> ' + ok.map(esc).join(', ') + ' ✓</p>' : '') +
+      (still.length ? '<p><b>Still a bit tricky:</b> ' + still.map(esc).join(', ') + '. That’s OK. It often clicks after a good sleep.</p>' : '') +
+      (more ? '<p>' + (P.k ? 'Your grown-up will get <b>recap 2</b> by email, for tomorrow.' : 'There is a little more to recap tomorrow.') + '</p>' : '<p><b>Everything is secure now!</b></p>') +
+      '<div class="row">' + (!P.k && P.n2 && P.n2.length ? '<a class="btn go" id="r2">Recap 2 (tomorrow)</a>' : '') +
+      '<a class="btn' + (more ? '' : ' go') + '" href="' + game + '">Play the whole game again</a><a class="btn" href="/' + P.g + '">Back to the lesson</a></div>';
+    var r2 = document.getElementById('r2');
+    if (r2) {
+      var o = {g: P.g, v: P.v, s: P.n2, n2: [], p: 2, of: 2, t: P.t};
+      r2.href = '/play/recap/?p=' + btoa(String.fromCharCode.apply(null, new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
   }
   drawDots(); show();
 })();
