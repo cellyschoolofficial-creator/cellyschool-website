@@ -104,7 +104,7 @@
       '<p style="margin:0">Before your child starts: would you like a short report by email when the game ends?</p>' +
       '<ul><li>Your child plays as normal. It takes about 15 minutes.</li>' +
       '<li>At the end, we email you a one-page PDF: what they got right first time, which words to practise, and what to try next.</li>' +
-      '<li>No account and no sign-in. We don’t keep your email address. It is only used to send this report.</li></ul>' +
+      '<li>No account and no sign-in. We keep your email so we can send this report and Celly’s recaps. We never share it, and you can ask us to delete it at any time.</li></ul>' +
       '<label for="guE">Your email (optional)</label><input type="email" id="guE" autocomplete="email" inputmode="email" maxlength="120" placeholder="name@example.com">' +
       '<input class="hp" type="text" id="guH" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<label class="tick"><input type="checkbox" id="guP"> <span>I’m this child’s parent or carer.</span></label>' +

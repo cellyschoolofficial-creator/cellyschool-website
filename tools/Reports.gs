@@ -6,7 +6,8 @@
  * This script builds a one-page PDF report and emails it from the Celly School account.
  *
  * What is kept: a log row (date, game, score, minutes, mode) in "Celly School game reports (log)".
- * The email address is NOT kept. A short one-way code of it is held for one day only,
+ * The email address is saved in "Celly School parent emails" (Google Sheet in the Celly School folder),
+ * as the game screen tells parents. A short one-way code of it is also held for one day
  * to stop more than 3 reports a day going to the same address.
  *
  * Deploy: Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone.
@@ -69,6 +70,7 @@ function doPost(e) {
       attachments: [pdf]
     });
     log_(r);
+    saveEmail_(email, r.game, 'report');
     return out_({ok: true});
   } catch (err) {
     console.error(err);
@@ -227,9 +229,10 @@ function recapResult_(d) {
       : '<p style="' + pp + '"><b>Everything from the report is secure now.</b> Your child is ready for ' + esc_((NEXT[game] || {t: 'the next lesson'}).t) + '.</p>') +
     '<p style="' + pp + '">Celly School</p>' +
     '<p style="font-size:12px;line-height:1.5;color:#56607A;margin-top:20px">You got this because a Celly School recap was finished from a report sent to this address. ' +
-    'We don’t keep your email address: it travels inside the recap link in scrambled form. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
+    'We never share your email address. To stop these emails or delete your address, reply to this email. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
   if (MailApp.getRemainingDailyQuota() < 3) return out_({ok: false, why: 'quota'});
   MailApp.sendEmail({to: t.email, name: 'Celly School', subject: 'Celly’s recap result: ' + game + ' ' + (still.length ? '(recap 2 ready)' : '(all secure)'), htmlBody: html});
+  saveEmail_(t.email, game, 'recap');
   try { log_({game: game + ' recap', first: nowOk.length, total: nowOk.length + still.length, minutes: 0, mode: 'recap', sayAgain: 0, practise: still}); } catch (e) {}
   return out_({ok: true});
 }
@@ -322,7 +325,7 @@ function emailHtml_(r) {
     '<p style="' + p + '">Celly School</p>' +
     '<p style="font-size:12px;line-height:1.5;color:#56607A;margin-top:20px">' +
     'You got this email because someone typed this address into a Celly School game and ticked “I’m this child’s parent or carer”. ' +
-    'If that wasn’t you, you can ignore it. We don’t keep your email address. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
+    'If that wasn’t you, reply and we will delete the address. We never share it. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
 }
 
 /* ---------- helpers ---------- */
@@ -353,6 +356,32 @@ function log_(r) {
     }
     ss.getSheets()[0].appendRow([new Date(), r.game, r.first, r.total, r.minutes, r.mode, r.sayAgain, r.practise.join(', ')]);
   } catch (e) { console.error('log: ' + e); }
+}
+
+/* ---------- parent email list (every address that asked for a report) ---------- */
+function saveEmail_(email, game, kind) {
+  try {
+    var lock = LockService.getScriptLock(); lock.waitLock(10000);
+    try {
+      var root = DriveApp.getFolderById(ROOT_ID), name = 'Celly School parent emails', it = root.getFilesByName(name), ss;
+      if (it.hasNext()) ss = SpreadsheetApp.open(it.next());
+      else {
+        ss = SpreadsheetApp.create(name); DriveApp.getFileById(ss.getId()).moveTo(root);
+        ss.getSheets()[0].appendRow(['Email', 'First seen', 'Last activity', 'Games', 'Reports', 'Recaps finished', 'News consent']);
+        ss.getSheets()[0].setFrozenRows(1);
+      }
+      var sh = ss.getSheets()[0], rows = sh.getDataRange().getValues(), now = new Date();
+      for (var i = 1; i < rows.length; i++) {
+        if (String(rows[i][0]).toLowerCase() === email) {
+          var games = String(rows[i][3] || ''), gl = games ? games.split(', ') : [];
+          if (gl.indexOf(game) < 0) gl.push(game);
+          sh.getRange(i + 1, 3, 1, 4).setValues([[now, gl.join(', '), (+rows[i][4] || 0) + (kind === 'report' ? 1 : 0), (+rows[i][5] || 0) + (kind === 'recap' ? 1 : 0)]]);
+          return;
+        }
+      }
+      sh.appendRow([email, now, now, game, kind === 'report' ? 1 : 0, kind === 'recap' ? 1 : 0, 'not asked']);
+    } finally { lock.releaseLock(); }
+  } catch (e) { console.error('saveEmail: ' + e); }
 }
 
 function clip_(s, n) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, n); }
