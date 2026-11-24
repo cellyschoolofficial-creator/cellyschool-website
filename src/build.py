@@ -374,7 +374,7 @@ def build_play():
     body = f'''<div class="wrap"><h1 style="margin-top:36px">Talk to Celly</h1>
 <p class="lead">Science games where Celly talks to you, listens to your answers and helps you say, tap and remember the key words. Each game goes with one lesson video.</p>
 <p class="note"><b>Free while we test them.</b> Works best in Chrome or Edge. When the browser asks for the microphone, choose “Allow”. You can also play by tapping only. A grown-up can get a short report by email at the end.</p>
-<div id="family" class="note" style="margin:18px 0 24px"></div><script src="/play/family.js?v=2"></script>
+<div id="family" class="note" style="margin:18px 0 24px"></div><script src="/play/family.js?v=3"></script>
 <h2>Unit 7A · Cells, tissues, organs and systems</h2>
 <div class="games">{cards}</div>
 <p class="muted" style="margin-top:24px">More games are on the way, starting with 7C Muscles and bones.</p></div>
