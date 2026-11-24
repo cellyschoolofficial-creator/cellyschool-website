@@ -73,7 +73,7 @@ function doPost(e) {
       attachments: [pdf]
     });
     log_(r, email, 'game');
-    saveEmail_(email, r.game, 'report', r.child);
+    saveEmail_(email, r.game, 'report', r.child, r.meta);
     return out_({ok: true});
   } catch (err) {
     console.error(err);
@@ -465,16 +465,16 @@ function log_(r, email, type) {
       var slow = rooms.slice().sort(function (a, b) { return b.secs - a.secs; })[0];
       tab_(ss, 'Sessions', ['Date', 'Session', 'Parent email', 'Child', 'Game', 'Topic', 'Type', 'Right first time', 'Out of', '%', 'Level',
         'Minutes', 'Mode', 'Say it again', 'Parts secure', 'Parts nearly there', 'Parts needing practice', 'Needs another go', 'Celly couldn’t hear', 'Recap minutes', 'Recap parts',
-        'Device', 'Browser', 'System', 'Screen', 'Language', 'Time zone', 'Came from', 'Voice muted', 'Talk/tap switches', 'Speech recognition available', 'Game version', 'Children on device', 'Slowest room', 'Room times', 'Rooms played', 'Rooms not played']);
+        'Device', 'Browser', 'System', 'Screen', 'Language', 'Time zone', 'Came from', 'Voice muted', 'Talk/tap switches', 'Speech recognition available', 'Game version', 'Children on device', 'Slowest room', 'Room times', 'Rooms played', 'Rooms not played', 'School order', 'Unit now']);
       var sesh = ss.getSheetByName('Sessions');
-      if (sesh.getLastColumn() < 37) sesh.getRange(1, 36, 1, 2).setValues([['Rooms played', 'Rooms not played']]).setFontWeight('bold');
+      if (sesh.getLastColumn() < 39) sesh.getRange(1, 36, 1, 4).setValues([['Rooms played', 'Rooms not played', 'School order', 'Unit now']]).setFontWeight('bold');
       sesh.appendRow([now, id, email || '', r.child || '', r.game, r.topic || '', type_, r.first, r.total, pct, (r.level || {}).t || '',
           r.minutes || 0, r.mode || '', r.sayAgain || 0, cnt('Secure'), cnt('Nearly there'), cnt('Needs practice'), weak.join(', '), unheard.join(', '),
           r.recapMins || 0, r.recapParts || 0,
           M.device || '', M.browser || '', M.os || '', M.screen || '', M.lang || '', M.tz || '', M.from || '', M.muted ? 'yes' : 'no', M.modeSwitches || 0,
           M.speech ? 'yes' : 'no', M.version || '', M.family || 0, slow ? slow.name + ' (' + slow.secs + 's)' : '',
           rooms.map(function (x) { return x.name + ' ' + x.secs + 's' + (x.again ? ' / ' + x.again + ' again' : ''); }).join('; '),
-          r.rooms && r.rooms.length ? r.roomsPlayed + ' of ' + r.rooms.length : '', (r.skipped || []).map(function (x) { return x.name; }).join(', ')]);
+          r.rooms && r.rooms.length ? r.roomsPlayed + ' of ' + r.rooms.length : '', (r.skipped || []).map(function (x) { return x.name; }).join(', '), M.order || '', M.now || '']);
       if (rooms.length) {
         var rt = tab_(ss, 'Room times', ['Date', 'Session', 'Child', 'Game', 'Room', 'Seconds', 'Say it again', 'Device']);
         rt.getRange(rt.getLastRow() + 1, 1, rooms.length, 8).setValues(rooms.map(function (x) { return [now, id, r.child || '', r.game, x.name, x.secs, x.again, M.device || '']; }));
@@ -501,16 +501,16 @@ function log_(r, email, type) {
   } catch (e) { console.error('log: ' + e); }
 }
 
-function saveEmail_(email, game, kind, child) {
+function saveEmail_(email, game, kind, child, order) {
   try {
     var lock = LockService.getScriptLock(); lock.waitLock(10000);
     try {
       var root = DriveApp.getFolderById(ROOT_ID), name = 'Celly School parent emails', it = root.getFilesByName(name), ss;
-      var head = ['Email', 'First seen', 'Last activity', 'Games', 'Reports', 'Recaps finished', 'News consent', 'Children'];
+      var head = ['Email', 'First seen', 'Last activity', 'Games', 'Reports', 'Recaps finished', 'News consent', 'Children', 'School order', 'Unit now'];
       if (it.hasNext()) ss = SpreadsheetApp.open(it.next());
       else { ss = SpreadsheetApp.create(name); DriveApp.getFileById(ss.getId()).moveTo(root); ss.getSheets()[0].setFrozenRows(1); }
       var sh = ss.getSheets()[0];
-      if (sh.getLastRow() === 0 || sh.getRange(1, 8).getValue() !== 'Children') sh.getRange(1, 1, 1, head.length).setValues([head]);
+      if (sh.getLastRow() === 0 || sh.getRange(1, 10).getValue() !== 'Unit now') sh.getRange(1, 1, 1, head.length).setValues([head]);
       var rows = sh.getDataRange().getValues(), now = new Date();
       for (var i = 1; i < rows.length; i++) {
         if (String(rows[i][0]).toLowerCase() === email) {
@@ -520,10 +520,11 @@ function saveEmail_(email, game, kind, child) {
           if (child && kl.indexOf(child) < 0) kl.push(child);
           sh.getRange(i + 1, 3, 1, 4).setValues([[now, gl.join(', '), (+rows[i][4] || 0) + (kind === 'report' ? 1 : 0), (+rows[i][5] || 0) + (kind === 'recap' ? 1 : 0)]]);
           sh.getRange(i + 1, 8).setValue(kl.join(', '));
+          if (order && order.order) sh.getRange(i + 1, 9, 1, 2).setValues([[order.order, order.now || '']]);
           return;
         }
       }
-      sh.appendRow([email, now, now, game, kind === 'report' ? 1 : 0, kind === 'recap' ? 1 : 0, 'not asked', child || '']);
+      sh.appendRow([email, now, now, game, kind === 'report' ? 1 : 0, kind === 'recap' ? 1 : 0, 'not asked', child || '', (order && order.order) || '', (order && order.now) || '']);
     } finally { lock.releaseLock(); }
   } catch (e) { console.error('saveEmail: ' + e); }
 }
@@ -535,7 +536,8 @@ function meta_(m) {
   });
   return {device: clip_(m.device, 12), browser: clip_(m.browser, 12), os: clip_(m.os, 12), screen: clip_(m.screen, 12), lang: clip_(m.lang, 12),
     tz: clip_(m.tz, 40), from: clip_(m.from, 60), rooms: rooms, muted: !!m.muted, modeSwitches: Math.min(99, Math.round(+m.modeSwitches) || 0),
-    speech: !!m.speech, version: clip_(m.version, 12), family: Math.min(9, Math.round(+m.family) || 0)};
+    speech: !!m.speech, version: clip_(m.version, 12), family: Math.min(9, Math.round(+m.family) || 0),
+    order: /^(7[A-L],?){1,12}$/.test(String(m.order || '')) ? String(m.order) : '', now: /^7[A-L]$/.test(String(m.now || '')) ? String(m.now) : ''};
 }
 function kid_(s) { return clip_(String(s || '').replace(/[<>"\\]/g, ''), 24); }
 function who_(r) { return r.child ? esc_(r.child) : 'Your child'; }

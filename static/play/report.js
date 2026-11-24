@@ -202,7 +202,7 @@
     return {device: device, browser: browser, os: os, screen: w + 'x' + h, lang: navigator.language || '', tz: tz,
       from: q.get('utm_source') || ss('cs_from') || ref, rooms: rooms, muted: !!(typeof S !== 'undefined' && S.mute) || !!ss(K + '_muted'),
       modeSwitches: +(ss(K + '_modeSwitch') || 0), speech: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
-      version: (ver.split('?')[1] || '').replace('v=', 'v'), family: window.CSFamily && window.CSFamily.get() ? (window.CSFamily.get().kids || []).length : 0};
+      version: (ver.split('?')[1] || '').replace('v=', 'v'), order: schoolOrder().join(','), now: (function () { try { return (JSON.parse(localStorage.getItem('cs_order') || 'null') || {}).now || ''; } catch (e) { return ''; } })(), family: window.CSFamily && window.CSFamily.get() ? (window.CSFamily.get().kids || []).length : 0};
   }
   try { if (!ss('cs_from')) ss('cs_from', new URLSearchParams(location.search).get('utm_source') || (document.referrer ? new URL(document.referrer).hostname : 'direct')); } catch (e) {}
 
@@ -259,9 +259,22 @@
     '7Ae': {lesson: ['7ca', '7Ca Fitness and breathing'], game: null}
   };
   var BASE = (location.pathname.match(/^\/preview-[a-z0-9-]+/) || [''])[0];
+  function schoolOrder() {
+    var book = ['7A', '7B', '7C', '7D', '7E', '7F', '7G', '7H', '7I', '7J', '7K', '7L'], o = null;
+    try { o = JSON.parse(localStorage.getItem('cs_order') || 'null'); } catch (e) {}
+    if (!o || !o.units || !o.units.length) return [];
+    var out = o.units.filter(function (c) { return book.indexOf(c) >= 0; });
+    book.forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); });
+    return out;
+  }
   function nextSteps(cert) {
     if (RECAP || document.getElementById('csNext')) return;
     var n = NEXTS[GAME]; if (!n) return;
+    var so = schoolOrder();
+    if (so.length && /e$/.test(GAME)) {           // last lesson of a unit: go to the next unit in the school's order
+      var nu = so[so.indexOf(GAME.slice(0, 2)) + 1];
+      n = {lesson: nu ? [nu.toLowerCase() + 'a', nu + 'a, unit ' + nu + ' (your school\'s order)'] : n.lesson, game: n.game};
+    }
     var st = document.createElement('style');
     st.textContent = '.cert .t{letter-spacing:.02em!important;text-transform:none!important;font-size:17px!important}' +
       '#csNext{margin:18px 0 6px;padding:16px 18px;border:2px solid #81A63C;border-radius:16px;background:#F6FAEE}' +

@@ -115,7 +115,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=6" defer></script>
+<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/lessons.js?v=1" defer></script><script src="/site.js?v=6" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
@@ -241,7 +241,7 @@ def build_lesson(d, prev, nxt):
     b.append(f'<span hidden id="lessonMeta" data-slug="{d["slug"]}" data-name="{d["code"]} {E(d["title"])}"></span>')
     nb = [f'<a href="/{d["slug"]}-workbook">{ICON_DL}<span>Workbook</span></a>']
     if has_game: nb.append(f'<a href="/play/{d["slug"]}/"><span aria-hidden="true">🎮</span><span>Game</span></a>')
-    if nxt: nb.append(f'<a href="/{nxt["slug"]}"><span aria-hidden="true">→</span><span>Next: {nxt["code"]}</span></a>')
+    if nxt: nb.append(f'<a class="nb-next" href="/{nxt["slug"]}"><span aria-hidden="true">→</span><span>Next: {nxt["code"]}</span></a>')
     b.append('<nav class="nextbar" aria-label="Next steps">' + ''.join(nb) + '</nav>')
     b.append(f'<p class="small">Follows the topic order of Pearson Exploring Science, Year 7, lesson {d["code"]}. Not made by or linked to Pearson.</p></div>')
     url = f'{SITE}/{d["slug"]}'
@@ -321,6 +321,9 @@ def build_year7():
     body = f'''<div class="wrap"><h1 style="margin-top:36px">Year 7 Science</h1>
 <p class="lead">A free online Year 7 science course in the Exploring Science order: all 12 units, 60 video lessons, and a free printable workbook with answers for every lesson. Prefer everything in one place with progress saved? <a href="/course">Take the full course (free)</a>.</p>
 {carry_on_box()}
+<section id="schoolOrder" class="school-order" aria-labelledby="soH"><h2 id="soH">Your school's order</h2>
+<p>Schools often teach the units in a different order from the book. Set your school's order once, and every “Next” button on this site will follow it. It is saved on this device.</p>
+<p><button class="btn" type="button" id="soEdit">Set our school's order</button></p></section>
 {"".join(secs_)}</div>'''
     page('year-7.html', 'Free online Year 7 science course in Exploring Science order | Celly School',
          'Free dyslexia-friendly Year 7 science lessons (KS3 biology, chemistry and physics): 60 video lessons and free printable workbooks.', body, 'y7')
@@ -484,6 +487,9 @@ def main():
     build_year7(); build_workbooks(); build_home(); build_play(); build_static_pages()
     HELP_URLS[:] = build_help(page, E, SITE, L)
     build_meta()
+    data = {'L': [[d['slug'], d['code'], d['title'], 1 if is_live(d) else 0] for d in L],
+            'U': [[u['code'], u['name'], u['subject']] for u in UNITS]}
+    open(os.path.join(OUT, 'lessons.js'), 'w', encoding='utf-8').write('window.CS_DATA=' + json.dumps(data, ensure_ascii=False) + ';\n')
     n = sum(len(f) for _, _, f in os.walk(OUT))
     print('built', n, 'files')
 
