@@ -51,6 +51,28 @@
     return {room: a.room, roomName: rn, t: t, tEnd: end, chap: name};
   }
 
+  /* ---------- recap mode: play one room, then go back to Celly's recap ---------- */
+  var QS = new URLSearchParams(location.search), RECAP = QS.get('recap') || '';
+  if (RECAP && RECAP.indexOf(location.origin + '/play/recap/') !== 0) RECAP = '';
+  if (RECAP) {
+    var startRoom = +(QS.get('room') || 0), leaving = false;
+    var bk = document.createElement('a'); bk.href = RECAP; bk.textContent = '↩ Back to the recap';
+    bk.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:150;background:#fff;border:3px solid #2B3A67;border-radius:14px;padding:8px 14px;font:600 16px Lexend,Arial,sans-serif;color:#1F2A44;text-decoration:none';
+    document.body.appendChild(bk);
+    setInterval(function () {
+      if (leaving || typeof S === 'undefined' || S.room == null) return;
+      if (S.room !== startRoom || document.querySelector('.cert')) {
+        leaving = true; track('recap-room-done', {game: GAME, room: startRoom});
+        try { if (window.stopVoice) stopVoice(); } catch (e) {}
+        var m = document.createElement('div');
+        m.style.cssText = 'position:fixed;inset:0;z-index:210;background:rgba(31,42,68,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+        m.innerHTML = '<div style="background:#FFFDF6;border:3px solid #1F2A44;border-radius:22px;padding:22px 26px;font:600 22px Lexend,Arial,sans-serif;color:#1F2A44;text-align:center">🎉 Well done!<br><span style="font-weight:400;font-size:18px">Back to your recap…</span></div>';
+        document.body.appendChild(m);
+        setTimeout(function () { location.href = RECAP; }, 2200);
+      }
+    }, 600);
+  }
+
   /* ---------- the grown-up screen ---------- */
   var css = '.gu{position:fixed;inset:0;z-index:200;background:rgba(31,42,68,.55);display:flex;padding:16px;overflow-y:auto;box-sizing:border-box}' +
     '.gu .box{margin:auto;background:#FFFDF6;border:3px solid #1F2A44;border-radius:22px;max-width:560px;width:100%;padding:20px 22px;font-size:18px;line-height:1.55;color:#1F2A44;box-shadow:0 10px 40px rgba(0,0,0,.25)}' +
@@ -98,7 +120,7 @@
 
   /* ---------- send at the certificate ---------- */
   function send(cert) {
-    if (ss(K + '_choice') !== 'yes' || ss(K + '_sent')) return;
+    if (RECAP || ss(K + '_choice') !== 'yes' || ss(K + '_sent')) return;
     var results = []; try { results = (typeof S !== 'undefined' && S.results) || JSON.parse(ss('cs' + GAME.toLowerCase() + '_res') || '[]'); } catch (e) {}
     if (!results.length) return;
     ss(K + '_sent', '1');
@@ -126,5 +148,5 @@
   new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) send(c); })
     .observe(document.getElementById('card') || document.body, {childList: true, subtree: true});
 
-  if (!ss(K + '_choice')) ask();
+  if (!RECAP && !ss(K + '_choice')) ask();
 })();

@@ -114,6 +114,18 @@ function plan_(r) {
   r.play.forEach(function (p) {
     p.url = SITE + '/play/' + r.game.toLowerCase() + '/' + (p.room > 0 ? '?room=' + p.room : '');
   });
+  // one automatic recap: each weak video part, then the game room that practises it, in game order
+  var steps = [], seen = {};
+  r.results.filter(function (x) { return !x.ok; }).sort(function (a, b) { return a.room - b.room; }).forEach(function (x) {
+    if (x.wrong && x.t >= 0 && r.video && !seen['c' + x.t]) {
+      seen['c' + x.t] = 1; steps.push({c: [x.t, x.tEnd > x.t ? x.tEnd : x.t + 90], n: x.chap || 'the lesson'});
+    }
+    if (x.room >= 0 && !seen['r' + x.room]) { seen['r' + x.room] = 1; steps.push({r: x.room, n: x.roomName || x.act}); }
+  });
+  steps = steps.slice(0, 12);
+  r.recapMins = steps.reduce(function (a, s) { return a + (s.c ? Math.max(1, Math.round((s.c[1] - s.c[0]) / 60)) : 3); }, 0);
+  r.recap = steps.length ? SITE + '/play/recap/?p=' + Utilities.base64EncodeWebSafe(Utilities.newBlob(JSON.stringify(
+    {g: r.game.toLowerCase(), v: r.video, s: steps})).getBytes()).replace(/=+$/, '') : '';
 }
 function mmss_(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 function list_(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
@@ -121,6 +133,13 @@ function dot_(s) { return /[.!?]$/.test(s) ? s : s + '.'; }
 
 function planHtml_(r, big) {
   var li = 'margin:0 0 10px;line-height:1.5', h = '';
+  if (r.recap) {
+    h += '<p style="margin:14px 0 6px"><a href="' + r.recap + '" style="display:inline-block;background:#2B3A67;color:#ffffff;text-decoration:none;font-weight:bold;' +
+      'font-size:' + (big ? '13pt' : '17px') + ';padding:12px 20px;border-radius:12px">▶ Start Celly’s recap (about ' + r.recapMins + ' min)</a></p>' +
+      '<p style="margin:0 0 6px">One link does it all. It plays each tricky part of the video, then opens the matching room of the game, in order. ' +
+      'When a room is finished it comes back by itself, so your child just presses <b>Next</b>.</p>' +
+      '<p style="margin:14px 0 0;color:#56607A">Or pick a part yourself:</p>';
+  }
   if (r.watch.length) {
     h += '<p style="margin:14px 0 6px;font-weight:bold">1. Watch these parts of the lesson again</p><ul style="margin:0;padding-left:20px">';
     r.watch.forEach(function (w) {
