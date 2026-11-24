@@ -93,7 +93,8 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/img/icon-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="preload" href="/fonts/lexend-regular.woff" as="font" type="font/woff" crossorigin>
-<link rel="stylesheet" href="/site.css?v=4">
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#FAF6E9">
+<link rel="stylesheet" href="/site.css?v=5">
 {extra_head}{ld}
 </head>
 <body>
@@ -114,7 +115,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=4" defer></script>
+<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=5" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
@@ -237,6 +238,7 @@ def build_lesson(d, prev, nxt):
     if prev: pg += f'<a class="card" href="/{prev["slug"]}"><span class="dir">← Previous lesson</span><strong>{prev["code"]} {E(prev["title"])}</strong></a>'
     if nxt: pg += f'<a class="card next" href="/{nxt["slug"]}"><span class="dir">Next lesson →</span><strong>{nxt["code"]} {E(nxt["title"])}</strong></a>'
     b.append(pg + '</nav>')
+    b.append(f'<span hidden id="lessonMeta" data-slug="{d["slug"]}" data-name="{d["code"]} {E(d["title"])}"></span>')
     nb = [f'<a href="/{d["slug"]}-workbook">{ICON_DL}<span>Workbook</span></a>']
     if has_game: nb.append(f'<a href="/play/{d["slug"]}/"><span aria-hidden="true">🎮</span><span>Game</span></a>')
     if nxt: nb.append(f'<a href="/{nxt["slug"]}"><span aria-hidden="true">→</span><span>Next: {nxt["code"]}</span></a>')
@@ -318,6 +320,7 @@ def build_year7():
         secs_.append(f'<section class="subj {sj}"><div class="subj-head"><img src="/img/{hero}.png" alt="{heroname}" width="64" height="56"><h2>{subj} <span class="small">with {heroname}</span></h2></div><div class="grid">{cards}</div></section>')
     body = f'''<div class="wrap"><h1 style="margin-top:36px">Year 7 Science</h1>
 <p class="lead">A free online Year 7 science course in the Exploring Science order: all 12 units, 60 video lessons, and a free printable workbook with answers for every lesson. Prefer everything in one place with progress saved? <a href="/course">Take the full course (free)</a>.</p>
+{carry_on_box()}
 {"".join(secs_)}</div>'''
     page('year-7.html', 'Free online Year 7 science course in Exploring Science order | Celly School',
          'Free dyslexia-friendly Year 7 science lessons (KS3 biology, chemistry and physics): 60 video lessons and free printable workbooks.', body, 'y7')
@@ -337,26 +340,37 @@ def build_workbooks():
          '60 free printable KS3 science workbooks for Year 7, dyslexia-friendly, with answers. Biology, chemistry and physics.', body, 'wb')
 
 
+def carry_on_box():
+    order = [[d['slug'], d['code'], d['title'], 1 if is_live(d) else 0] for d in L if not d['age_restricted']]
+    games = {g[0]: g[3] for g in GAMES}
+    return (f'<div id="carryOn" class="carry" hidden data-order="{E(json.dumps(order, ensure_ascii=False))}" '
+            f'data-games="{E(json.dumps(games, ensure_ascii=False))}"></div>')
+
+
 def build_home():
     live = [d for d in L if is_live(d) and not d['age_restricted']]
     latest = sorted(live, key=lambda d: d.get('public_from') or '', reverse=True)[:6]
     upcoming = [d for d in L if not is_live(d)][:3]
     cards = ''.join(lesson_card(d) for d in latest)
     up = ''.join(lesson_card(d) for d in upcoming)
+    games_strip = ''.join(f'<a class="card game-mini" href="/play/{g}/"><span class="chip bio">{code}</span><h3 style="margin:.4em 0 0">{E(name)}</h3></a>' for g, code, topic, name, blurb in GAMES)
     body = f'''<section class="hero"><div class="wrap">
 <div><h1>Science that sticks, one small step at a time</h1>
 <p class="lead">Free Year 7 science lessons made for children with dyslexia: short video parts, long words broken into beats, memory tricks, and a free printable workbook for every lesson.</p>
-<div class="btns"><a class="btn primary" href="/year-7">Start Year 7 Science</a><a class="btn" href="/workbooks">{ICON_DL} Free workbooks</a><a class="btn" href="{COURSE_URL}">Full course (free)</a></div></div>
+{carry_on_box()}
+<div class="btns"><a class="btn primary big" id="heroGo" href="/7aa">▶ Start with lesson 7Aa</a><a class="btn" href="/play">🎮 Play a Celly game</a></div>
+<p class="hero-more"><a href="/year-7">All Year 7 lessons</a> · <a href="/workbooks">Free workbooks</a> · <a href="{COURSE_URL}">Full course (free)</a></p></div>
 <div class="heroes" aria-hidden="true"><img class="h1" src="/img/celly.png" alt=""><img class="h2" src="/img/atomy.png" alt=""><img class="h3" src="/img/volty.png" alt=""></div>
 </div></section>
 <div class="wrap">
-<div class="grid four">
+<h2>Latest lessons</h2><div class="grid">{cards}</div>
+<h2>Talk to Celly games</h2><div class="grid games-strip">{games_strip}</div>
+<div class="grid four" style="margin-top:32px">
 <div class="card"><h3>Short parts</h3><p class="muted">Each lesson is split into parts with a brain break, so nothing is too long.</p></div>
 <div class="card"><h3>Words in beats</h3><p class="muted">New science words are tapped out syllable by syllable: Mi · to · chon · dri · a.</p></div>
 <div class="card"><h3>Memory tricks</h3><p class="muted">Silly sentences and pictures, like “Nine Cats Make Music” for the parts of a cell.</p></div>
 <div class="card"><h3>Free workbooks</h3><p class="muted">A printable workbook for every lesson, with answers and QR codes back to the video.</p></div>
 </div>
-<h2>Latest lessons</h2><div class="grid">{cards}</div>
 {('<h2>Coming next</h2><div class="grid">' + up + '</div>') if up else ''}
 <section class="subj biology" style="margin-top:36px"><div class="subj-head"><img src="/img/celly.png" alt="Celly the cell" width="64" height="56"><h2>Meet the heroes</h2></div>
 <p><strong>Celly the cell</strong> teaches biology, <strong>Atomy the atom</strong> teaches chemistry, and <strong>Volty the spark</strong> teaches physics. Bolt the robot joins every lesson and gets things wrong, so children can spot the mistake.</p></section>

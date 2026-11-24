@@ -84,7 +84,7 @@
     var key = at + '/' + n; if (key === last) return; last = key;
     var pct = n > 1 ? Math.round(at / (n - 1) * 100) : 100;
     fill.style.width = pct + '%';
-    lbl.textContent = at >= n - 1 ? '🏆 All done!' : 'Step ' + (at + 1) + ' of ' + n;
+    var L = window.CS_LEVEL; lbl.textContent = at >= n - 1 ? '🏆 All done!' : (L && L.split > 0 ? 'Level ' + L.of(at) + ' · ' : '') + 'Step ' + (at + 1) + ' of ' + n;
     box.setAttribute('aria-valuemax', String(n)); box.setAttribute('aria-valuenow', String(at + 1));
   }
   new MutationObserver(update).observe(trail, {childList: true, subtree: true});
