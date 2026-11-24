@@ -39,13 +39,13 @@
     var kids = f.kids.length ? f.kids : [''];
     box.classList.add('fam');
     box.innerHTML = (opts.intro || '') +
+      (window.CSSync && !(f && f.token) ? '<p class="fam-back" style="margin:6px 0 4px;padding:10px 12px;border-radius:12px;background:#F6FAEE;border:2px solid #D9E5C4">Already use Celly School on another device? <a href="#" id="famLink">🔗 Bring your family here</a></p>' : '') +
       '<label for="famE">Your email</label><input type="email" id="famE" autocomplete="email" inputmode="email" maxlength="120" placeholder="name@example.com" value="' + esc(f.email) + '">' +
       '<input class="hp" type="text" id="famH" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<label>Your child’s first name <span style="font-weight:400;color:#56607A">(or a nickname)</span></label><div class="kids" id="famK"></div>' +
       '<button type="button" class="addkid" id="famAdd">+ Add another child</button>' +
       '<label class="tick"><input type="checkbox" id="famP"' + (f.email ? ' checked' : '') + '> <span>I’m the parent or carer of these children, and I agree to Celly School keeping this email and these first names to send me their reports and recaps.</span></label>' +
       '<p class="err" id="famErr" aria-live="polite"></p>' +
-      (window.CSSync && !(f && f.token) ? '<p style="margin:4px 0 10px"><a href="#" id="famLink">🔗 Used Celly School on another device? Bring your family here</a></p>' : '') +
       '<div class="btns"><button class="yes" id="famSave">' + (opts.saveLabel || 'Save') + '</button>' + (opts.onSkip ? '<button id="famSkip">' + (opts.skipLabel || 'Skip') + '</button>' : '') + '</div>' +
       '<p class="small">We keep your email and your children’s first names in our private Google account, only to send you their reports and recaps. We never share them. You can ask us to change or delete them at any time. This device also remembers them, so next time your child just taps their name. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>';
     var K = box.querySelector('#famK');
