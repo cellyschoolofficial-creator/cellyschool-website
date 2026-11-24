@@ -79,7 +79,7 @@
         panel.querySelector('#famEdit').onclick = edit;
         panel.querySelector('#famDel').onclick = function () { clear(); show(); };
       } else {
-        panel.innerHTML = '<h2 style="margin-top:0">Grown-ups: set up reports once</h2><p>Add your email and your children’s names. After each game you get a short report for the child who played, even when they play alone.</p>' +
+        panel.innerHTML = '<h2 style="margin-top:0">Parents and carers: set up reports once</h2><p>Add your email and your children’s names. After each game you get a short report for the child who played, even when they play alone.</p>' +
           '<div class="btns"><button class="btn primary" id="famStart">Set up reports</button></div>';
         panel.querySelector('#famStart').onclick = edit;
       }

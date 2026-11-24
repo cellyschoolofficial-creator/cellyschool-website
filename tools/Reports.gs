@@ -1,8 +1,8 @@
 /**
- * Celly School — game reports for grown-ups (email + PDF, no sign-in)
+ * Celly School — game reports for parents and carers (email + PDF, no sign-in)
  *
  * A Talk to Celly game sends its results here when the child reaches the certificate,
- * but only if a grown-up typed an email and ticked "I'm this child's parent or carer".
+ * but only if a parent or carer typed an email and ticked "I'm the parent or carer of these children".
  * This script builds a one-page PDF report and emails it from the Celly School account.
  *
  * What is kept: a log row (date, game, score, minutes, mode) in "Celly School game reports (log)".
@@ -327,7 +327,7 @@ function reportHtml_(r) {
   var th = 'padding:6px 8px;text-align:left;font-size:9.5pt;color:#56607A;border-bottom:2px solid #E4DFCF';
   return '<html><head><meta charset="utf-8"></head><body style="font-family:Verdana,Arial,sans-serif;font-size:10.5pt;color:#1F2A44;line-height:1.45;margin:22px">' +
     '<div style="border:4px double #81A63C;border-radius:14px;padding:12px 18px;background:#FAF6E9">' +
-    '<div style="font-size:9pt;letter-spacing:2px;color:#56607A">CELLY SCHOOL · REPORT FOR GROWN-UPS</div>' +
+    '<div style="font-size:10pt;color:#56607A">Celly School · Report for parents and carers</div>' +
     '<div style="font-size:17pt;font-weight:bold;margin:4px 0 0">' + esc_(r.title) + '</div>' +
     '<div style="color:#56607A">' + (r.child ? '<b style="color:#1F2A44">Report for ' + esc_(r.child) + '</b> · ' : '') + 'Talk to Celly · ' + esc_(r.game + ' ' + r.topic) + ' · ' + esc_(r.date) + ' · played by ' + esc_(r.mode) + '</div></div>' +
     '<table style="width:100%;margin:10px 0 6px;border-collapse:separate;border-spacing:6px 0;table-layout:fixed"><tr>' +
@@ -364,7 +364,7 @@ function emailHtml_(r) {
     '<p style="' + p + '">The full report, with every answer, is attached as a PDF.</p>' +
     '<p style="' + p + '">Celly School</p>' +
     '<p style="font-size:12px;line-height:1.5;color:#56607A;margin-top:20px">' +
-    'You got this email because someone typed this address into a Celly School game and ticked “I’m this child’s parent or carer”. ' +
+    'You got this email because someone typed this address into a Celly School game and ticked “I’m the parent or carer of these children”. ' +
     'If that wasn’t you, reply and we will delete the address. We never share it. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
 }
 
