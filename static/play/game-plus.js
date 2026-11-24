@@ -66,6 +66,8 @@
 
   /* ---------- 5. progress for the website ---------- */
   function prog(fn) {
+    var ch = ssGet('cs_report_' + slug + '_child');
+    if (window.CSProg) { if (ch) CSProg.setKid(ch); CSProg.update(fn); return; }
     var p = lsGet('cs_progress2') || {v: 1, lessons: {}, games: {}};
     p.lessons = p.lessons || {}; p.games = p.games || {};
     fn(p); lsSet('cs_progress2', p);
