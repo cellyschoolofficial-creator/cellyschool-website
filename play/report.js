@@ -227,7 +227,14 @@
       })
       .catch(function () { ss(K + '_sent', ''); });
   }
-  new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) send(c); })
+  // put the child's name on the certificate (they already chose it on "Who's playing today?")
+  function nameCert() {
+    var n = ss(K + '_child'), inp = document.getElementById('nameIn'), out = document.getElementById('certName');
+    if (!n || !inp || inp.dataset.csFilled) return;
+    inp.dataset.csFilled = '1';
+    if (!inp.value) { inp.value = n; if (out) out.textContent = n; try { inp.dispatchEvent(new Event('input', {bubbles: true})); } catch (e) {} }
+  }
+  new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) { nameCert(); send(c); } })
     .observe(document.getElementById('card') || document.body, {childList: true, subtree: true});
 
   if (!RECAP && !ss(K + '_choice')) ask();
