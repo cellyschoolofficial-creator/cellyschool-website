@@ -241,8 +241,20 @@ function mmss_(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2)
 function list_(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
 function dot_(s) { return /[.!?]$/.test(s) ? s : s + '.'; }
 
+function planPdf_(r) {
+  var h = '';
+  if (r.recap) h += '<p style="margin:8px 0 4px"><a href="' + r.recap + '" style="display:inline-block;background:#2B3A67;color:#ffffff;text-decoration:none;font-weight:bold;font-size:11pt;padding:7px 14px;border-radius:10px">▶ Start Celly’s recap (about ' + r.recapMins + ' min)</a>' +
+    '<span style="margin-left:10px;color:#56607A;font-size:9pt">' + (r.recapParts > 1 ? 'Recap 1 of 2, trickiest parts first. ' : '') + 'Video part, then its game room, in order. Your child just presses Next.</span></p>';
+  var w = r.watch.map(function (x) { return '<div style="margin:0 0 3px"><a href="' + x.url + '" style="color:#2B5BA8;font-weight:bold">▶ ' + esc_(x.chap) + ' (' + mmss_(x.t) + ')</a> <span style="color:#56607A">' + esc_(list_(x.items)) + '</span></div>'; }).join('');
+  var g = r.play.map(function (x) { return '<div style="margin:0 0 3px"><a href="' + x.url + '" style="color:#2B5BA8;font-weight:bold">🎮 ' + esc_(x.name) + '</a> <span style="color:#56607A">' + esc_(list_(x.items)) + '</span></div>'; }).join('');
+  if (!w && !g) return '<p>Nothing to repeat. Move on to ' + esc_(r.next.t) + ' when your child is ready.</p>';
+  return h + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:9.5pt;margin-top:4px"><tr>' +
+    '<td style="width:50%;vertical-align:top;padding-right:10px"><div style="font-weight:bold;margin:0 0 4px">1. Watch these parts again</div>' + (w || '<span style="color:#56607A">None needed.</span>') + '</td>' +
+    '<td style="vertical-align:top;padding-left:10px;border-left:1px solid #D9E5C4"><div style="font-weight:bold;margin:0 0 4px">2. Then replay these rooms</div>' + (g || '<span style="color:#56607A">None needed.</span>') + '</td></tr></table>';
+}
+
 function planHtml_(r, big) {
-  var li = 'margin:0 0 10px;line-height:1.5', h = '';
+  var li = big ? 'margin:0 0 4px;line-height:1.4' : 'margin:0 0 10px;line-height:1.5', h = '';
   if (r.recap) {
     h += '<p style="margin:14px 0 6px"><a href="' + r.recap + '" style="display:inline-block;background:#2B3A67;color:#ffffff;text-decoration:none;font-weight:bold;' +
       'font-size:' + (big ? '13pt' : '17px') + ';padding:12px 20px;border-radius:12px">▶ Start Celly’s recap (about ' + r.recapMins + ' min)</a></p>' +
@@ -274,35 +286,35 @@ function planHtml_(r, big) {
 
 /* ---------- report (PDF) ---------- */
 function reportHtml_(r) {
-  var rows = r.sections.map(function (s) {
-    var col = s.status === 'Secure' ? '#4E7A1E' : '#B5651D';
-    var items = s.items.map(function (x) {
-      var st = x.ok ? '<span style="color:#4E7A1E">Secure</span>' : x.unheard ? '<span style="color:#56607A">Celly couldn’t hear it clearly</span>'
-        : '<span style="color:#B5651D">Needs another go</span>';
-      return '<tr><td style="padding:3px 8px 3px 22px;border-bottom:1px solid #EEE9DA">' + esc_(x.item) + '</td><td style="padding:3px 8px;border-bottom:1px solid #EEE9DA;font-weight:bold">' + st + '</td></tr>';
-    }).join('');
-    return '<tr><td style="padding:10px 8px 4px;font-weight:bold">' + esc_(cap_(s.act)) + '</td><td style="padding:10px 8px 4px;font-weight:bold;color:' + col + '">' +
-      s.ok + ' of ' + s.n + ' · ' + s.status + '</td></tr>' + items;
+  // one row per part of the game: score, status and only the answers that need work
+  var rows = r.sections.map(function (s, i) {
+    var col = s.status === 'Secure' ? '#4E7A1E' : '#B5651D', bg = s.status === 'Secure' ? '#EEF5E1' : '#FBEEDD';
+    var weak = s.items.filter(function (x) { return !x.ok; }).map(function (x) { return esc_(x.item) + (x.unheard ? ' <i style="color:#56607A">(Celly couldn’t hear it)</i>' : ''); });
+    var td = 'padding:6px 8px;border-bottom:1px solid #EEE9DA;vertical-align:top;' + (i % 2 ? 'background:#FCFAF3;' : '');
+    return '<tr><td style="' + td + 'font-weight:bold">' + esc_(cap_(s.act)) + '</td>' +
+      '<td style="' + td + 'text-align:center;font-weight:bold">' + s.ok + ' / ' + s.n + '</td>' +
+      '<td style="' + td + 'text-align:center"><span style="display:inline-block;padding:1px 8px;border-radius:10px;background:' + bg + ';color:' + col + ';font-weight:bold;font-size:9.5pt">' + s.status + '</span></td>' +
+      '<td style="' + td + 'color:' + (weak.length ? '#1F2A44' : '#56607A') + '">' + (weak.length ? weak.join(', ') : 'All secure') + '</td></tr>';
   }).join('');
-  var heard = r.unheard.length ? '<p style="font-size:10.5pt;color:#56607A">Celly couldn’t hear ' + esc_(list_(r.unheard)) +
-    ' clearly. That is usually the microphone or a noisy room, not your child’s knowledge. Saying the word slowly in beats (tapping each part) helps.</p>' : '';
-  return '<html><head><meta charset="utf-8"></head><body style="font-family:Verdana,Arial,sans-serif;font-size:11.5pt;color:#1F2A44;line-height:1.5;margin:26px">' +
-    '<div style="border:4px double #81A63C;border-radius:14px;padding:16px 20px;background:#FAF6E9">' +
-    '<div style="font-size:10pt;letter-spacing:2px;color:#56607A">CELLY SCHOOL · REPORT FOR GROWN-UPS</div>' +
-    '<h1 style="font-size:19pt;margin:6px 0 2px">' + esc_(r.title) + '</h1>' +
+  var th = 'padding:6px 8px;text-align:left;font-size:9.5pt;color:#56607A;border-bottom:2px solid #E4DFCF';
+  return '<html><head><meta charset="utf-8"></head><body style="font-family:Verdana,Arial,sans-serif;font-size:10.5pt;color:#1F2A44;line-height:1.45;margin:22px">' +
+    '<div style="border:4px double #81A63C;border-radius:14px;padding:12px 18px;background:#FAF6E9">' +
+    '<div style="font-size:9pt;letter-spacing:2px;color:#56607A">CELLY SCHOOL · REPORT FOR GROWN-UPS</div>' +
+    '<div style="font-size:17pt;font-weight:bold;margin:4px 0 0">' + esc_(r.title) + '</div>' +
     '<div style="color:#56607A">Talk to Celly · ' + esc_(r.game + ' ' + r.topic) + ' · ' + esc_(r.date) + '</div></div>' +
     '<table style="width:100%;margin:10px 0 6px;border-collapse:separate;border-spacing:6px 0;table-layout:fixed"><tr>' +
     box_('Right first time', r.first + ' of ' + r.total) + box_('Overall', r.level.t) + box_('Time', (r.minutes || '<1') + ' min') +
     box_('Played by', r.mode) + box_('"Say it again"', String(r.sayAgain)) + '</tr></table>' +
-    '<p style="margin:8px 0"><b style="color:' + r.level.c + '">' + r.level.t + '.</b> ' + esc_(r.level.s) + '</p>' +
-    (r.strong.length ? '<p style="margin:8px 0"><b>Strong in:</b> ' + esc_(list_(r.strong)) + '.</p>' : '') +
-    '<div style="border:2px solid #81A63C;border-radius:12px;padding:6px 16px 12px;margin:14px 0;background:#F6FAEE">' +
-    '<h2 style="font-size:13.5pt;margin:8px 0 0">What to do next</h2>' + planHtml_(r, true) + '</div>' +
-    '<h2 style="font-size:13.5pt;margin:18px 0 4px">How each part went</h2>' +
-    '<table style="width:100%;border-collapse:collapse;font-size:10.5pt">' + rows + '</table>' + heard +
-    '<p style="font-size:10pt;color:#56607A">“Needs another go” means your child got there with help. It is not a mark. A child who says “say it again” a lot is using a good strategy, not struggling.</p>' +
-    '<p style="margin-top:12px"><b>After that:</b> ' + esc_(r.next.t) + ' at ' + SITE.replace('https://', '') + r.next.u + '</p>' +
-    '<p style="font-size:9.5pt;color:#56607A;margin-top:16px">Celly School · free, dyslexia-friendly KS3 science · www.cellyschool.com</p>' +
+    '<p style="margin:8px 0 4px"><b style="color:' + r.level.c + '">' + r.level.t + '.</b> ' + esc_(r.level.s) + '</p>' +
+    '<div style="font-size:12.5pt;font-weight:bold;margin:12px 0 4px">How each part went</div>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:10pt;table-layout:fixed">' +
+    '<tr><th style="' + th + ';width:26%">Part of the game</th><th style="' + th + ';width:10%;text-align:center">Score</th>' +
+    '<th style="' + th + ';width:20%;text-align:center">Status</th><th style="' + th + '">Needs another go</th></tr>' + rows + '</table>' +
+    '<p style="margin:6px 0 0;font-size:9pt;color:#56607A">“Needs another go” means your child got there with help. It is not a mark. “Celly couldn’t hear it” is usually the microphone, not your child’s knowledge.</p>' +
+    '<div style="border:2px solid #81A63C;border-radius:12px;padding:2px 14px 8px;margin:12px 0 0;background:#F6FAEE;font-size:10pt">' +
+    '<div style="font-size:12.5pt;font-weight:bold;margin:8px 0 0">What to do next</div>' + planPdf_(r) + '<div style="font-size:8.5pt;color:#56607A;margin-top:4px">Short and often works best: one video part and one room in a sitting is plenty.</div></div>' +
+    '<p style="margin:10px 0 0"><b>After that:</b> ' + esc_(r.next.t) + ' at ' + SITE.replace('https://', '') + r.next.u + '</p>' +
+    '<p style="font-size:8.5pt;color:#56607A;margin-top:8px">Celly School · free, dyslexia-friendly KS3 science · www.cellyschool.com</p>' +
     '</body></html>';
 }
 function box_(k, v) {
