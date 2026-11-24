@@ -11,7 +11,7 @@ COURSE_URL = '/course'
 UMAMI_ID = '585f0232-f0de-4980-a401-6b8133b6d029'    # Umami Cloud website ID (cookieless counts)
 CLARITY_ID = 'zhgmzz2723'  # Microsoft Clarity project ID (replays, only after consent)
 POSTHOG_KEY = 'phc_nES5k4NAb39SgFteH7mdCASP4BPWS3vFsJzMTxAB9Vdr'  # PostHog EU project key (public), only after consent
-GA_ID = ''  # Google Analytics 4 measurement ID (G-...), only after consent
+GA_ID = 'G-MZ4TCMRJ72'  # Google Analytics 4 measurement ID (G-...), only after consent
 NOW = dt.datetime.now(dt.timezone.utc)
 E = html.escape
 
@@ -113,7 +113,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=3" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=3" defer></script>
+<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=3" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
