@@ -268,3 +268,5 @@ html.vfake{overflow:hidden}
 .so-chip.so-c-chemistry{background:var(--chem-p);border-color:var(--chem);color:#1E4E7A}
 .so-chip.so-c-physics{background:var(--phys-p);border-color:var(--phys);color:#8E1430}
 .so-chip.now{outline:3px solid var(--sun);outline-offset:1px}
+.together{margin:14px 0;padding:14px 16px;border:2px solid var(--line);border-radius:var(--radius);background:var(--paper)}
+.together p{margin:.3em 0}

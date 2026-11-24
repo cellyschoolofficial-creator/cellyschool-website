@@ -15,12 +15,13 @@ window.CSOrder=(function(){
     inU.forEach(function(x,k){if(x[0]===slug)i=k;});
     if(i>=0&&i+1<inU.length)return inU[i+1];
     var us=units(),j=us.indexOf(u);
-    for(var k=j+1;k<us.length;k++){var f=lessonsOf(us[k]);if(f.length)return f[0];}
+    for(var k=j+1;k<us.length;k++){if(us[k]==='7B'&&!wants7B())continue;var f=lessonsOf(us[k]);if(f.length)return f[0];}
     return null;
   }
   function current(){var o=get();return o&&o.now?o.now:null;}
+  function wants7B(){var o=get();return !!(o&&o.units.indexOf('7B')>=0);}
   function unitName(c){for(var i=0;i<D.U.length;i++)if(D.U[i][0]===c)return D.U[i][1];return '';}
-  return {get:get,set:set,book:book,units:units,nextAfter:nextAfter,lessonsOf:lessonsOf,find:find,current:current,unitName:unitName,custom:function(){return !!get();}};
+  return {get:get,set:set,book:book,units:units,nextAfter:nextAfter,wants7B:wants7B,lessonsOf:lessonsOf,find:find,current:current,unitName:unitName,custom:function(){return !!get();}};
 })();
 (function(){
   // Phone menu: one button opens the full list (Stage 1, Nov 2026)
@@ -199,12 +200,13 @@ window.CSOrder=(function(){
   function esc(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   var meta=document.getElementById('lessonMeta');
   var here=meta?meta.getAttribute('data-slug'):(location.pathname.match(/\/(7[a-l][a-e])-workbook(\.html)?$/)||[])[1];
-  if(here&&CSOrder.custom()){
+  var staticNext=document.querySelector('.pager a.next'),toB=staticNext&&/\/7b[a-e](-workbook)?$/.test(staticNext.getAttribute('href')||'');
+  if(here&&(CSOrder.custom()||(toB&&!/^7b/.test(here)))){
     var nx=CSOrder.nextAfter(here),wb=/-workbook(\.html)?$/.test(location.pathname);
     document.querySelectorAll('.pager a.next').forEach(function(a){
       if(!nx){a.remove();return;}
       a.href=BASE+'/'+nx[0]+(wb?'-workbook':'');var st=a.querySelector('strong');if(st)st.textContent=nx[1]+' '+nx[2];
-      var d=a.querySelector('.dir');if(d&&!/school/.test(d.textContent))d.textContent=(wb?'Next workbook':'Next lesson')+' (your school\'s order) →';
+      var d=a.querySelector('.dir');if(d&&!/school/.test(d.textContent))d.textContent=(wb?'Next workbook':'Next lesson')+(CSOrder.custom()?' (your school\'s order)':'')+' →';
     });
     // the book's last lesson has no "Next" link: add one when the school's order carries on
     if(nx&&!document.querySelector('.pager a.next')){var pg=document.querySelector('.pager');if(pg){var na=document.createElement('a');na.className='card next';
@@ -287,4 +289,14 @@ window.CSOrder=(function(){
   b.innerHTML='<label for="kidSel">Learning:</label><select id="kidSel">'+f.kids.map(function(k){return '<option'+(k===cur?' selected':'')+'>'+CSFamily.esc(k)+'</option>';}).join('')+'</select>';
   var mb=document.getElementById('menuBtn');wrap.insertBefore(b,mb||null);
   b.querySelector('select').onchange=function(e){CSProg.setKid(e.target.value);if(window.csTrack)csTrack('kid-switch',{});location.reload();};
+})();
+
+/* 7B: the video plays on YouTube (age-restricted), so a grown-up confirms it was watched */
+(function(){
+  var b=document.getElementById('watchedTogether'),meta=document.getElementById('lessonMeta');if(!b||!meta||!window.CSProg)return;
+  var slug=meta.getAttribute('data-slug');
+  function show(){var l=CSProg.get().lessons[slug]||{};if(l.watched){b.textContent='✓ Marked as watched. Thank you!';b.disabled=true;}}
+  b.onclick=function(){CSProg.update(function(p){var l=p.lessons[slug]=p.lessons[slug]||{};l.watched=Date.now();l.together=1;l.t=Date.now();});
+    if(window.csTrack)csTrack('watched-together',{lesson:slug});show();};
+  show();
 })();

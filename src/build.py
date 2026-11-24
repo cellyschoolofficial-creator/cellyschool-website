@@ -94,7 +94,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/img/icon-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="preload" href="/fonts/lexend-regular.woff" as="font" type="font/woff" crossorigin>
 <link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#FAF6E9">
-<link rel="stylesheet" href="/site.css?v=11">
+<link rel="stylesheet" href="/site.css?v=12">
 {extra_head}{ld}
 </head>
 <body>
@@ -115,7 +115,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/play/family.js?v=6" defer></script><script src="/sync.js?v=1" defer></script><script src="/lessons.js?v=1" defer></script><script src="/site.js?v=15" defer></script>
+<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/play/family.js?v=6" defer></script><script src="/sync.js?v=1" defer></script><script src="/lessons.js?v=1" defer></script><script src="/site.js?v=16" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
@@ -184,6 +184,8 @@ def build_lesson(d, prev, nxt):
     b.append(f'<div class="video"{vattr}><div class="soon"><img src="/img/{hero}.png" alt=""><p>The video for this lesson goes live on<br><strong class="when">{nice_date(d)}, 6 pm (Qatar)</strong>.<br>The free workbook is ready now.</p></div></div>')
     if d['age_restricted']:
         b.append('<p class="note warn">Unit 7B covers human reproduction. On YouTube these videos are age-restricted, so they open on YouTube. Please watch together with a parent or teacher.</p>')
+        b.append('<div class="together"><p><strong>For the grown-up:</strong> this video plays on YouTube, so Celly School can’t see it being watched. When you have watched it together, press the button, and “Next” will move on.</p>'
+                 '<p><button class="btn" type="button" id="watchedTogether">✓ We watched this together</button></p></div>')
     game_btn = f'<a class="btn" href="/play/{d["slug"]}/">🎮 Play the Talk to Celly game</a>' if d["slug"] in [g[0] for g in GAMES] else ''
     b.append('<div class="btns">'
              f'<a class="btn primary" href="/{d["slug"]}-workbook">{ICON_DL} Free workbook (PDF)</a>'
