@@ -77,7 +77,9 @@ function doPost(e) {
     });
     log_(r, email, 'game');
     saveEmail_(email, r.game, 'report', r.child, r.meta);
-    return out_({ok: true});
+    // tell the game what to offer first on the certificate screen
+    var weak = (r.sections || []).filter(function (x) { return x.status !== 'Secure'; }).length;
+    return out_({ok: true, recap: r.recap || '', mins: r.recapMins || 0, weak: weak});
   } catch (err) {
     console.error(err);
     return out_({ok: false, why: 'error'});

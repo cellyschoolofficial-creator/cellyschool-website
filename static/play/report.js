@@ -235,13 +235,17 @@
         return {act: r.act, item: r.item, first: r.first, said: r.said, room: p.room, roomName: p.roomName, t: p.t, tEnd: p.tEnd, chap: p.chap};
       })
     };
-    fetch(URL_, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(body)})
-      .then(function () {
+    window.__csRecapWait = true;
+    fetch(URL_, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(body)})
+      .then(function (res) { return res.json().catch(function () { return {}; }); })
+      .then(function (r) {
+        window.__csRecapWait = false; window.__csRecap = r || {};
+        try { window.dispatchEvent(new Event('cs-recap-ready')); } catch (e) {}
         track('report-sent', {game: GAME});
         var p = document.createElement('p'); p.className = 'gu-sent'; p.textContent = '📧 ' + (ss(K + '_child') ? ss(K + '_child') + ', your' : 'Your') + ' grown-up’s report is on its way by email.';
         cert.appendChild(p);
       })
-      .catch(function () { ss(K + '_sent', ''); });
+      .catch(function () { ss(K + '_sent', ''); window.__csRecapWait = false; try { window.dispatchEvent(new Event('cs-recap-ready')); } catch (e) {} });
   }
   // put the child's name on the certificate (they already chose it on "Who's playing today?")
   function nameCert() {
@@ -280,7 +284,10 @@
       '#csNext{margin:18px 0 6px;padding:16px 18px;border:2px solid #81A63C;border-radius:16px;background:#F6FAEE}' +
       '#csNext h2{margin:0 0 10px;font-size:22px}#csNext .row{display:flex;flex-wrap:wrap;gap:10px}' +
       '#csNext a{display:inline-flex;align-items:center;gap:.4em;min-height:48px;padding:.6em 1.1em;border-radius:999px;font-weight:600;text-decoration:none;border:2px solid #2E3F6E;color:#1F2A44;background:#fff}' +
-      '#csNext a.go{background:#1F2A44;color:#fff;border-color:#1F2A44}';
+      '#csNext a.go{background:#1F2A44;color:#fff;border-color:#1F2A44}' +
+      '#csNext a.recap{background:#81A63C;border-color:#5E7F22;color:#fff;font-size:1.08em}' +
+      '#csNext .recap-wait{display:inline-flex;align-items:center;min-height:48px;color:#4E7A1E;font-weight:600}' +
+      '#csNext .recap-note{margin:8px 0 0;color:#4A5573;font-size:16px}';
     document.head.appendChild(st);
     var box = document.createElement('div'); box.id = 'csNext';
     var h = '<h2>What next? 🚀</h2><div class="row">' +
@@ -289,6 +296,27 @@
       '<a href="' + BASE + '/' + GAME.toLowerCase() + '">📺 Watch the ' + GAME + ' video again</a></div>';
     box.innerHTML = h;
     cert.parentNode.insertBefore(box, cert.nextSibling);
+    // the report decides: if some parts need practice, Celly's recap comes first (short, and optional)
+    var row = box.querySelector('.row'), hold = null;
+    function showRecap() {
+      var r = window.__csRecap || {};
+      if (hold) { hold.remove(); hold = null; }
+      if (!r.recap || !r.weak || box.querySelector('.recap')) return;
+      var a = document.createElement('a'); a.className = 'go recap'; a.href = r.recap;
+      a.innerHTML = '⭐ Practise the tricky bits with Celly' + (r.mins ? ' (about ' + r.mins + ' min)' : '');
+      row.insertBefore(a, row.firstChild);
+      var lead = row.querySelector('a.go:not(.recap)'); if (lead) lead.className = '';
+      var note = document.createElement('p'); note.className = 'recap-note';
+      note.textContent = 'Or do it tomorrow: your grown-up has the same link in their email.';
+      row.parentNode.insertBefore(note, row.nextSibling);
+      track('recap-offered', {game: GAME, weak: r.weak});
+    }
+    if (window.__csRecapWait) {
+      hold = document.createElement('span'); hold.className = 'recap-wait'; hold.textContent = '⭐ Celly is checking which bits to practise…';
+      row.insertBefore(hold, row.firstChild);
+      window.addEventListener('cs-recap-ready', showRecap);
+      setTimeout(function () { if (hold) { hold.remove(); hold = null; } }, 25000);
+    } else if (window.__csRecap) showRecap();
     box.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a) track('game-next-click', {game: GAME, to: a.getAttribute('href')}); });
   }
   new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) { nameCert(); send(c); nextSteps(c); } })
