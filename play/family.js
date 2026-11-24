@@ -1,7 +1,7 @@
 /* Celly School · family setup, once per device.
    A grown-up saves their email and their children's first names. Every game then asks
    "Who's playing today?" and the report goes to that grown-up with the right child's name.
-   Stored only in this browser (localStorage "cs_family"). Children's names are not stored by us. */
+   Stored in this browser (localStorage "cs_family") and, with the parent's agreement, in Celly School's parent list. */
 (function () {
   var KEY = 'cs_family';
   function get() {
@@ -39,10 +39,10 @@
       '<input class="hp" type="text" id="famH" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<label>Your child’s first name <span style="font-weight:400;color:#56607A">(or a nickname)</span></label><div class="kids" id="famK"></div>' +
       '<button type="button" class="addkid" id="famAdd">+ Add another child</button>' +
-      '<label class="tick"><input type="checkbox" id="famP"' + (f.email ? ' checked' : '') + '> <span>I’m the parent or carer of these children.</span></label>' +
+      '<label class="tick"><input type="checkbox" id="famP"' + (f.email ? ' checked' : '') + '> <span>I’m the parent or carer of these children, and I agree to Celly School keeping this email and these first names to send me their reports and recaps.</span></label>' +
       '<p class="err" id="famErr" aria-live="polite"></p>' +
       '<div class="btns"><button class="yes" id="famSave">' + (opts.saveLabel || 'Save') + '</button>' + (opts.onSkip ? '<button id="famSkip">' + (opts.skipLabel || 'Skip') + '</button>' : '') + '</div>' +
-      '<p class="small">This device remembers your email and your children’s names, so next time your child just taps their name. Names are only used in your report. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>';
+      '<p class="small">We keep your email and your children’s first names in our private Google account, only to send you their reports and recaps. We never share them. You can ask us to change or delete them at any time. This device also remembers them, so next time your child just taps their name. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>';
     var K = box.querySelector('#famK');
     function addRow(v) {
       if (K.children.length >= 6) return;

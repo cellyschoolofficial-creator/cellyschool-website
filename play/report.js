@@ -120,7 +120,7 @@
       intro: '<h2 id="guT">For the grown-up 👋</h2>' +
         '<p style="margin:0">Set this up once and get a short report by email each time your child finishes a game, even when they play alone.</p>' +
         '<ul><li>At the end of each game: what they got right first time, which words to practise, and Celly’s recap.</li>' +
-        '<li>No account and no sign-in. We keep your email so we can send reports and recaps. We never share it, and you can ask us to delete it at any time.</li></ul>',
+        '<li>No account and no sign-in. We keep your email and your children’s first names so we can send each child’s reports and recaps. We never share them.</li></ul>',
       saveLabel: 'Save and play', skipLabel: 'Play without a report',
       onSave: function (f, hp) {
         track('report-optin', {game: GAME, kids: f.kids.length});
