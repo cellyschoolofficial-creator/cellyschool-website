@@ -66,9 +66,9 @@
 
   /* ---------- 5. progress for the website ---------- */
   function prog(fn) {
-    var p = lsGet('cs_progress') || {v: 1, lessons: {}, games: {}};
+    var p = lsGet('cs_progress2') || {v: 1, lessons: {}, games: {}};
     p.lessons = p.lessons || {}; p.games = p.games || {};
-    fn(p); lsSet('cs_progress', p);
+    fn(p); lsSet('cs_progress2', p);
   }
   var gameName = ((document.querySelector('#card h1') || {}).textContent || '').trim() || (document.title.split('·')[1] || '').trim();
   function savePlace(room) {
@@ -143,7 +143,18 @@
   new MutationObserver(function () {
     if (finished || !document.querySelector('.cert')) return;
     finished = true; lsDel(RKEY);
-    if (!RECAP) prog(function (p) { var g = p.games[slug] = p.games[slug] || {}; g.name = g.name || gameName; g.done = Date.now(); g.room = LAST; g.level = 2; p.last = {kind: 'game', slug: slug, t: Date.now(), done: true}; });
+    if (RECAP) return;
+    // honest "finished": most rooms really played (20 s or more in the room), not just jumping to the certificate
+    var log = {}; try { log = JSON.parse(ssGet('cs_report_' + slug + '_rooms') || '{}'); } catch (e) {}
+    var playable = 0, played = 0;
+    TRAIL.forEach(function (t, i) { if (i === LAST || i === BB) return; playable++; if (log[i] && log[i].s >= 20) played++; });
+    var real = playable && played / playable >= 0.7;
+    track(real ? 'game-finished-real' : 'game-cert-skipped', {game: slug, played: played, of: playable});
+    prog(function (p) {
+      var g = p.games[slug] = p.games[slug] || {}; g.name = g.name || gameName; g.played = Math.max(g.played || 0, played); g.of = playable;
+      if (real) { g.done = Date.now(); g.room = LAST; g.level = 2; } else { g.room = g.room || 0; }
+      p.last = {kind: 'game', slug: slug, t: Date.now(), done: real};
+    });
   }).observe(document.getElementById('card') || document.body, {childList: true, subtree: true});
 
   /* the brain break ends Level 1: say so, and offer a natural place to stop */
