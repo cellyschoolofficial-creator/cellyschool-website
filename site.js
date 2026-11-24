@@ -1,4 +1,7 @@
 (function(){
+  // Phone menu: one button opens the full list (Stage 1, Nov 2026)
+  var mb=document.getElementById('menuBtn'), nv=document.getElementById('mainNav');
+  if(mb&&nv)mb.addEventListener('click',function(){var o=!nv.classList.contains('open');nv.classList.toggle('open',o);mb.setAttribute('aria-expanded',o?'true':'false');});
   // Reading comfort: bigger text and wider spacing, remembered on this device only.
   var html=document.documentElement, btn=document.getElementById('comfy');
   function set(on){html.classList.toggle('comfy',on);if(btn)btn.setAttribute('aria-pressed',on?'true':'false');}
