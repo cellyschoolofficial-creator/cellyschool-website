@@ -291,7 +291,7 @@ function reportHtml_(r) {
     '<div style="font-size:10pt;letter-spacing:2px;color:#56607A">CELLY SCHOOL · REPORT FOR GROWN-UPS</div>' +
     '<h1 style="font-size:19pt;margin:6px 0 2px">' + esc_(r.title) + '</h1>' +
     '<div style="color:#56607A">Talk to Celly · ' + esc_(r.game + ' ' + r.topic) + ' · ' + esc_(r.date) + '</div></div>' +
-    '<table style="width:100%;margin:14px 0 6px;border-collapse:collapse"><tr>' +
+    '<table style="width:100%;margin:10px 0 6px;border-collapse:separate;border-spacing:6px 0;table-layout:fixed"><tr>' +
     box_('Right first time', r.first + ' of ' + r.total) + box_('Overall', r.level.t) + box_('Time', (r.minutes || '<1') + ' min') +
     box_('Played by', r.mode) + box_('"Say it again"', String(r.sayAgain)) + '</tr></table>' +
     '<p style="margin:8px 0"><b style="color:' + r.level.c + '">' + r.level.t + '.</b> ' + esc_(r.level.s) + '</p>' +
@@ -306,8 +306,8 @@ function reportHtml_(r) {
     '</body></html>';
 }
 function box_(k, v) {
-  return '<td style="width:20%;padding:3px"><div style="border:2px solid #E4DFCF;border-radius:10px;padding:6px;text-align:center">' +
-    '<div style="font-size:9pt;color:#56607A">' + k + '</div><div style="font-size:12.5pt;font-weight:bold">' + esc_(v) + '</div></div></td>';
+  return '<td style="width:20%;height:58px;vertical-align:top;text-align:center;border:2px solid #E4DFCF;border-radius:10px;padding:7px 6px;background:#FFFFFF">' +
+    '<div style="font-size:9pt;color:#56607A;line-height:1.3">' + k + '</div><div style="font-size:12pt;font-weight:bold;line-height:1.25">' + esc_(v) + '</div></td>';
 }
 
 /* ---------- email ---------- */
