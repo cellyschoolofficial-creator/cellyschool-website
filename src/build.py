@@ -94,7 +94,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/img/icon-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="preload" href="/fonts/lexend-regular.woff" as="font" type="font/woff" crossorigin>
 <link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#FAF6E9">
-<link rel="stylesheet" href="/site.css?v=9">
+<link rel="stylesheet" href="/site.css?v=11">
 {extra_head}{ld}
 </head>
 <body>
@@ -115,7 +115,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/play/family.js?v=6" defer></script><script src="/sync.js?v=1" defer></script><script src="/lessons.js?v=1" defer></script><script src="/site.js?v=13" defer></script>
+<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/play/family.js?v=6" defer></script><script src="/sync.js?v=1" defer></script><script src="/lessons.js?v=1" defer></script><script src="/site.js?v=15" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
