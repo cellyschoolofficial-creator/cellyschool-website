@@ -6,8 +6,8 @@
  * This script builds a one-page PDF report and emails it from the Celly School account.
  *
  * What is kept: a log row (date, game, score, minutes, mode) in "Celly School game reports (log)".
- * The email address is saved in "Celly School parent emails" (Google Sheet in the Celly School folder),
- * as the game screen tells parents. A short one-way code of it is also held for one day
+ * The email address and the children's first names the parent gives are saved in "Celly School parent
+ * emails" (Google Sheet in the Celly School folder). The parent agrees to this on the setup screen. A short one-way code of it is also held for one day
  * to stop more than 3 reports a day going to the same address.
  *
  * Deploy: Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone.
@@ -71,7 +71,7 @@ function doPost(e) {
       attachments: [pdf]
     });
     log_(r);
-    saveEmail_(email, r.game, 'report');
+    saveEmail_(email, r.game, 'report', r.child);
     return out_({ok: true});
   } catch (err) {
     console.error(err);
@@ -233,8 +233,8 @@ function recapResult_(d) {
     'We never share your email address. To stop these emails or delete your address, reply to this email. <a href="' + SITE + '/privacy">Privacy</a></p></div>';
   if (MailApp.getRemainingDailyQuota() < 3) return out_({ok: false, why: 'quota'});
   MailApp.sendEmail({to: t.email, name: 'Celly School', subject: (child ? child + '’s recap result: ' : 'Celly’s recap result: ') + game + ' ' + (still.length ? '(recap 2 ready)' : '(all secure)'), htmlBody: html});
-  saveEmail_(t.email, game, 'recap');
-  try { log_({game: game + ' recap', first: nowOk.length, total: nowOk.length + still.length, minutes: 0, mode: 'recap', sayAgain: 0, practise: still}); } catch (e) {}
+  saveEmail_(t.email, game, 'recap', child);
+  try { log_({game: game + ' recap', first: nowOk.length, total: nowOk.length + still.length, minutes: 0, mode: 'recap', sayAgain: 0, practise: still, child: child}); } catch (e) {}
   return out_({ok: true});
 }
 
@@ -365,34 +365,37 @@ function log_(r) {
     else {
       ss = SpreadsheetApp.create(name);
       DriveApp.getFileById(ss.getId()).moveTo(root);
-      ss.getSheets()[0].appendRow(['Date', 'Game', 'Right first time', 'Out of', 'Minutes', 'Mode', 'Say it again', 'To practise']);
+      ss.getSheets()[0].appendRow(['Date', 'Game', 'Right first time', 'Out of', 'Minutes', 'Mode', 'Say it again', 'To practise', 'Child']);
     }
-    ss.getSheets()[0].appendRow([new Date(), r.game, r.first, r.total, r.minutes, r.mode, r.sayAgain, r.practise.join(', ')]);
+    if (ss.getSheets()[0].getRange(1, 9).getValue() !== 'Child') ss.getSheets()[0].getRange(1, 9).setValue('Child');
+    ss.getSheets()[0].appendRow([new Date(), r.game, r.first, r.total, r.minutes, r.mode, r.sayAgain, r.practise.join(', '), r.child || '']);
   } catch (e) { console.error('log: ' + e); }
 }
 
 /* ---------- parent email list (every address that asked for a report) ---------- */
-function saveEmail_(email, game, kind) {
+function saveEmail_(email, game, kind, child) {
   try {
     var lock = LockService.getScriptLock(); lock.waitLock(10000);
     try {
       var root = DriveApp.getFolderById(ROOT_ID), name = 'Celly School parent emails', it = root.getFilesByName(name), ss;
+      var head = ['Email', 'First seen', 'Last activity', 'Games', 'Reports', 'Recaps finished', 'News consent', 'Children'];
       if (it.hasNext()) ss = SpreadsheetApp.open(it.next());
-      else {
-        ss = SpreadsheetApp.create(name); DriveApp.getFileById(ss.getId()).moveTo(root);
-        ss.getSheets()[0].appendRow(['Email', 'First seen', 'Last activity', 'Games', 'Reports', 'Recaps finished', 'News consent']);
-        ss.getSheets()[0].setFrozenRows(1);
-      }
-      var sh = ss.getSheets()[0], rows = sh.getDataRange().getValues(), now = new Date();
+      else { ss = SpreadsheetApp.create(name); DriveApp.getFileById(ss.getId()).moveTo(root); ss.getSheets()[0].setFrozenRows(1); }
+      var sh = ss.getSheets()[0];
+      if (sh.getLastRow() === 0 || sh.getRange(1, 8).getValue() !== 'Children') sh.getRange(1, 1, 1, head.length).setValues([head]);
+      var rows = sh.getDataRange().getValues(), now = new Date();
       for (var i = 1; i < rows.length; i++) {
         if (String(rows[i][0]).toLowerCase() === email) {
-          var games = String(rows[i][3] || ''), gl = games ? games.split(', ') : [];
+          var gl = String(rows[i][3] || '') ? String(rows[i][3]).split(', ') : [];
           if (gl.indexOf(game) < 0) gl.push(game);
+          var kl = String(rows[i][7] || '') ? String(rows[i][7]).split(', ') : [];
+          if (child && kl.indexOf(child) < 0) kl.push(child);
           sh.getRange(i + 1, 3, 1, 4).setValues([[now, gl.join(', '), (+rows[i][4] || 0) + (kind === 'report' ? 1 : 0), (+rows[i][5] || 0) + (kind === 'recap' ? 1 : 0)]]);
+          sh.getRange(i + 1, 8).setValue(kl.join(', '));
           return;
         }
       }
-      sh.appendRow([email, now, now, game, kind === 'report' ? 1 : 0, kind === 'recap' ? 1 : 0, 'not asked']);
+      sh.appendRow([email, now, now, game, kind === 'report' ? 1 : 0, kind === 'recap' ? 1 : 0, 'not asked', child || '']);
     } finally { lock.releaseLock(); }
   } catch (e) { console.error('saveEmail: ' + e); }
 }
