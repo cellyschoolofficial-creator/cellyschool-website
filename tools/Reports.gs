@@ -70,7 +70,7 @@ function doPost(e) {
       htmlBody: emailHtml_(r),
       attachments: [pdf]
     });
-    log_(r);
+    log_(r, email, 'game');
     saveEmail_(email, r.game, 'report', r.child);
     return out_({ok: true});
   } catch (err) {
@@ -234,7 +234,7 @@ function recapResult_(d) {
   if (MailApp.getRemainingDailyQuota() < 3) return out_({ok: false, why: 'quota'});
   MailApp.sendEmail({to: t.email, name: 'Celly School', subject: (child ? child + '’s recap result: ' : 'Celly’s recap result: ') + game + ' ' + (still.length ? '(recap 2 ready)' : '(all secure)'), htmlBody: html});
   saveEmail_(t.email, game, 'recap', child);
-  try { log_({game: game + ' recap', first: nowOk.length, total: nowOk.length + still.length, minutes: 0, mode: 'recap', sayAgain: 0, practise: still, child: child}); } catch (e) {}
+  log_({game: game, topic: '', child: child, results: res, first: res.filter(function (x) { return x.ok; }).length, total: res.length, mode: 'recap', minutes: 0, sayAgain: 0}, t.email, 'recap');
   return out_({ok: true});
 }
 
@@ -357,22 +357,54 @@ function allow_(email) {
   } finally { lock.releaseLock(); }
 }
 
-function log_(r) {
+/* ---------- the log: every game and recap, every answer, and each child's progress ----------
+   One spreadsheet "Celly School game reports (log)" with three tabs: Sessions, Answers, Progress by child. */
+function tab_(ss, name, head) {
+  var sh = ss.getSheetByName(name);
+  if (!sh) { sh = ss.insertSheet(name); sh.appendRow(head); sh.setFrozenRows(1); sh.getRange(1, 1, 1, head.length).setFontWeight('bold'); }
+  return sh;
+}
+function logBook_() {
+  var root = DriveApp.getFolderById(ROOT_ID), name = 'Celly School game reports (log)', it = root.getFilesByName(name);
+  if (it.hasNext()) return SpreadsheetApp.open(it.next());
+  var ss = SpreadsheetApp.create(name); DriveApp.getFileById(ss.getId()).moveTo(root); return ss;
+}
+function log_(r, email, type) {
   try {
-    var root = DriveApp.getFolderById(ROOT_ID), name = 'Celly School game reports (log)';
-    var it = root.getFilesByName(name), ss;
-    if (it.hasNext()) ss = SpreadsheetApp.open(it.next());
-    else {
-      ss = SpreadsheetApp.create(name);
-      DriveApp.getFileById(ss.getId()).moveTo(root);
-      ss.getSheets()[0].appendRow(['Date', 'Game', 'Right first time', 'Out of', 'Minutes', 'Mode', 'Say it again', 'To practise', 'Child']);
-    }
-    if (ss.getSheets()[0].getRange(1, 9).getValue() !== 'Child') ss.getSheets()[0].getRange(1, 9).setValue('Child');
-    ss.getSheets()[0].appendRow([new Date(), r.game, r.first, r.total, r.minutes, r.mode, r.sayAgain, r.practise.join(', '), r.child || '']);
+    var lock = LockService.getScriptLock(); lock.waitLock(15000);
+    try {
+      var ss = logBook_(), now = new Date(), id = Utilities.getUuid().slice(0, 8), type_ = type || 'game';
+      var pct = r.total ? Math.round(r.first / r.total * 100) : 0;
+      var secs = r.sections || [], cnt = function (st) { return secs.filter(function (x) { return x.status === st; }).length; };
+      var weak = uniq_(r.results.filter(function (x) { return x.wrong; }).map(function (x) { return x.item; }));
+      var unheard = uniq_(r.results.filter(function (x) { return x.unheard; }).map(function (x) { return x.item; }));
+      tab_(ss, 'Sessions', ['Date', 'Session', 'Parent email', 'Child', 'Game', 'Topic', 'Type', 'Right first time', 'Out of', '%', 'Level',
+        'Minutes', 'Mode', 'Say it again', 'Parts secure', 'Parts nearly there', 'Parts needing practice', 'Needs another go', 'Celly couldn’t hear', 'Recap minutes', 'Recap parts'])
+        .appendRow([now, id, email || '', r.child || '', r.game, r.topic || '', type_, r.first, r.total, pct, (r.level || {}).t || '',
+          r.minutes || 0, r.mode || '', r.sayAgain || 0, cnt('Secure'), cnt('Nearly there'), cnt('Needs practice'), weak.join(', '), unheard.join(', '),
+          r.recapMins || 0, r.recapParts || 0]);
+      var ans = tab_(ss, 'Answers', ['Date', 'Session', 'Child', 'Game', 'Type', 'Part of the game', 'Answer', 'Right first time', 'Celly heard it', 'Video part', 'Video time', 'Room']);
+      var rows = r.results.map(function (x) {
+        return [now, id, r.child || '', r.game, type_, x.act, x.item, x.wrong ? 'no' : 'yes', x.unheard ? 'no' : 'yes', x.chap || '', x.t >= 0 ? mmss_(x.t) : '', x.roomName || ''];
+      });
+      if (rows.length) ans.getRange(ans.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+      // progress: one row per parent + child + game
+      var pr = tab_(ss, 'Progress by child', ['Parent email', 'Child', 'Game', 'First played', 'Last played', 'Games played', 'Recaps finished',
+        'First score %', 'Latest score %', 'Best score %', 'Still tricky (latest)']);
+      var data = pr.getDataRange().getValues(), key = (email || '') + '|' + (r.child || '') + '|' + r.game, tricky = uniq_(weak.concat(unheard)).join(', ');
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][0] + '|' + data[i][1] + '|' + data[i][2] === key) {
+          if (type_ === 'game') pr.getRange(i + 1, 5, 1, 7).setValues([[now, (+data[i][5] || 0) + 1, +data[i][6] || 0, data[i][7], pct, Math.max(+data[i][9] || 0, pct), tricky]]);
+          else pr.getRange(i + 1, 5, 1, 7).setValues([[now, +data[i][5] || 0, (+data[i][6] || 0) + 1, data[i][7], data[i][8], data[i][9], tricky]]);
+          return;
+        }
+      }
+      pr.appendRow([email || '', r.child || '', r.game, now, now, type_ === 'game' ? 1 : 0, type_ === 'recap' ? 1 : 0,
+        type_ === 'game' ? pct : '', type_ === 'game' ? pct : '', type_ === 'game' ? pct : '', tricky]);
+    } finally { lock.releaseLock(); }
   } catch (e) { console.error('log: ' + e); }
 }
 
-/* ---------- parent email list (every address that asked for a report) ---------- */
 function saveEmail_(email, game, kind, child) {
   try {
     var lock = LockService.getScriptLock(); lock.waitLock(10000);
