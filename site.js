@@ -255,6 +255,23 @@ window.CSOrder=(function(){
   // opened from "Set our school's order" links
   if(/[?&]setorder=1/.test(location.search)&&!CSOrder.custom()){editor();setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'start'});},200);}
 })();
+/* Year 7 page: with a school order set, show the units in that order (subject view folded away below) */
+(function(){
+  var box=document.getElementById('schoolOrder');if(!box||!window.CSOrder||!CSOrder.custom())return;
+  var subj=[].slice.call(document.querySelectorAll('section.subj'));if(!subj.length)return;
+  var BASE=(location.pathname.match(/^\/preview-[a-z0-9-]+/)||[''])[0],cards={};
+  subj.forEach(function(sec){sec.querySelectorAll('a.card[href]').forEach(function(a){var m=(a.getAttribute('href')||'').match(/\/year-7\/(7[a-l])$/);if(m)cards[m[1].toUpperCase()]={a:a,cls:sec.className.replace('subj','').trim()};});});
+  var now=CSOrder.current(),sec=document.createElement('section');sec.className='school-units';
+  sec.innerHTML='<h2>Your school’s units, in order</h2><div class="grid"></div>';
+  var g=sec.querySelector('.grid');
+  CSOrder.units().forEach(function(u,i){var c=cards[u];if(!c)return;var a=c.a.cloneNode(true);a.classList.add('su-'+c.cls);
+    var n=document.createElement('span');n.className='su-n';n.textContent=String(i+1);a.insertBefore(n,a.firstChild);
+    if(u===now){a.classList.add('su-now');var t=document.createElement('span');t.className='su-tag';t.textContent='Now';a.insertBefore(t,n.nextSibling);}
+    g.appendChild(a);});
+  box.parentNode.insertBefore(sec,box.nextSibling);
+  var det=document.createElement('details');det.className='by-subject';det.innerHTML='<summary>See the units by subject (book order)</summary>';
+  subj[0].parentNode.insertBefore(det,subj[0]);subj.forEach(function(x){det.appendChild(x);});
+})();
 /* home page: hide the "set your school's order" link once an order is set */
 (function(){var h=document.getElementById('heroOrder');if(h&&window.CSOrder&&CSOrder.custom())h.hidden=true;})();
 
