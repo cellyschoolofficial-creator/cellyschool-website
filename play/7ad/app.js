@@ -964,11 +964,11 @@ function saveCert(){
   g.font=`600 30px ${F}`;g.fillText("CELLY SCHOOL CERTIFICATE",W/2,150);g.font=`600 84px ${F}`;g.fillText(CERT_T,W/2,260);
   g.font=`400 34px ${F}`;g.fillText("This is to say that",W/2,340);g.font=`600 64px ${F}`;g.fillText($("#certName").textContent,W/2,430);
   g.font=`400 34px ${F}`;g.fillText("found Celly's parts in every room of the Cell Museum.",W/2,500);g.fillStyle="#56607A";g.fillText("7Ad Cells · "+new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}),W/2,556);
-  g.font=`400 26px ${F}`;g.fillText("www.cellyschool.com",W/2,H-90);
+  g.font=`400 26px ${F}`;g.fillText("www.cellyschool.com",W/2,H-80);
   const name="Celly School certificate - "+CERT_T+".png";
   const save=()=>{const a=document.createElement("a");a.download=name;a.href=c.toDataURL("image/png");document.body.appendChild(a);a.click();a.remove();};
   const svg=new XMLSerializer().serializeToString(rig).replace(/class="rig[^"]*"/,'class="rig"');
-  const img=new Image();img.onload=()=>{g.drawImage(img,W/2-170,590,340,340);save();};img.onerror=save;
+  const img=new Image();img.onload=()=>{g.drawImage(img,W/2-140,578,280,280);save();};img.onerror=save;
   img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg.includes("xmlns=")?svg:svg.replace("<svg",'<svg xmlns="http://www.w3.org/2000/svg"'));
 }
 
