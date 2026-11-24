@@ -360,6 +360,61 @@ function allow_(email) {
 
 /* ---------- the log: every game and recap, every answer, and each child's progress ----------
    One spreadsheet "Celly School game reports (log)" with three tabs: Sessions, Answers, Progress by child. */
+var HEAD = {
+  'Sessions': ['Date'],
+  'Answers': ['Date'],
+  'Progress by child': ['Parent email'],
+  'Room times': ['Date']
+};
+
+/* ---------- Dashboard tab: live formulas over the other tabs (built once, updates by itself) ---------- */
+function dashboard_(ss) {
+  try {
+    tab_(ss, 'Sessions', HEAD['Sessions']); tab_(ss, 'Answers', HEAD['Answers']); tab_(ss, 'Room times', HEAD['Room times']); tab_(ss, 'Progress by child', HEAD['Progress by child']);
+    var d = ss.insertSheet('Dashboard', 0);
+    var bold = function (a1) { d.getRange(a1).setFontWeight('bold'); };
+    var title = function (a1, t) { d.getRange(a1).setValue(t).setFontWeight('bold').setFontSize(12).setFontColor('#2B3A67'); };
+    d.getRange('A1').setValue('Celly School · Talk to Celly dashboard').setFontSize(16).setFontWeight('bold').setFontColor('#1F2A44');
+    d.getRange('A2').setValue('Updates by itself from the Sessions, Answers, Room times and Progress tabs.').setFontColor('#56607A');
+    var S = 'Sessions!', G = 'Sessions!G:G';
+    var kpi = [
+      ['Games finished', '=COUNTIF(' + G + ',"game")'],
+      ['Recaps finished', '=COUNTIF(' + G + ',"recap")'],
+      ['Families (emails)', '=IFERROR(COUNTUNIQUE(FILTER(Sessions!C2:C,Sessions!C2:C<>"")),0)'],
+      ['Children', '=IFERROR(COUNTUNIQUE(FILTER(Sessions!C2:C&"|"&Sessions!D2:D,Sessions!C2:C<>"")),0)'],
+      ['Average score %', '=IFERROR(ROUND(AVERAGEIF(' + G + ',"game",Sessions!J:J)),"")'],
+      ['Average minutes per game', '=IFERROR(ROUND(AVERAGEIF(' + G + ',"game",Sessions!L:L),1),"")'],
+      ['Average gain when a game is replayed (points)', '=IFERROR(ROUND(AVERAGE(FILTER(\'Progress by child\'!I2:I-\'Progress by child\'!H2:H,\'Progress by child\'!F2:F>1))),"no replays yet")'],
+      ['Share of games played by talking', '=IFERROR(TEXT(COUNTIFS(' + G + ',"game",Sessions!M:M,"talking*")/COUNTIF(' + G + ',"game"),"0%"),"")']
+    ];
+    title('A4', 'Key numbers'); d.getRange(5, 1, kpi.length, 2).setValues(kpi); d.getRange(5, 2, kpi.length, 1).setFontWeight('bold').setHorizontalAlignment('left');
+    var q = function (a1, head, f) { title(a1, head); var c = d.getRange(a1).offset(1, 0); c.setFormula(f); };
+    q('A15', 'By game', '=IFERROR(QUERY(Sessions!A:AI,"select E, count(B), avg(J), avg(L), avg(N), avg(Q) where G=\'game\' group by E label count(B) \'Plays\', avg(J) \'Avg score %\', avg(L) \'Avg minutes\', avg(N) \'Avg say again\', avg(Q) \'Avg parts needing practice\'",1),"No games yet")');
+    q('A36', 'Hardest answers (most often wrong first time)', '=IFERROR(QUERY(Answers!A:L,"select D, F, G, count(B) where H=\'no\' and E=\'game\' group by D, F, G order by count(B) desc limit 15 label count(B) \'Times missed\'",1),"No answers yet")');
+    q('A55', 'Words Celly most often could not hear', '=IFERROR(QUERY(Answers!A:L,"select D, G, count(B) where I=\'no\' group by D, G order by count(B) desc limit 10 label count(B) \'Times\'",1),"None yet")');
+    q('A69', 'Slowest rooms (where children spend longest)', '=IFERROR(QUERY(\'Room times\'!A:H,"select D, E, avg(F), sum(G), count(B) group by D, E order by avg(F) desc limit 12 label avg(F) \'Avg seconds\', sum(G) \'Say it again\', count(B) \'Visits\'",1),"No room times yet")');
+    q('A85', 'Lesson video parts linked to the most missed answers', '=IFERROR(QUERY(Answers!A:L,"select D, J, count(B) where H=\'no\' and J<>\'\' group by D, J order by count(B) desc limit 10 label count(B) \'Times missed\'",1),"None yet")');
+    q('H4', 'Devices', '=IFERROR(QUERY(Sessions!A:AI,"select V, count(B) where G=\'game\' group by V order by count(B) desc label count(B) \'Plays\'",1),"")');
+    q('H12', 'Browsers', '=IFERROR(QUERY(Sessions!A:AI,"select W, count(B) where G=\'game\' group by W order by count(B) desc label count(B) \'Plays\'",1),"")');
+    q('H22', 'Where players came from', '=IFERROR(QUERY(Sessions!A:AI,"select AB, count(B) where G=\'game\' group by AB order by count(B) desc limit 10 label count(B) \'Plays\'",1),"")');
+    q('H36', 'Time zones (rough location)', '=IFERROR(QUERY(Sessions!A:AI,"select AA, count(B) where G=\'game\' group by AA order by count(B) desc limit 10 label count(B) \'Plays\'",1),"")');
+    q('H50', 'Talk or tap', '=IFERROR(QUERY(Sessions!A:AI,"select M, count(B), avg(J) where G=\'game\' group by M label count(B) \'Plays\', avg(J) \'Avg score %\'",1),"")');
+    q('H57', 'Plays by day', '=IFERROR(QUERY(Sessions!A:AI,"select toDate(A), count(B) where G=\'game\' and A is not null group by toDate(A) label toDate(A) \'Day\', count(B) \'Plays\'",1),"")');
+    d.setColumnWidth(1, 300); d.setColumnWidths(2, 5, 120); d.setColumnWidth(7, 30); d.setColumnWidths(8, 3, 140);
+    d.getRange('B16:F16').setNumberFormat('0.0');
+    try {
+      d.insertChart(d.newChart().asColumnChart().addRange(d.getRange('A16:C30')).setPosition(15, 12, 0, 0)
+        .setOption('title', 'Plays and average score by game').setOption('legend', {position: 'bottom'}).build());
+      d.insertChart(d.newChart().asLineChart().addRange(d.getRange('H58:I200')).setPosition(36, 12, 0, 0)
+        .setOption('title', 'Games finished per day').setOption('legend', {position: 'none'}).build());
+      d.insertChart(d.newChart().asPieChart().addRange(d.getRange('H5:I10')).setPosition(57, 12, 0, 0)
+        .setOption('title', 'Devices').build());
+    } catch (e) { console.error('charts: ' + e); }
+    d.setFrozenRows(2);
+    var old = ss.getSheetByName('Sheet1'); if (old && old.getLastRow() <= 1 && ss.getSheets().length > 1) ss.deleteSheet(old);
+  } catch (e) { console.error('dashboard: ' + e); }
+}
+
 function tab_(ss, name, head) {
   var sh = ss.getSheetByName(name);
   if (!sh) { sh = ss.insertSheet(name); sh.appendRow(head); sh.setFrozenRows(1); sh.getRange(1, 1, 1, head.length).setFontWeight('bold'); }
@@ -375,6 +430,7 @@ function log_(r, email, type) {
     var lock = LockService.getScriptLock(); lock.waitLock(15000);
     try {
       var ss = logBook_(), now = new Date(), id = Utilities.getUuid().slice(0, 8), type_ = type || 'game';
+      var newBook = !ss.getSheetByName('Sessions');
       var pct = r.total ? Math.round(r.first / r.total * 100) : 0;
       var secs = r.sections || [], cnt = function (st) { return secs.filter(function (x) { return x.status === st; }).length; };
       var weak = uniq_(r.results.filter(function (x) { return x.wrong; }).map(function (x) { return x.item; }));
@@ -412,7 +468,7 @@ function log_(r, email, type) {
       }
       pr.appendRow([email || '', r.child || '', r.game, now, now, type_ === 'game' ? 1 : 0, type_ === 'recap' ? 1 : 0,
         type_ === 'game' ? pct : '', type_ === 'game' ? pct : '', type_ === 'game' ? pct : '', tricky]);
-    } finally { lock.releaseLock(); }
+    } finally { if (!ss.getSheetByName('Dashboard')) dashboard_(ss); lock.releaseLock(); }
   } catch (e) { console.error('log: ' + e); }
 }
 
