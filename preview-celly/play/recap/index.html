@@ -134,7 +134,8 @@ h1{font-size:30px;margin:0 0 6px;line-height:1.25}
             var n = document.getElementById('next'); if (n) { n.classList.add('pulse'); n.focus(); } }
         }}});
       tick = setInterval(function () {
-        if (!player || !player.getCurrentTime || !document.getElementById('vt')) return clearInterval(tick);
+        if (!document.getElementById('vt')) return clearInterval(tick);
+        if (!player || !player.getCurrentTime) return;
         var now = player.getCurrentTime() - s.c[0]; vt.textContent = fmt(Math.min(now, s.c[1] - s.c[0])) + ' of ' + fmt(s.c[1] - s.c[0]);
       }, 500);
     });
