@@ -59,3 +59,34 @@
     if (pr && pr.then) pr.then(function () { setTimeout(function () { start('autoplay'); }, 1200); }, function () {});
   } catch (e) {}
 })();
+
+/* ---------- progress bar under the room list ---------- */
+(function () {
+  var trail = document.getElementById('trail');
+  if (!trail || typeof S === 'undefined') return;
+  var st = document.createElement('style');
+  st.textContent = '.cs-prog{display:flex;align-items:center;gap:12px;margin:6px 2px 10px}' +
+    '.cs-prog .bar{flex:1;height:14px;border-radius:999px;background:#EDE8D8;border:2px solid #D9D2BC;overflow:hidden}' +
+    '.cs-prog .fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#9BC24E,#81A63C);transition:width .6s ease}' +
+    '.cs-prog .lbl{font-size:16px;font-weight:600;color:#4E7A1E;white-space:nowrap}' +
+    '@media (max-width:520px){.cs-prog .lbl{font-size:14px}.cs-prog .bar{height:12px}}' +
+    '@media (prefers-reduced-motion:reduce){.cs-prog .fill{transition:none}}';
+  document.head.appendChild(st);
+  var box = document.createElement('div'); box.className = 'cs-prog';
+  box.setAttribute('role', 'progressbar'); box.setAttribute('aria-valuemin', '0'); box.setAttribute('aria-label', 'Game progress');
+  box.innerHTML = '<div class="bar"><div class="fill"></div></div><span class="lbl"></span>';
+  trail.parentNode.insertBefore(box, trail.nextSibling);
+  var fill = box.querySelector('.fill'), lbl = box.querySelector('.lbl'), last = null;
+  function update() {
+    var steps = [].slice.call(trail.querySelectorAll('.step')).filter(function (b) { return !b.classList.contains('nav'); });
+    var n = steps.length; if (!n) return;
+    var at = Math.max(0, Math.min(n - 1, +S.room || 0));
+    var key = at + '/' + n; if (key === last) return; last = key;
+    var pct = n > 1 ? Math.round(at / (n - 1) * 100) : 100;
+    fill.style.width = pct + '%';
+    lbl.textContent = at >= n - 1 ? '🏆 All done!' : 'Step ' + (at + 1) + ' of ' + n;
+    box.setAttribute('aria-valuemax', String(n)); box.setAttribute('aria-valuenow', String(at + 1));
+  }
+  new MutationObserver(update).observe(trail, {childList: true, subtree: true});
+  update();
+})();
