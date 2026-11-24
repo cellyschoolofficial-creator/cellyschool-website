@@ -192,7 +192,7 @@ function wav_(pcm, rate) {
 /* ---------- checking takes: Gemini writes down the words it hears ----------
    Batch file: {batch_name, key, check_folders:[folder ids]} → transcripts.json in each folder
    ({"<file>.wav": "words heard"}). Resumes across runs. */
-var CHECK_MODEL = 'gemini-2.5-flash';
+var CHECK_MODEL = 'gemini-3.8-flash';
 function checkBatch_(file, b, start) {
   var props = PropertiesService.getScriptProperties();
   var key = props.getProperty('GEMINI_KEY_' + (b.key || 1));
@@ -201,7 +201,7 @@ function checkBatch_(file, b, start) {
     var tf = f.getFilesByName('transcripts.json'), tfile = tf.hasNext() ? tf.next() : null;
     var done = tfile ? JSON.parse(tfile.getBlob().getDataAsString()) : {};
     var it = f.getFiles(), todo = [];
-    while (it.hasNext()) { var w = it.next(); if (/\.wav$/i.test(w.getName()) && !(w.getName() in done)) todo.push(w); }
+    while (it.hasNext()) { var w = it.next(); if (/\.wav$/i.test(w.getName()) && !(done[w.getName()] && String(done[w.getName()]).indexOf('ERROR') !== 0)) todo.push(w); }
     todo.sort(function (x, y) { return x.getName() < y.getName() ? -1 : 1; });
     for (var j = 0; j < todo.length; j++) {
       if (Date.now() - start > RUN_LIMIT_MS) { save_(f, tfile, done); return false; }

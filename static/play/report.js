@@ -23,6 +23,34 @@
     if (t.id === 'go' && !ss(K + '_t0')) ss(K + '_t0', String(Date.now()));
   }, true);
 
+
+  /* ---------- where each part of the game is taught in the lesson video ----------
+     chapters: [start in seconds, name]; acts: game activity → {room, t} (t = default video time);
+     kw: words in an item → video time (used when the activity is marked kw:true). */
+  var GUIDES = {
+    '7Aa': {video: 'E_YFTGRxsR4',
+      chapters: [[0, 'Doctors and clues'], [69, 'Word workshop: organism'], [127, 'Meet Mrs Gren'], [162, 'Movement and reproduction'],
+        [225, 'Sensitivity'], [270, 'Growth'], [312, 'Brain break'], [326, 'Respiration'], [400, 'Excretion and nutrition'],
+        [454, 'Say Mrs Gren together'], [494, 'Organism or not?'], [571, 'Quiz and big ideas'], [650, 'Workbook for grown-ups']],
+      acts: {
+        "Doctor's tools": {room: 0, t: 0}, 'Clue detective': {room: 1, t: 0},
+        'Build the word': {room: 2, t: 69, kw: true}, 'Mrs Gren': {room: 3, t: 454}, 'Mrs Gren meanings': {room: 3, t: 127, kw: true},
+        'Test Bolt': {room: 5, t: 494}, 'Test Zoom': {room: 5, t: 494}, 'Test the campfire': {room: 5, t: 494},
+        'Waiting room': {room: 6, t: 494}, 'Clinic lab': {room: 7, t: 571, kw: true}, 'Teach Dr Celly': {room: 8, t: 571, kw: true}},
+      kw: [[/respir|limewater|gills|breath/i, 326], [/excret|nutrition|urine/i, 400], [/movement|move|reproduc/i, 162],
+        [/sensitiv|pupil|hot pan/i, 225], [/grow|ring/i, 270], [/symptom|flu|cold|spots/i, 0], [/organism|alive/i, 69]]}
+  };
+  function place(r) {
+    var g = GUIDES[GAME]; if (!g) return {};
+    var a = g.acts[r.act]; if (!a) return {};
+    var t = a.t;
+    if (a.kw) for (var i = 0; i < g.kw.length; i++) if (g.kw[i][0].test(r.item)) { t = g.kw[i][1]; break; }
+    var ch = g.chapters, name = '', end = 0;
+    for (var j = 0; j < ch.length; j++) if (ch[j][0] <= t) { name = ch[j][1]; end = ch[j + 1] ? ch[j + 1][0] : 0; }
+    var rn = (typeof TRAIL !== 'undefined' && TRAIL[a.room]) || '';
+    return {room: a.room, roomName: rn, t: t, tEnd: end, chap: name};
+  }
+
   /* ---------- the grown-up screen ---------- */
   var css = '.gu{position:fixed;inset:0;z-index:200;background:rgba(31,42,68,.55);display:flex;padding:16px;overflow-y:auto;box-sizing:border-box}' +
     '.gu .box{margin:auto;background:#FFFDF6;border:3px solid #1F2A44;border-radius:22px;max-width:560px;width:100%;padding:20px 22px;font-size:18px;line-height:1.55;color:#1F2A44;box-shadow:0 10px 40px rgba(0,0,0,.25)}' +
@@ -81,7 +109,11 @@
       minutes: t0 ? (Date.now() - t0) / 60000 : 0,
       mode: (typeof S !== 'undefined' && S.mode) || 'tap',
       sayAgain: +(ss(K + '_again') || 0),
-      results: results.map(function (r) { return {act: r.act, item: r.item, first: r.first, said: r.said}; })
+      video: (GUIDES[GAME] || {}).video || '',
+      results: results.map(function (r) {
+        var p = place(r);
+        return {act: r.act, item: r.item, first: r.first, said: r.said, room: p.room, roomName: p.roomName, t: p.t, tEnd: p.tEnd, chap: p.chap};
+      })
     };
     fetch(URL_, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(body)})
       .then(function () {
