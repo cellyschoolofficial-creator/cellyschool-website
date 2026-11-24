@@ -252,3 +252,19 @@ html.vfake{overflow:hidden}
 .su-subj img{width:26px;height:auto}
 .su-biology .su-subj{color:var(--bio)}.su-chemistry .su-subj{color:var(--chem)}.su-physics .su-subj{color:var(--phys)}
 .school-units .card.su-now{box-shadow:0 0 0 4px var(--sun)}
+/* school order picker: each unit in its subject colour */
+.so-u.so-biology{border-color:var(--bio-m);border-left:8px solid var(--bio)}
+.so-u.so-chemistry{border-color:var(--chem-m);border-left:8px solid var(--chem)}
+.so-u.so-physics{border-color:var(--phys-m);border-left:8px solid var(--phys)}
+.so-u.so-biology.on{background:var(--bio-p);border-color:var(--bio)}
+.so-u.so-chemistry.on{background:var(--chem-p);border-color:var(--chem)}
+.so-u.so-physics.on{background:var(--phys-p);border-color:var(--phys)}
+.so-u.so-biology.on .so-n{background:var(--bio);border-color:var(--bio)}
+.so-u.so-chemistry.on .so-n{background:var(--chem);border-color:var(--chem)}
+.so-u.so-physics.on .so-n{background:var(--phys);border-color:var(--phys)}
+.so-u.so-biology .so-n{border-color:var(--bio)}.so-u.so-chemistry .so-n{border-color:var(--chem)}.so-u.so-physics .so-n{border-color:var(--phys)}
+.so-chip{border-width:2px}
+.so-chip.so-c-biology{background:var(--bio-p);border-color:var(--bio);color:#33500E}
+.so-chip.so-c-chemistry{background:var(--chem-p);border-color:var(--chem);color:#1E4E7A}
+.so-chip.so-c-physics{background:var(--phys-p);border-color:var(--phys);color:#8E1430}
+.so-chip.now{outline:3px solid var(--sun);outline-offset:1px}

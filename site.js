@@ -220,7 +220,7 @@ window.CSOrder=(function(){
     var o=CSOrder.get();
     if(!o){box.querySelector('#soEdit').onclick=editor;return;}
     var us=CSOrder.units(),now=o.now||us[0];
-    box.innerHTML='<h2 id="soH">Your school\'s order ✓</h2><p class="so-line">'+us.map(function(c){return '<span class="so-chip'+(c===now?' now':'')+'">'+c+'</span>';}).join('<span aria-hidden="true">→</span>')+'</p>'+
+    box.innerHTML='<h2 id="soH">Your school\'s order ✓</h2><p class="so-line">'+us.map(function(c){var sj='';U.forEach(function(u){if(u[0]===c)sj=u[2];});return '<span class="so-chip so-c-'+sj+(c===now?' now':'')+'">'+c+'</span>';}).join('<span aria-hidden="true">→</span>')+'</p>'+
       '<p>Now on: <b>'+esc(now+' '+CSOrder.unitName(now))+'</b>. Every “Next” button follows this order.</p>'+
       (window.CSSync&&CSSync.linked()?'<p class="small">🔗 Saved with your email, on all your linked devices.</p>':'<p class="small">Saved on this device. <a href="#" id="soLink">🔗 Save it with my email for all my devices</a></p>')+
       '<p><button class="btn" type="button" id="soEdit">Change</button></p>';
@@ -234,7 +234,7 @@ window.CSOrder=(function(){
     var o=CSOrder.get(),picked=o?CSOrder.units().slice(0,o.units.length):[],now=o&&o.now||'',nowTouched=false;
     function draw(){
       box.innerHTML='<h2 id="soH">Your school\'s order</h2><p>Tap the units in the order your school teaches them. Units you don\'t tap go at the end, in book order.</p>'+
-        '<div class="so-grid">'+U.map(function(u){var k=picked.indexOf(u[0]);return '<button type="button" class="so-u'+(k>=0?' on':'')+'" data-u="'+u[0]+'" aria-pressed="'+(k>=0)+'"><span class="so-n">'+(k>=0?k+1:'')+'</span><b>'+u[0]+'</b> '+esc(u[1])+'</button>';}).join('')+'</div>'+
+        '<div class="so-grid">'+U.map(function(u){var k=picked.indexOf(u[0]);return '<button type="button" class="so-u so-'+u[2]+(k>=0?' on':'')+'" data-u="'+u[0]+'" aria-pressed="'+(k>=0)+'"><span class="so-n">'+(k>=0?k+1:'')+'</span><b>'+u[0]+'</b> '+esc(u[1])+'</button>';}).join('')+'</div>'+
         '<label class="so-now">Which unit is your child doing now? <span class="small" style="font-weight:400">(we start here; it is your first unit unless you choose another)</span><select id="soNow"><option value="">Choose a unit</option>'+U.map(function(u){return '<option value="'+u[0]+'"'+(u[0]===now?' selected':'')+'>'+u[0]+' '+esc(u[1])+'</option>';}).join('')+'</select></label>'+
         '<div class="btns"><button class="btn primary" type="button" id="soSave">Save our order</button><button class="btn" type="button" id="soUndo">Clear</button><button class="btn" type="button" id="soBook">Use the book order</button></div>';
       box.querySelectorAll('.so-u').forEach(function(b){b.onclick=function(){var c=b.getAttribute('data-u'),k=picked.indexOf(c);if(k>=0)picked.splice(k,1);else picked.push(c);if(!nowTouched)now=picked[0]||'';draw();};});
