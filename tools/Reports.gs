@@ -34,6 +34,9 @@ function doPost(e) {
     var d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (d.hp) return out_({ok: true});                              // hidden spam trap was filled in
     if (d.type === 'recap') return recapResult_(d);
+    if (d.type === 'code') return famCode_(d);
+    if (d.type === 'verify') return famVerify_(d);
+    if (d.type === 'sync') return famSync_(d);
     var email = String(d.email || '').trim().toLowerCase();
     if (!/^[^\s@<>()",;]+@[^\s@<>()",;]+\.[a-z]{2,}$/.test(email) || email.length > 120) return out_({ok: false, why: 'email'});
     if (d.parent !== true) return out_({ok: false, why: 'parent'});
@@ -515,7 +518,7 @@ function saveEmail_(email, game, kind, child, order) {
       for (var i = 1; i < rows.length; i++) {
         if (String(rows[i][0]).toLowerCase() === email) {
           var gl = String(rows[i][3] || '') ? String(rows[i][3]).split(', ') : [];
-          if (gl.indexOf(game) < 0) gl.push(game);
+          if (game !== 'sync' && gl.indexOf(game) < 0) gl.push(game);
           var kl = String(rows[i][7] || '') ? String(rows[i][7]).split(', ') : [];
           if (child && kl.indexOf(child) < 0) kl.push(child);
           sh.getRange(i + 1, 3, 1, 4).setValues([[now, gl.join(', '), (+rows[i][4] || 0) + (kind === 'report' ? 1 : 0), (+rows[i][5] || 0) + (kind === 'recap' ? 1 : 0)]]);
@@ -524,7 +527,7 @@ function saveEmail_(email, game, kind, child, order) {
           return;
         }
       }
-      sh.appendRow([email, now, now, game, kind === 'report' ? 1 : 0, kind === 'recap' ? 1 : 0, 'not asked', child || '', (order && order.order) || '', (order && order.now) || '']);
+      sh.appendRow([email, now, now, game === 'sync' ? '' : game, kind === 'report' ? 1 : 0, kind === 'recap' ? 1 : 0, 'not asked', child || '', (order && order.order) || '', (order && order.now) || '']);
     } finally { lock.releaseLock(); }
   } catch (e) { console.error('saveEmail: ' + e); }
 }
@@ -557,4 +560,123 @@ function testReport() {
               {act: 'words', item: 'excretion', first: true, said: false}, {act: 'words', item: 'nutrition', first: true, said: true}]
   })}});
   Logger.log(res.getContent());
+}
+
+
+/* ---------- Family sync (Nov 2026): the same children, school order and progress on every device ----------
+   A device is linked by a 6-digit code emailed to the parent (valid 10 minutes, 5 tries).
+   A linked device gets a private random token; only a hash of it is stored.
+   Sheet "Celly School family sync" (Celly School folder): Email | Created | Updated | Children | School order | Progress | Devices */
+var FAM_HEAD = ['Email', 'Created', 'Updated', 'Children', 'School order', 'Progress', 'Devices'];
+function famHash_(s) { return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s) + '|' + secret_())).slice(0, 32); }
+function famSheet_() {
+  var root = DriveApp.getFolderById(ROOT_ID), name = 'Celly School family sync', it = root.getFilesByName(name), ss;
+  if (it.hasNext()) ss = SpreadsheetApp.open(it.next());
+  else { ss = SpreadsheetApp.create(name); DriveApp.getFileById(ss.getId()).moveTo(root); }
+  var sh = ss.getSheets()[0];
+  if (sh.getLastRow() === 0) { sh.appendRow(FAM_HEAD); sh.setFrozenRows(1); sh.getRange(1, 1, 1, FAM_HEAD.length).setFontWeight('bold'); }
+  return sh;
+}
+function famEmail_(e) { e = String(e || '').trim().toLowerCase(); return /^[^\s@<>()",;]+@[^\s@<>()",;]+\.[a-z]{2,}$/.test(e) && e.length <= 120 ? e : ''; }
+function famCode_(d) {
+  var email = famEmail_(d.email); if (!email) return out_({ok: false, why: 'email'});
+  var cache = CacheService.getScriptCache(), h = famHash_(email), nk = 'fn_' + h, n = +(cache.get(nk) || 0);
+  if (n >= 5) return out_({ok: false, why: 'limit'});
+  if (MailApp.getRemainingDailyQuota() < 3) return out_({ok: false, why: 'quota'});
+  var code = ('00000' + Math.floor(Math.random() * 1e6)).slice(-6);
+  cache.put('fc_' + h, JSON.stringify({c: famHash_(code), a: 0}), 600);
+  cache.put(nk, String(n + 1), 3600);
+  MailApp.sendEmail({to: email, name: 'Celly School', subject: 'Your Celly School code: ' + code,
+    htmlBody: '<div style="font-family:Verdana,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1F2A44;max-width:520px">' +
+      '<p>Your code for Celly School is:</p><p style="font-size:30px;font-weight:bold;letter-spacing:4px;margin:6px 0 14px">' + code + '</p>' +
+      '<p>Type it on the device you are setting up. It works for 10 minutes. This links the device to your email, so your children’s names, ' +
+      'your school’s unit order and their progress are the same on all your devices.</p>' +
+      '<p style="font-size:13px;color:#56607A">If you didn’t ask for this, you can ignore this email. Nobody can link a device without this code.</p>' +
+      '<p>Celly School · www.cellyschool.com</p></div>'});
+  return out_({ok: true});
+}
+function famVerify_(d) {
+  var email = famEmail_(d.email); if (!email) return out_({ok: false, why: 'email'});
+  var cache = CacheService.getScriptCache(), h = famHash_(email), k = 'fc_' + h, rec = null;
+  try { rec = JSON.parse(cache.get(k) || 'null'); } catch (e) {}
+  if (!rec) return out_({ok: false, why: 'expired'});
+  if (rec.a >= 5) { cache.remove(k); return out_({ok: false, why: 'tries'}); }
+  if (famHash_(String(d.code || '').replace(/\D/g, '')) !== rec.c) { rec.a++; cache.put(k, JSON.stringify(rec), 600); return out_({ok: false, why: 'code', left: 5 - rec.a}); }
+  cache.remove(k);
+  var token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+  var lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    var sh = famSheet_(), rows = sh.getDataRange().getValues(), at = -1;
+    for (var i = 1; i < rows.length; i++) if (String(rows[i][0]).toLowerCase() === email) { at = i; break; }
+    var now = new Date(), cur = at > 0 ? famRow_(rows[at]) : {kids: [], order: null, progress: {}, devices: []};
+    var st = famMerge_(cur, famClean_(d.state));
+    st.devices = (cur.devices || []).concat([{h: famHash_(token), d: clip_(d.device, 30), t: Date.now()}]).slice(-10);
+    var row = [email, at > 0 ? rows[at][1] : now, now, JSON.stringify(st.kids), JSON.stringify(st.order), JSON.stringify(st.progress), JSON.stringify(st.devices)];
+    if (at > 0) sh.getRange(at + 1, 1, 1, row.length).setValues([row]); else sh.appendRow(row);
+    saveEmail_(email, 'sync', 'link', '', st.order ? {order: (st.order.units || []).join(','), now: st.order.now || ''} : null);
+    return out_({ok: true, token: token, state: famPublic_(st)});
+  } finally { lock.releaseLock(); }
+}
+function famSync_(d) {
+  var t = String(d.token || ''); if (t.length < 40) return out_({ok: false, why: 'token'});
+  var th = famHash_(t), lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    var sh = famSheet_(), rows = sh.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      var cur = famRow_(rows[i]);
+      if (!(cur.devices || []).some(function (x) { return x.h === th; })) continue;
+      var st = famMerge_(cur, famClean_(d.state)); st.devices = cur.devices;
+      sh.getRange(i + 1, 3, 1, 4).setValues([[new Date(), JSON.stringify(st.kids), JSON.stringify(st.order), JSON.stringify(st.progress)]]);
+      return out_({ok: true, email: String(rows[i][0]), state: famPublic_(st)});
+    }
+    return out_({ok: false, why: 'token'});
+  } finally { lock.releaseLock(); }
+}
+function famRow_(r) {
+  function j(x, dflt) { try { return x ? JSON.parse(x) : dflt; } catch (e) { return dflt; } }
+  return {kids: j(r[3], []), order: j(r[4], null), progress: j(r[5], {}), devices: j(r[6], [])};
+}
+function famPublic_(st) { return {kids: st.kids, order: st.order, progress: st.progress}; }
+var SLUG_ = /^7[a-l][a-e]$/;
+function famClean_(s) {
+  s = s && typeof s === 'object' ? s : {};
+  var out = {kids: [], order: null, progress: {}};
+  (Array.isArray(s.kids) ? s.kids : []).slice(0, 6).forEach(function (k) { k = kid_(k); if (k && out.kids.indexOf(k) < 0) out.kids.push(k); });
+  if (s.order && typeof s.order === 'object') {
+    var u = (Array.isArray(s.order.units) ? s.order.units : []).filter(function (x) { return /^7[A-L]$/.test(x); }).slice(0, 12);
+    out.order = {units: u, now: /^7[A-L]$/.test(s.order.now || '') ? s.order.now : '', t: Math.max(0, +s.order.t || 0)};
+  }
+  var P = s.progress && typeof s.progress === 'object' ? s.progress : {};
+  Object.keys(P).slice(0, 7).forEach(function (kname) {
+    var kn = kname === '_' ? '_' : kid_(kname); if (!kn) return;
+    var src = P[kname] || {}, dst = out.progress[kn] = {lessons: {}, games: {}, last: null};
+    ['lessons', 'games'].forEach(function (kind) {
+      var o = src[kind] && typeof src[kind] === 'object' ? src[kind] : {};
+      Object.keys(o).forEach(function (sl) {
+        if (!SLUG_.test(sl)) return; var it = o[sl] || {}, c = {};
+        ['seen', 'watched', 'wb', 'secs', 'dur', 't', 'started', 'done', 'room', 'level', 'played', 'of'].forEach(function (f) { if (it[f] != null && isFinite(+it[f])) c[f] = Math.max(0, Math.round(+it[f])); });
+        if (it.name) c.name = clip_(it.name, 60);
+        dst[kind][sl] = c;
+      });
+    });
+    var L = src.last; if (L && SLUG_.test(L.slug || '')) dst.last = {kind: L.kind === 'game' ? 'game' : 'lesson', slug: L.slug, t: Math.max(0, +L.t || 0), done: !!L.done};
+  });
+  return out;
+}
+function famMerge_(a, b) {
+  var st = {kids: (a.kids || []).slice(), order: a.order || null, progress: JSON.parse(JSON.stringify(a.progress || {}))};
+  (b.kids || []).forEach(function (k) { if (st.kids.map(function (x) { return x.toLowerCase(); }).indexOf(k.toLowerCase()) < 0 && st.kids.length < 6) st.kids.push(k); });
+  if (b.order && (!st.order || (+b.order.t || 0) > (+st.order.t || 0))) st.order = b.order;
+  Object.keys(b.progress || {}).forEach(function (kn) {
+    var A = st.progress[kn] = st.progress[kn] || {lessons: {}, games: {}, last: null}, B = b.progress[kn];
+    ['lessons', 'games'].forEach(function (kind) {
+      A[kind] = A[kind] || {};
+      Object.keys(B[kind] || {}).forEach(function (sl) {
+        var x = A[kind][sl] = A[kind][sl] || {}, y = B[kind][sl];
+        Object.keys(y).forEach(function (f) { if (f === 'name') x.name = x.name || y.name; else if (f === 'room' || f === 'level') { if ((+y.t || 0) >= (+x.t || 0)) x[f] = y[f]; } else x[f] = Math.max(+x[f] || 0, +y[f] || 0); });
+      });
+    });
+    if (B.last && (!A.last || (+B.last.t || 0) > (+A.last.t || 0))) A.last = B.last;
+  });
+  return st;
 }
