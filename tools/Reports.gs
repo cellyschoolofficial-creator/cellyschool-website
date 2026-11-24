@@ -50,6 +50,7 @@ function doPost(e) {
       mode: d.mode === 'talk' ? 'talking and tapping' : 'tapping only',
       sayAgain: Math.max(0, Math.min(999, Math.round(+d.sayAgain || 0))),
       results: res,
+      rooms: parseTrail_(d.trail),
       child: kid_(d.child),
       meta: meta_(d.meta),
       video: /^[A-Za-z0-9_-]{11}$/.test(String(d.video || '')) ? String(d.video) : '',
@@ -80,6 +81,13 @@ function doPost(e) {
   }
 }
 
+// every room of the game, and whether the child played it (skipped rooms are shown, not hidden)
+function parseTrail_(a) {
+  return (Array.isArray(a) ? a : []).slice(0, 30).map(function (x) {
+    return {room: Math.max(0, Math.min(30, Math.round(+x.room) || 0)), name: clip_(x.name, 40), played: !!x.played};
+  }).filter(function (x) { return x.name; });
+}
+
 function parseResults_(a) {
   return (Array.isArray(a) ? a : []).slice(0, 200).map(function (r) {
     var t = Math.round(+r.t), te = Math.round(+r.tEnd), rm = Math.round(+r.room);
@@ -93,7 +101,13 @@ function parseResults_(a) {
 /* ---------- what the results mean, and what to do next ---------- */
 function plan_(r) {
   var pct = r.total ? r.first / r.total : 0;
-  r.level = pct >= 0.85 ? {t: 'Strong', c: '#4E7A1E', s: 'Your child understood most of this lesson. A quick look at anything below is enough.'}
+  r.rooms = r.rooms || [];
+  r.skipped = r.rooms.filter(function (x) { return !x.played; });
+  r.roomsPlayed = r.rooms.length - r.skipped.length;
+  r.skipped.forEach(function (x) { x.url = SITE + '/play/' + r.game.toLowerCase() + '/' + (x.room > 0 ? '?room=' + x.room : ''); });
+  var few = r.rooms.length && r.roomsPlayed * 2 < r.rooms.length;
+  r.level = few ? {t: 'Not finished', c: '#2B5BA8', s: (r.child || 'Your child') + ' played ' + r.roomsPlayed + ' of ' + r.rooms.length + ' rooms, so this report only covers those. The rooms not played yet are listed below. Playing them gives the full picture.'}
+    : pct >= 0.85 ? {t: 'Strong', c: '#4E7A1E', s: 'Your child understood most of this lesson. A quick look at anything below is enough.'}
     : pct >= 0.6 ? {t: 'Getting there', c: '#B5651D', s: 'Most of it is in place. A few ideas need another look, and the plan below shows exactly where.'}
     : {t: 'Needs another go', c: '#B5651D', s: 'That is normal for a first try. Watch the parts below again, then replay those rooms. It usually clicks the second time.'};
   // sections in the order they were played
@@ -245,14 +259,16 @@ function dot_(s) { return /[.!?]$/.test(s) ? s : s + '.'; }
 
 function planPdf_(r) {
   var h = '';
-  if (r.recap) h += '<p style="margin:8px 0 4px"><a href="' + r.recap + '" style="display:inline-block;background:#2B3A67;color:#ffffff;text-decoration:none;font-weight:bold;font-size:11pt;padding:7px 14px;border-radius:10px">▶ Start Celly’s recap (about ' + r.recapMins + ' min)</a>' +
-    '<span style="margin-left:10px;color:#56607A;font-size:9pt">' + (r.recapParts > 1 ? 'Recap 1 of 2, trickiest parts first. ' : '') + 'Video part, then its game room, in order. Your child just presses Next.</span></p>';
+  if (r.recap) h += '<table style="border-collapse:collapse;margin:8px 0 4px"><tr><td bgcolor="#2B3A67" style="background:#2B3A67;border-radius:10px;padding:7px 14px;white-space:nowrap">' +
+    '<a href="' + r.recap + '" style="color:#ffffff;text-decoration:none;font-weight:bold;font-size:11pt">▶ Start Celly’s recap (about ' + r.recapMins + ' min)</a></td>' +
+    '<td style="padding-left:10px;color:#56607A;font-size:9pt">' + (r.recapParts > 1 ? 'Recap 1 of 2, trickiest parts first. ' : '') + 'Video part, then its game room, in order. Your child just presses Next.</td></tr></table>';
   var w = r.watch.map(function (x) { return '<div style="margin:0 0 3px"><a href="' + x.url + '" style="color:#2B5BA8;font-weight:bold">▶ ' + esc_(x.chap) + ' (' + mmss_(x.t) + ')</a> <span style="color:#56607A">' + esc_(list_(x.items)) + '</span></div>'; }).join('');
   var g = r.play.map(function (x) { return '<div style="margin:0 0 3px"><a href="' + x.url + '" style="color:#2B5BA8;font-weight:bold">🎮 ' + esc_(x.name) + '</a> <span style="color:#56607A">' + esc_(list_(x.items)) + '</span></div>'; }).join('');
-  if (!w && !g) return '<p>Nothing to repeat. Move on to ' + esc_(r.next.t) + ' when your child is ready.</p>';
+  var sk = r.skipped.length ? '<div style="margin:6px 0 0"><b>3. Rooms not played yet:</b> ' + r.skipped.map(function (x) { return '<a href="' + x.url + '" style="color:#2B5BA8;font-weight:bold">🎮 ' + esc_(x.name) + '</a>'; }).join(', ') + '</div>' : '';
+  if (!w && !g) return sk ? '<p style="margin:8px 0 0">Nothing to repeat in the rooms played.</p>' + sk : '<p>Nothing to repeat. Move on to ' + esc_(r.next.t) + ' when your child is ready.</p>';
   return h + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:9.5pt;margin-top:4px"><tr>' +
     '<td style="width:50%;vertical-align:top;padding-right:10px"><div style="font-weight:bold;margin:0 0 4px">1. Watch these parts again</div>' + (w || '<span style="color:#56607A">None needed.</span>') + '</td>' +
-    '<td style="vertical-align:top;padding-left:10px;border-left:1px solid #D9E5C4"><div style="font-weight:bold;margin:0 0 4px">2. Then replay these rooms</div>' + (g || '<span style="color:#56607A">None needed.</span>') + '</td></tr></table>';
+    '<td style="vertical-align:top;padding-left:10px;border-left:1px solid #D9E5C4"><div style="font-weight:bold;margin:0 0 4px">2. Then replay these rooms</div>' + (g || '<span style="color:#56607A">None needed.</span>') + '</td></tr></table>' + sk;
 }
 
 function planHtml_(r, big) {
@@ -281,7 +297,12 @@ function planHtml_(r, big) {
     });
     h += '</ul>';
   }
-  if (!r.watch.length && !r.play.length) h = '<p>Nothing to repeat. Move on to ' + esc_(r.next.t) + ' when your child is ready.</p>';
+  if (r.skipped.length) {
+    h += '<p style="margin:14px 0 6px;font-weight:bold">' + (1 + (r.watch.length ? 1 : 0) + (r.play.length ? 1 : 0)) + '. Rooms not played yet</p><ul style="margin:0;padding-left:20px">';
+    r.skipped.forEach(function (x) { h += '<li style="' + li + '"><a href="' + x.url + '" style="color:#2B5BA8;font-weight:bold">🎮 ' + esc_(x.name) + '</a></li>'; });
+    h += '</ul>';
+  }
+  if (!r.watch.length && !r.play.length && !r.skipped.length) h = '<p>Nothing to repeat. Move on to ' + esc_(r.next.t) + ' when your child is ready.</p>';
   else if (big) h += '<p style="margin:12px 0 0;color:#56607A;font-size:10.5pt">Short and often works best: one video part and one room in a sitting is plenty.</p>';
   return h;
 }
@@ -297,22 +318,27 @@ function reportHtml_(r) {
       '<td style="' + td + 'text-align:center;font-weight:bold">' + s.ok + ' / ' + s.n + '</td>' +
       '<td style="' + td + 'text-align:center"><span style="display:inline-block;padding:1px 8px;border-radius:10px;background:' + bg + ';color:' + col + ';font-weight:bold;font-size:9.5pt">' + s.status + '</span></td>' +
       '<td style="' + td + 'color:' + (weak.length ? '#1F2A44' : '#56607A') + '">' + (weak.length ? weak.join(', ') : 'All secure') + '</td></tr>';
+  }).join('') + r.skipped.map(function (x, j) {
+    var td = 'padding:6px 8px;border-bottom:1px solid #EEE9DA;vertical-align:top;color:#56607A;' + ((r.sections.length + j) % 2 ? 'background:#FCFAF3;' : '');
+    return '<tr><td style="' + td + 'font-weight:bold">' + esc_(x.name) + '</td><td style="' + td + 'text-align:center">–</td>' +
+      '<td style="' + td + 'text-align:center"><span style="display:inline-block;padding:1px 8px;border-radius:10px;background:#EAF0FA;color:#2B5BA8;font-weight:bold;font-size:9.5pt">Not played</span></td>' +
+      '<td style="' + td + '">Skipped this time. Play it next time.</td></tr>';
   }).join('');
   var th = 'padding:6px 8px;text-align:left;font-size:9.5pt;color:#56607A;border-bottom:2px solid #E4DFCF';
   return '<html><head><meta charset="utf-8"></head><body style="font-family:Verdana,Arial,sans-serif;font-size:10.5pt;color:#1F2A44;line-height:1.45;margin:22px">' +
     '<div style="border:4px double #81A63C;border-radius:14px;padding:12px 18px;background:#FAF6E9">' +
     '<div style="font-size:9pt;letter-spacing:2px;color:#56607A">CELLY SCHOOL · REPORT FOR GROWN-UPS</div>' +
     '<div style="font-size:17pt;font-weight:bold;margin:4px 0 0">' + esc_(r.title) + '</div>' +
-    '<div style="color:#56607A">' + (r.child ? '<b style="color:#1F2A44">Report for ' + esc_(r.child) + '</b> · ' : '') + 'Talk to Celly · ' + esc_(r.game + ' ' + r.topic) + ' · ' + esc_(r.date) + '</div></div>' +
+    '<div style="color:#56607A">' + (r.child ? '<b style="color:#1F2A44">Report for ' + esc_(r.child) + '</b> · ' : '') + 'Talk to Celly · ' + esc_(r.game + ' ' + r.topic) + ' · ' + esc_(r.date) + ' · played by ' + esc_(r.mode) + '</div></div>' +
     '<table style="width:100%;margin:10px 0 6px;border-collapse:separate;border-spacing:6px 0;table-layout:fixed"><tr>' +
-    box_('Right first time', r.first + ' of ' + r.total) + box_('Overall', r.level.t) + box_('Time', (r.minutes || '<1') + ' min') +
-    box_('Played by', r.mode) + box_('"Say it again"', String(r.sayAgain)) + '</tr></table>' +
+    box_('Right first time', r.first + ' of ' + r.total) + box_('Rooms played', r.rooms.length ? r.roomsPlayed + ' of ' + r.rooms.length : '–') +
+    box_('Overall', r.level.t) + box_('Time playing', (r.minutes || '<1') + ' min') + box_('"Say it again"', String(r.sayAgain)) + '</tr></table>' +
     '<p style="margin:8px 0 4px"><b style="color:' + r.level.c + '">' + r.level.t + '.</b> ' + esc_(r.level.s) + '</p>' +
     '<div style="font-size:12.5pt;font-weight:bold;margin:12px 0 4px">How each part went</div>' +
     '<table style="width:100%;border-collapse:collapse;font-size:10pt;table-layout:fixed">' +
     '<tr><th style="' + th + ';width:26%">Part of the game</th><th style="' + th + ';width:10%;text-align:center">Score</th>' +
     '<th style="' + th + ';width:20%;text-align:center">Status</th><th style="' + th + '">Needs another go</th></tr>' + rows + '</table>' +
-    '<p style="margin:6px 0 0;font-size:9pt;color:#56607A">“Needs another go” means your child got there with help. It is not a mark. “Celly couldn’t hear it” is usually the microphone, not your child’s knowledge.</p>' +
+    '<p style="margin:6px 0 0;font-size:9pt;color:#56607A">“Needs another go” means your child got there with help. It is not a mark. “Celly couldn’t hear it” is usually the microphone, not your child’s knowledge.' + (r.skipped.length ? ' “Not played” rooms were skipped, so they have no score yet.' : '') + '</p>' +
     '<div style="border:2px solid #81A63C;border-radius:12px;padding:2px 14px 8px;margin:12px 0 0;background:#F6FAEE;font-size:10pt">' +
     '<div style="font-size:12.5pt;font-weight:bold;margin:8px 0 0">What to do next</div>' + planPdf_(r) + '<div style="font-size:8.5pt;color:#56607A;margin-top:4px">Short and often works best: one video part and one room in a sitting is plenty.</div></div>' +
     '<p style="margin:10px 0 0"><b>After that:</b> ' + esc_(r.next.t) + ' at ' + SITE.replace('https://', '') + r.next.u + '</p>' +
@@ -330,7 +356,7 @@ function emailHtml_(r) {
   return '<div style="max-width:580px;font-family:Verdana,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2A44">' +
     '<p style="' + p + '">Hello,</p>' +
     '<p style="' + p + '">' + who_(r) + ' has just finished <b>' + esc_(r.title) + '</b> (' + esc_(r.game + ' ' + r.topic) + ') on Celly School: ' +
-    '<b>' + r.first + ' of ' + r.total + '</b> right first time, in about ' + (r.minutes || 1) + ' minutes.</p>' +
+    '<b>' + r.first + ' of ' + r.total + '</b> right first time, in about ' + (r.minutes || 1) + ' minutes of play' + (r.rooms.length ? ', ' + r.roomsPlayed + ' of ' + r.rooms.length + ' rooms played' : '') + '.</p>' +
     '<p style="' + p + '"><b style="color:' + r.level.c + '">' + r.level.t + '.</b> ' + esc_(r.level.s) + '</p>' +
     (r.strong.length ? '<p style="' + p + '"><b>Strong in:</b> ' + esc_(list_(r.strong)) + '.</p>' : '') +
     '<div style="border:2px solid #81A63C;border-radius:12px;padding:4px 16px 8px;margin:0 0 14px;background:#F6FAEE">' +
@@ -439,13 +465,16 @@ function log_(r, email, type) {
       var slow = rooms.slice().sort(function (a, b) { return b.secs - a.secs; })[0];
       tab_(ss, 'Sessions', ['Date', 'Session', 'Parent email', 'Child', 'Game', 'Topic', 'Type', 'Right first time', 'Out of', '%', 'Level',
         'Minutes', 'Mode', 'Say it again', 'Parts secure', 'Parts nearly there', 'Parts needing practice', 'Needs another go', 'Celly couldn’t hear', 'Recap minutes', 'Recap parts',
-        'Device', 'Browser', 'System', 'Screen', 'Language', 'Time zone', 'Came from', 'Voice muted', 'Talk/tap switches', 'Speech recognition available', 'Game version', 'Children on device', 'Slowest room', 'Room times'])
-        .appendRow([now, id, email || '', r.child || '', r.game, r.topic || '', type_, r.first, r.total, pct, (r.level || {}).t || '',
+        'Device', 'Browser', 'System', 'Screen', 'Language', 'Time zone', 'Came from', 'Voice muted', 'Talk/tap switches', 'Speech recognition available', 'Game version', 'Children on device', 'Slowest room', 'Room times', 'Rooms played', 'Rooms not played']);
+      var sesh = ss.getSheetByName('Sessions');
+      if (sesh.getLastColumn() < 37) sesh.getRange(1, 36, 1, 2).setValues([['Rooms played', 'Rooms not played']]).setFontWeight('bold');
+      sesh.appendRow([now, id, email || '', r.child || '', r.game, r.topic || '', type_, r.first, r.total, pct, (r.level || {}).t || '',
           r.minutes || 0, r.mode || '', r.sayAgain || 0, cnt('Secure'), cnt('Nearly there'), cnt('Needs practice'), weak.join(', '), unheard.join(', '),
           r.recapMins || 0, r.recapParts || 0,
           M.device || '', M.browser || '', M.os || '', M.screen || '', M.lang || '', M.tz || '', M.from || '', M.muted ? 'yes' : 'no', M.modeSwitches || 0,
           M.speech ? 'yes' : 'no', M.version || '', M.family || 0, slow ? slow.name + ' (' + slow.secs + 's)' : '',
-          rooms.map(function (x) { return x.name + ' ' + x.secs + 's' + (x.again ? ' / ' + x.again + ' again' : ''); }).join('; ')]);
+          rooms.map(function (x) { return x.name + ' ' + x.secs + 's' + (x.again ? ' / ' + x.again + ' again' : ''); }).join('; '),
+          r.rooms && r.rooms.length ? r.roomsPlayed + ' of ' + r.rooms.length : '', (r.skipped || []).map(function (x) { return x.name; }).join(', ')]);
       if (rooms.length) {
         var rt = tab_(ss, 'Room times', ['Date', 'Session', 'Child', 'Game', 'Room', 'Seconds', 'Say it again', 'Device']);
         rt.getRange(rt.getLastRow() + 1, 1, rooms.length, 8).setValues(rooms.map(function (x) { return [now, id, r.child || '', r.game, x.name, x.secs, x.again, M.device || '']; }));
