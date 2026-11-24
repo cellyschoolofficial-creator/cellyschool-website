@@ -168,7 +168,7 @@ window.CSOrder=(function(){
   var order=[],games={};try{order=JSON.parse(box.getAttribute('data-order'));games=JSON.parse(box.getAttribute('data-games'));}catch(e){}
   var last=P.last;
   if(!last){var nu=CSOrder.current();if(!nu)return;var f0=CSOrder.lessonsOf(nu)[0];if(!f0)return;
-    box.innerHTML='<a class="btn primary big" href="'+BASE+'/'+f0[0]+'">'+esc('▶ Start '+nu+': '+f0[2])+'</a><p class="carry-sub">Following your school\'s order. <a href="'+BASE+'/year-7#schoolOrder">Change</a></p>';
+    box.innerHTML='<a class="btn primary big" href="'+BASE+'/'+f0[0]+'">'+esc('▶ Start '+f0[1]+' '+f0[2])+'</a><p class="carry-sub">Following your school\'s order. <a href="'+BASE+'/year-7#schoolOrder">Change</a></p>';
     box.hidden=false;var hg0=document.getElementById('heroGo');if(hg0)hg0.hidden=true;return;}
   var href,label,sub='';
   if(last.kind==='game'&&P.games[last.slug]&&!P.games[last.slug].done){
@@ -206,6 +206,10 @@ window.CSOrder=(function(){
       a.href=BASE+'/'+nx[0]+(wb?'-workbook':'');var st=a.querySelector('strong');if(st)st.textContent=nx[1]+' '+nx[2];
       var d=a.querySelector('.dir');if(d&&!/school/.test(d.textContent))d.textContent=(wb?'Next workbook':'Next lesson')+' (your school\'s order) →';
     });
+    // the book's last lesson has no "Next" link: add one when the school's order carries on
+    if(nx&&!document.querySelector('.pager a.next')){var pg=document.querySelector('.pager');if(pg){var na=document.createElement('a');na.className='card next';
+      na.href=BASE+'/'+nx[0]+(wb?'-workbook':'');na.innerHTML='<span class="dir">'+(wb?'Next workbook':'Next lesson')+' (your school\'s order) →</span><strong>'+esc(nx[1]+' '+nx[2])+'</strong>';pg.appendChild(na);}}
+    if(nx&&!document.querySelector('.nb-next')){var bar=document.querySelector('.nextbar');if(bar){var nn=document.createElement('a');nn.className='nb-next';nn.href=BASE+'/'+nx[0];nn.innerHTML='<span aria-hidden="true">→</span><span>Next: '+esc(nx[1])+'</span>';bar.appendChild(nn);}}
     var nb=document.querySelector('.nb-next');
     if(nb){if(nx){nb.href=BASE+'/'+nx[0];nb.lastElementChild.textContent='Next: '+nx[1];}else nb.remove();}
   }
@@ -227,15 +231,15 @@ window.CSOrder=(function(){
         onDone:function(){location.reload();},onCancel:function(){location.reload();}});};
   }
   function editor(){
-    var o=CSOrder.get(),picked=o?CSOrder.units().slice(0,o.units.length):[],now=o&&o.now||'';
+    var o=CSOrder.get(),picked=o?CSOrder.units().slice(0,o.units.length):[],now=o&&o.now||'',nowTouched=false;
     function draw(){
       box.innerHTML='<h2 id="soH">Your school\'s order</h2><p>Tap the units in the order your school teaches them. Units you don\'t tap go at the end, in book order.</p>'+
         '<div class="so-grid">'+U.map(function(u){var k=picked.indexOf(u[0]);return '<button type="button" class="so-u'+(k>=0?' on':'')+'" data-u="'+u[0]+'" aria-pressed="'+(k>=0)+'"><span class="so-n">'+(k>=0?k+1:'')+'</span><b>'+u[0]+'</b> '+esc(u[1])+'</button>';}).join('')+'</div>'+
-        '<label class="so-now">Which unit is your child doing now? <select id="soNow"><option value="">Choose a unit</option>'+U.map(function(u){return '<option value="'+u[0]+'"'+(u[0]===now?' selected':'')+'>'+u[0]+' '+esc(u[1])+'</option>';}).join('')+'</select></label>'+
+        '<label class="so-now">Which unit is your child doing now? <span class="small" style="font-weight:400">(we start here; it is your first unit unless you choose another)</span><select id="soNow"><option value="">Choose a unit</option>'+U.map(function(u){return '<option value="'+u[0]+'"'+(u[0]===now?' selected':'')+'>'+u[0]+' '+esc(u[1])+'</option>';}).join('')+'</select></label>'+
         '<div class="btns"><button class="btn primary" type="button" id="soSave">Save our order</button><button class="btn" type="button" id="soUndo">Clear</button><button class="btn" type="button" id="soBook">Use the book order</button></div>';
-      box.querySelectorAll('.so-u').forEach(function(b){b.onclick=function(){var c=b.getAttribute('data-u'),k=picked.indexOf(c);if(k>=0)picked.splice(k,1);else picked.push(c);if(!now&&picked.length===1)now=c;draw();};});
-      box.querySelector('#soNow').onchange=function(e){now=e.target.value;};
-      box.querySelector('#soUndo').onclick=function(){picked=[];now='';draw();};
+      box.querySelectorAll('.so-u').forEach(function(b){b.onclick=function(){var c=b.getAttribute('data-u'),k=picked.indexOf(c);if(k>=0)picked.splice(k,1);else picked.push(c);if(!nowTouched)now=picked[0]||'';draw();};});
+      box.querySelector('#soNow').onchange=function(e){now=e.target.value;nowTouched=!!now;};
+      box.querySelector('#soUndo').onclick=function(){picked=[];now='';nowTouched=false;draw();};
       box.querySelector('#soBook').onclick=function(){CSOrder.set(null);if(window.csTrack)csTrack('school-order-clear',{});location.reload();};
       box.querySelector('#soSave').onclick=function(){
         if(!picked.length&&!now){CSOrder.set(null);location.reload();return;}
