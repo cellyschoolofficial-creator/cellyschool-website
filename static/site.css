@@ -160,3 +160,31 @@ section{scroll-margin-top:90px}
 .consent{position:fixed;left:12px;right:12px;bottom:12px;z-index:50;max-width:760px;margin:0 auto;background:#fff;border:2px solid #2B3A67;border-radius:16px;padding:14px 16px;box-shadow:0 6px 24px rgba(0,0,0,.18);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
 .consent p{margin:0;flex:1 1 320px;font-size:.95rem}
 .consent-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---- Stage 1 (Nov 2026): menu, tap sizes, game card, next-step bar ---- */
+.menu-btn{display:none;font:inherit;font-weight:600;font-size:1rem;margin-left:auto;border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:.5em 1em;min-height:44px;cursor:pointer}
+.menu-btn[aria-expanded=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.nav a,.comfy-btn{min-height:44px;display:inline-flex;align-items:center}
+.nav a{font-size:1.05rem}
+.comfy-btn{font-size:1rem}
+.crumbs a{display:inline-block;padding:.45em 0}
+footer a{display:inline-block;padding:.3em 0}
+.game-cta{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;background:var(--bio-p,#E9F2D8);border:2px solid var(--bio,#81A63C);border-radius:var(--radius,18px);padding:20px 22px;margin-top:28px}
+.game-cta h2{margin-top:0}
+.game-cta img{width:84px;height:auto}
+.nextbar{display:none}
+@media(max-width:700px){
+  .menu-btn{display:inline-flex;align-items:center;gap:.4em}
+  .top .wrap{flex-wrap:wrap}
+  .nav{display:none;width:100%;flex-direction:column;align-items:stretch;gap:4px;padding:6px 0 10px;overflow:visible;flex-wrap:nowrap}
+  .nav.open{display:flex}
+  .nav a{font-size:1.1rem;padding:.55em .9em;border-radius:14px;white-space:normal}
+  .comfy-btn{font-size:1rem;justify-content:center;margin-top:6px}
+  .game-cta{grid-template-columns:1fr}.game-cta img{display:none}
+  .nextbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper,#FFFDF6);border-top:2px solid var(--rule,#E4DFCF);padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:6px;box-shadow:0 -4px 14px rgba(31,42,68,.08)}
+  .nextbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;text-decoration:none;color:var(--ink);font-weight:600;font-size:.95rem;border-radius:12px}
+  .nextbar a:last-child{background:var(--ink);color:#fff}
+  .nextbar svg{width:1.2em;height:1.2em}
+  body:has(.nextbar){padding-bottom:76px}
+}
+@media print{.nextbar,.menu-btn{display:none!important}}

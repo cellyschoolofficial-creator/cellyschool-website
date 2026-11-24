@@ -93,14 +93,15 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/img/icon-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="preload" href="/fonts/lexend-regular.woff" as="font" type="font/woff" crossorigin>
-<link rel="stylesheet" href="/site.css?v=3">
+<link rel="stylesheet" href="/site.css?v=4">
 {extra_head}{ld}
 </head>
 <body>
 <a class="skip" href="#main">Skip to the lesson content</a>
 <header class="top"><div class="wrap">
 <a class="brand" href="/"><img src="/img/celly.png" alt="" width="42" height="37">Celly School</a>
-<nav class="nav" aria-label="Main">{navh}<a href="{YT}" rel="noopener">YouTube</a>
+<button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="mainNav"><span aria-hidden="true">☰</span> Menu</button>
+<nav class="nav" id="mainNav" aria-label="Main">{navh}<a href="{YT}" rel="noopener">YouTube</a>
 <button class="comfy-btn" id="comfy" type="button" aria-pressed="false" title="Bigger text and more space between letters">Aa Easier reading</button></nav>
 </div></header>
 <main id="main">
@@ -113,7 +114,7 @@ def page(path, title, desc, body, active='', canonical=None, jsonld=None, extra_
 </div>
 <p class="small" style="color:#C9CFE0;margin-top:18px">Lessons follow the Year 7 Exploring Science topic order. Celly School is independent and is not affiliated with or endorsed by Pearson. The narration voice and some illustrations are AI-generated.</p>
 </div></footer>
-<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=3" defer></script>
+<script src="/track.js?v=4" defer data-umami="{UMAMI_ID}" data-clarity="{CLARITY_ID}" data-posthog="{POSTHOG_KEY}" data-ga="{GA_ID}"></script><script src="/site.js?v=4" defer></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8654c0b305d848cdbc645b5f4c7e1aa1"}}'></script>
 </body>
 </html>
@@ -212,7 +213,13 @@ def build_lesson(d, prev, nxt):
     if d.get('bigideas'):
         b.append('<section id="ideas"><h2>Three big ideas</h2><ol class="ideas">' + ''.join(f'<li>{E(x)}</li>' for x in d['bigideas']) + '</ol></section>')
     faq = []
-    if True:
+    has_game = d["slug"] in [g[0] for g in GAMES]
+    if has_game:
+        gname = next(g[3] for g in GAMES if g[0] == d["slug"])
+        b.append(f'<section id="practice" class="game-cta"><img src="/img/celly.png" alt="" width="84" height="74"><div><h2>Play the game: {E(gname)}</h2>'
+                 '<p>Celly talks to you, listens to your answers and helps you practise the key words from this lesson. You can talk or just tap. About 15 minutes.</p>'
+                 f'<p><a class="btn primary" href="/play/{d["slug"]}/">🎮 Play {E(gname)}</a></p></div></section>')
+    else:
         b.append('<section id="practice"><h2>Talk to Celly <span class="chip">Coming soon</span></h2>'
                  '<p>An interactive game for this lesson is on its way. Celly talks, listens to your answers and helps you practise the key words. '
                  'For now, use the video and the free workbook.</p></section>')
@@ -230,6 +237,10 @@ def build_lesson(d, prev, nxt):
     if prev: pg += f'<a class="card" href="/{prev["slug"]}"><span class="dir">← Previous lesson</span><strong>{prev["code"]} {E(prev["title"])}</strong></a>'
     if nxt: pg += f'<a class="card next" href="/{nxt["slug"]}"><span class="dir">Next lesson →</span><strong>{nxt["code"]} {E(nxt["title"])}</strong></a>'
     b.append(pg + '</nav>')
+    nb = [f'<a href="/{d["slug"]}-workbook">{ICON_DL}<span>Workbook</span></a>']
+    if has_game: nb.append(f'<a href="/play/{d["slug"]}/"><span aria-hidden="true">🎮</span><span>Game</span></a>')
+    if nxt: nb.append(f'<a href="/{nxt["slug"]}"><span aria-hidden="true">→</span><span>Next: {nxt["code"]}</span></a>')
+    b.append('<nav class="nextbar" aria-label="Next steps">' + ''.join(nb) + '</nav>')
     b.append(f'<p class="small">Follows the topic order of Pearson Exploring Science, Year 7, lesson {d["code"]}. Not made by or linked to Pearson.</p></div>')
     url = f'{SITE}/{d["slug"]}'
     ld = [{'@context': 'https://schema.org', '@type': 'LearningResource', 'name': f'{d["code"]} {d["title"]}', 'url': url,
@@ -250,25 +261,28 @@ def build_lesson(d, prev, nxt):
     page(f'{d["slug"]}.html', title, desc, '\n'.join(b), 'y7', jsonld=ld)
 
 
-def build_workbook(d):
+def build_workbook(d, nxt=None):
     subj, hero, _ = SUBJ[d['subject']]
     fn = pdf_name(d)
     title = f'Free {d["code"]} {d["title"]} worksheet with answers (printable PDF) | Year 7 {subj}'
     desc = f'Download the free printable {d["code"]} {d["title"]} workbook for KS3 {subj.lower()}, Year 7. Dyslexia-friendly worksheets with answers, following the Exploring Science order.'
     mb = d.get('pdf_kb', 0) / 1024
+    wb_game = f'<a class="btn" href="/play/{d["slug"]}/">🎮 Play the game</a>' if d["slug"] in [g[0] for g in GAMES] else ''
+    wb_next = (f'<nav class="pager" aria-label="Workbooks"><a class="card next" href="/{nxt["slug"]}-workbook"><span class="dir">Next workbook →</span><strong>{nxt["code"]} {E(nxt["title"])}</strong></a></nav>') if nxt else ''
     body = f'''<div class="wrap narrow">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/workbooks">Free workbooks</a> › {d["code"]}</nav>
 <span class="chip {d["subject"]}">{d["code"]} · {subj}</span>
 <h1 style="margin-top:.35em">{E(d["title"])}: free workbook</h1>
 <p class="lead">A printable workbook for the {d["code"]} lesson, made for children who find reading and spelling hard.</p>
 <div class="btns"><a class="btn primary" href="/workbooks/{fn}" download>{ICON_DL} Download the workbook (PDF, {mb:.1f} MB)</a>
-<a class="btn" href="/{d["slug"]}">Go to the {d["code"]} lesson</a></div>
+<a class="btn" href="/{d["slug"]}">Go to the {d["code"]} lesson</a>{wb_game}</div>
 <div class="card"><h2 style="margin-top:0">What is inside</h2><ul>
 <li>Short parts that match the parts of the video</li><li>Picture activities, labelling and sorting</li>
 <li>Key words with syllable taps, and memory tricks</li><li>Test-style questions, with answers for grown-ups</li>
 <li>A QR code on each part that opens the matching part of the video</li></ul></div>
 <h2>Printing tips</h2><p>Print on cream or pale yellow paper if you have it; many dyslexic readers find it calmer than bright white. Print at 100% (actual size). You can print only the part you are working on today.</p>
 <p class="note">The workbooks are free to print and share for home and classroom use. Please don't sell them or upload them to other websites; share the link to this page instead.</p>
+{wb_next}
 <p class="small">Follows the topic order of Pearson Exploring Science, Year 7, lesson {d["code"]}. Not made by or linked to Pearson.</p>
 </div>'''
     page(f'{d["slug"]}-workbook.html', title, desc, body, 'wb')
@@ -451,7 +465,7 @@ def main():
     shutil.copytree(os.path.join(ROOT, 'static'), OUT, ignore=shutil.ignore_patterns('src'))
     for i, d in enumerate(L):
         build_lesson(d, L[i - 1] if i else None, L[i + 1] if i + 1 < len(L) else None)
-        build_workbook(d)
+        build_workbook(d, L[i + 1] if i + 1 < len(L) else None)
     for u in UNITS: build_unit(u)
     build_year7(); build_workbooks(); build_home(); build_play(); build_static_pages()
     HELP_URLS[:] = build_help(page, E, SITE, L)

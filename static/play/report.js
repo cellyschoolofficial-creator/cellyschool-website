@@ -250,7 +250,35 @@
     inp.dataset.csFilled = '1';
     if (!inp.value) { inp.value = n; if (out) out.textContent = n; try { inp.dispatchEvent(new Event('input', {bubbles: true})); } catch (e) {} }
   }
-  new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) { nameCert(); send(c); } })
+  /* ---------- after the certificate: what to do next (never a dead end) ---------- */
+  var NEXTS = {
+    '7Aa': {lesson: ['7ab', '7Ab Organs'], game: ['7ab', 'The Body Town Tour']},
+    '7Ab': {lesson: ['7ac', '7Ac Tissues'], game: ['7ac', 'The Tissue Lab']},
+    '7Ac': {lesson: ['7ad', '7Ad Cells'], game: ['7ad', "Celly's Cell Museum"]},
+    '7Ad': {lesson: ['7ae', '7Ae Organ systems'], game: ['7ae', 'Body Town Grand Opening']},
+    '7Ae': {lesson: ['7ca', '7Ca Fitness and breathing'], game: null}
+  };
+  var BASE = (location.pathname.match(/^\/preview-[a-z0-9-]+/) || [''])[0];
+  function nextSteps(cert) {
+    if (RECAP || document.getElementById('csNext')) return;
+    var n = NEXTS[GAME]; if (!n) return;
+    var st = document.createElement('style');
+    st.textContent = '.cert .t{letter-spacing:.02em!important;text-transform:none!important;font-size:17px!important}' +
+      '#csNext{margin:18px 0 6px;padding:16px 18px;border:2px solid #81A63C;border-radius:16px;background:#F6FAEE}' +
+      '#csNext h2{margin:0 0 10px;font-size:22px}#csNext .row{display:flex;flex-wrap:wrap;gap:10px}' +
+      '#csNext a{display:inline-flex;align-items:center;gap:.4em;min-height:48px;padding:.6em 1.1em;border-radius:999px;font-weight:600;text-decoration:none;border:2px solid #2E3F6E;color:#1F2A44;background:#fff}' +
+      '#csNext a.go{background:#1F2A44;color:#fff;border-color:#1F2A44}';
+    document.head.appendChild(st);
+    var box = document.createElement('div'); box.id = 'csNext';
+    var h = '<h2>What next? 🚀</h2><div class="row">' +
+      '<a class="go" href="' + BASE + '/' + n.lesson[0] + '">▶ Next lesson: ' + n.lesson[1] + '</a>' +
+      (n.game ? '<a href="' + BASE + '/' + 'play/' + n.game[0] + '/">🎮 Next game: ' + n.game[1] + '</a>' : '<a href="' + BASE + '/' + 'play/">🎮 All Celly games</a>') +
+      '<a href="' + BASE + '/' + GAME.toLowerCase() + '">📺 Watch the ' + GAME + ' video again</a></div>';
+    box.innerHTML = h;
+    cert.parentNode.insertBefore(box, cert.nextSibling);
+    box.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a) track('game-next-click', {game: GAME, to: a.getAttribute('href')}); });
+  }
+  new MutationObserver(function () { var c = document.querySelector('.cert'); if (c) { nameCert(); send(c); nextSteps(c); } })
     .observe(document.getElementById('card') || document.body, {childList: true, subtree: true});
 
   if (!RECAP && !ss(K + '_choice')) ask();
