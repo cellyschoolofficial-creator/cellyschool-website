@@ -94,37 +94,75 @@
     '.gu button{font:inherit;font-weight:600;border-radius:14px;padding:12px 18px;cursor:pointer;border:3px solid #1F2A44;background:#fff;color:#1F2A44;flex:1 1 200px}' +
     '.gu button.yes{background:#1F2A44;color:#fff}.gu .err{color:#B5651D;font-weight:600;min-height:1.4em;margin:6px 0 0}' +
     '.gu .small{font-size:14px;color:#56607A;margin:12px 0 0}.gu .small a{color:#56607A}.gu .hp{position:absolute;left:-9999px}' +
-    '.gu-sent{margin:8px 0 0;font-size:16px;color:#4E7A1E;font-weight:600}';
+    '.gu-sent{margin:8px 0 0;font-size:16px;color:#4E7A1E;font-weight:600}' +
+    '.gu .kidbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}' +
+    '.gu button.kid{font-size:26px;padding:20px 14px;background:#EEF5E1;border-color:#81A63C;border-radius:18px}' +
+    '.gu button.kid:hover{background:#81A63C;color:#fff}.gu button.kid:focus-visible{outline:4px solid #2B3A67;outline-offset:2px}';
 
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
-  function ask() {
-    var saved = ls('cs_report_email') || '';
-    var d = document.createElement('div'); d.className = 'gu'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-labelledby', 'guT');
-    d.innerHTML = '<div class="box"><h2 id="guT">For the grown-up 👋</h2>' +
-      '<p style="margin:0">Before your child starts: would you like a short report by email when the game ends?</p>' +
-      '<ul><li>Your child plays as normal. It takes about 15 minutes.</li>' +
-      '<li>At the end, we email you a one-page PDF: what they got right first time, which words to practise, and what to try next.</li>' +
-      '<li>No account and no sign-in. We keep your email so we can send this report and Celly’s recaps. We never share it, and you can ask us to delete it at any time.</li></ul>' +
-      '<label for="guE">Your email (optional)</label><input type="email" id="guE" autocomplete="email" inputmode="email" maxlength="120" placeholder="name@example.com">' +
-      '<input class="hp" type="text" id="guH" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-      '<label class="tick"><input type="checkbox" id="guP"> <span>I’m this child’s parent or carer.</span></label>' +
-      '<p class="err" id="guErr" aria-live="polite"></p>' +
-      '<div class="btns"><button class="yes" id="guYes">Send me the report</button><button id="guNo">Skip and play without a report</button></div>' +
-      '<p class="small">This device remembers the email so you don’t need to type it again. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p></div>';
-    document.body.appendChild(d);
-    var E = d.querySelector('#guE'), P = d.querySelector('#guP'), err = d.querySelector('#guErr');
-    E.value = saved; if (saved) P.checked = true;
-    setTimeout(function () { (saved ? d.querySelector('#guYes') : E).focus(); }, 50);
-    function close(choice) { d.remove(); ss(K + '_choice', choice); var go = document.getElementById('go'); if (go) go.focus(); try { window.dispatchEvent(new Event('cs-grownup-done')); } catch (e) {} }
-    d.querySelector('#guYes').onclick = function () {
-      var v = E.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) { err.textContent = 'Please check the email address.'; E.focus(); return; }
-      if (!P.checked) { err.textContent = 'Please tick the box to say you’re the parent or carer.'; return; }
-      ss(K + '_email', v); ss(K + '_hp', d.querySelector('#guH').value); ls('cs_report_email', v);
-      track('report-optin', {game: GAME}); close('yes');
+  function finishAsk(d, choice) {
+    d.remove(); ss(K + '_choice', choice);
+    var go = document.getElementById('go'); if (go) go.focus();
+    try { window.dispatchEvent(new Event('cs-grownup-done')); } catch (e) {}
+  }
+  function overlay() {
+    var d = document.createElement('div'); d.className = 'gu'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+    d.innerHTML = '<div class="box"></div>'; document.body.appendChild(d); return d;
+  }
+  function useFamily(f, child, hp) {
+    ss(K + '_email', f.email); ss(K + '_child', child || ''); ss(K + '_hp', hp || '');
+  }
+  // first time on this device: the grown-up sets up email + children
+  function setup(d) {
+    var box = d.querySelector('.box'); box.innerHTML = '';
+    var inner = document.createElement('div'); box.appendChild(inner);
+    window.CSFamily.form(inner, {
+      intro: '<h2 id="guT">For the grown-up 👋</h2>' +
+        '<p style="margin:0">Set this up once and get a short report by email each time your child finishes a game, even when they play alone.</p>' +
+        '<ul><li>At the end of each game: what they got right first time, which words to practise, and Celly’s recap.</li>' +
+        '<li>No account and no sign-in. We keep your email so we can send reports and recaps. We never share it, and you can ask us to delete it at any time.</li></ul>',
+      saveLabel: 'Save and play', skipLabel: 'Play without a report',
+      onSave: function (f, hp) {
+        track('report-optin', {game: GAME, kids: f.kids.length});
+        if (f.kids.length > 1) return who(d, f);
+        useFamily(f, f.kids[0] || '', hp); finishAsk(d, 'yes');
+      },
+      onSkip: function () { track('report-skip', {game: GAME}); finishAsk(d, 'no'); }
+    });
+  }
+  // every time after that: the child picks their name
+  function who(d, f) {
+    var box = d.querySelector('.box'), E = window.CSFamily.esc;
+    var kids = f.kids;
+    box.innerHTML = '<h2 id="guT" style="font-size:28px;text-align:center">' + (kids.length ? 'Who’s playing today? 👋' : 'Ready to play? 👋') + '</h2>' +
+      '<div class="kidbtns">' + (kids.length ? kids.map(function (k, i) { return '<button class="kid" data-i="' + i + '">' + ['🌟', '🚀', '🌈', '⚡', '🍀', '🎈'][i % 6] + ' ' + E(k) + '</button>'; }).join('')
+        : '<button class="kid" data-i="-1">▶ Start</button>') + '</div>' +
+      '<div class="btns" style="margin-top:10px"><button id="kNew">Someone else</button><button id="kNo">Play without a report</button></div>' +
+      '<p class="small">Reports go to ' + E(window.CSFamily.mask(f.email)) + '. <a href="#" id="kSet">Grown-up settings</a></p>';
+    [].forEach.call(box.querySelectorAll('.kid'), function (b) {
+      b.onclick = function () { var i = +b.dataset.i; useFamily(f, i >= 0 ? kids[i] : ''); track('report-child', {game: GAME}); finishAsk(d, 'yes'); };
+    });
+    box.querySelector('#kNo').onclick = function () { track('report-skip', {game: GAME}); finishAsk(d, 'no'); };
+    box.querySelector('#kSet').onclick = function (e) { e.preventDefault(); setup(d); };
+    box.querySelector('#kNew').onclick = function () {
+      box.innerHTML = '<h2 style="text-align:center">What’s your name? 😊</h2><input type="text" id="kName" maxlength="24" autocomplete="off" style="font:inherit;font-size:24px;width:100%;box-sizing:border-box;border:2px solid #C9C2AE;border-radius:12px;padding:10px 12px;text-align:center">' +
+        '<div class="btns"><button class="yes" id="kGo">▶ Play</button><button id="kBack">Back</button></div>' +
+        '<p class="small">Your name goes in the report to ' + E(window.CSFamily.mask(f.email)) + '.</p>';
+      var inp = box.querySelector('#kName'); inp.focus();
+      var go = function () {
+        var n = window.CSFamily.cleanName(inp.value); if (!n) { inp.focus(); return; }
+        if (f.kids.indexOf(n) < 0 && f.kids.length < 6) { f.kids.push(n); window.CSFamily.save(f); }
+        useFamily(f, n); finishAsk(d, 'yes');
+      };
+      box.querySelector('#kGo').onclick = go; inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+      box.querySelector('#kBack').onclick = function () { who(d, f); };
     };
-    d.querySelector('#guNo').onclick = function () { track('report-skip', {game: GAME}); close('no'); };
-    E.addEventListener('keydown', function (e) { if (e.key === 'Enter') d.querySelector('#guYes').click(); });
+    var first = box.querySelector('.kid'); if (first) setTimeout(function () { first.focus(); }, 50);
+  }
+  function ask() {
+    if (!window.CSFamily) return;
+    var d = overlay(), f = window.CSFamily.get();
+    if (f) who(d, f); else setup(d);
   }
 
   /* ---------- send at the certificate ---------- */
@@ -135,7 +173,7 @@
     ss(K + '_sent', '1');
     var t0 = +(ss(K + '_t0') || 0);
     var body = {
-      email: ss(K + '_email'), parent: true, hp: ss(K + '_hp') || '', game: GAME,
+      email: ss(K + '_email'), child: ss(K + '_child') || '', parent: true, hp: ss(K + '_hp') || '', game: GAME,
       title: ss(K + '_title') || 'Talk to Celly', topic: topic,
       minutes: t0 ? (Date.now() - t0) / 60000 : 0,
       mode: (typeof S !== 'undefined' && S.mode) || 'tap',
@@ -149,7 +187,7 @@
     fetch(URL_, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(body)})
       .then(function () {
         track('report-sent', {game: GAME});
-        var p = document.createElement('p'); p.className = 'gu-sent'; p.textContent = '📧 Your grown-up’s report is on its way by email.';
+        var p = document.createElement('p'); p.className = 'gu-sent'; p.textContent = '📧 ' + (ss(K + '_child') ? ss(K + '_child') + ', your' : 'Your') + ' grown-up’s report is on its way by email.';
         cert.appendChild(p);
       })
       .catch(function () { ss(K + '_sent', ''); });
