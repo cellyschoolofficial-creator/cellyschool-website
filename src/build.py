@@ -391,16 +391,17 @@ def build_static_pages():
     page('about.html', 'About Celly School | For parents, tutors and teachers', 'How Celly School lessons help dyslexic learners: short parts, syllable taps, memory tricks and free workbooks.', about, 'ab')
     privacy = f'''<div class="wrap narrow"><h1 style="margin-top:36px">Privacy</h1>
 <p>Celly School is made for children, so this website collects as little as possible.</p>
-<ul><li>No accounts, no sign-up and no email collection.</li>
+<ul><li>No accounts and no sign-up. We don’t collect email addresses for lists; the only email we use is the optional game report below, and we don’t keep it.</li>
 <li>No advertising cookies on this website.</li>
 <li>The “Easier reading” setting is saved only in your own browser, on your device. It is never sent to us.</li>
 <li>We count which pages are visited and which buttons are used (for example “download the workbook”, “play the video” or “finished a game”) with Umami. Umami uses no cookies and collects no personal information; we only see totals.</li>
 <li>To make the lessons and games easier to use, we use three tools that look at how the website is used: Microsoft Clarity (clicks, scrolling and where people get stuck), PostHog (which pages and game rooms are used and where people stop; its data is kept in the EU) and Google Analytics (which websites and searches bring visitors). They hide anything typed and do not record names or contact details. Google Analytics' advertising and Google-signals features are switched off, and for visitors in the UK and Europe Clarity and Google Analytics do not set cookies. The privacy statements of Microsoft, PostHog and Google apply to their tools. You can switch these tools off on your device here: <button type="button" class="btn" data-consent-reset hidden>Turn them off on this device</button></li>
 <li>We count visits with Cloudflare Web Analytics. It uses no cookies, does not collect personal information and does not follow you to other websites. It only tells us totals, such as how many people visited a page and which country or website they came from.</li>
+<li>Talk to Celly games can email a grown-up a short report when the game ends. This is optional: the grown-up types their email and ticks that they are the child’s parent or carer, or presses Skip. The game’s results (which answers were right first time, the time taken and the words to practise) are sent to our Google account, which makes the PDF report and emails it. We do not keep the email address after sending; we keep only an anonymous line (date, game and score) to improve the games. No child’s name is needed. Your device remembers the email so you do not have to type it again.</li>
 <li>Lesson videos are hosted on YouTube. A video only loads from YouTube (in privacy-enhanced mode, youtube-nocookie.com) when you press play. YouTube's own privacy policy then applies.</li>
 <li>The website is hosted on GitHub Pages, which may keep basic technical logs (such as IP addresses) for security.</li></ul>
 <p>Questions: <a href="mailto:{EMAIL}">{EMAIL}</a></p></div>'''
-    page('privacy.html', 'Privacy | Celly School', 'Celly School collects no personal data: no accounts and no ads. Visits are counted to improve the lessons; no names or contact details are collected.', privacy)
+    page('privacy.html', 'Privacy | Celly School', 'Celly School collects as little as possible: no accounts and no ads. Visits are counted to improve the lessons; no names or contact details are collected.', privacy)
     nf = '''<div class="wrap narrow center" style="padding:60px 20px"><img src="/img/celly.png" alt="" width="160"><h1>Oops, this page is missing</h1>
 <p style="margin:0 auto 1em">Celly looked everywhere. Try the Year 7 lessons or the free workbooks.</p>
 <div class="btns" style="justify-content:center"><a class="btn primary" href="/year-7">Year 7 Science</a><a class="btn" href="/workbooks">Free workbooks</a></div></div>'''
