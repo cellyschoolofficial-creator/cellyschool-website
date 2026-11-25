@@ -106,6 +106,19 @@
         'How big really?': {room: 9, t: 200},
         'Teach Celly': {room: 10, t: 792},
         'Draw a root hair cell': {room: 11, t: 645}}},
+    '7Ca': {video: '029hCBjtQJY',
+      chapters: [[0, 'Part 1: Fitness and gas exchange'], [107, 'Fitness and the four S-factors'], [192, 'Which S-factor?'], [273, 'Why do we breathe?'],
+        [366, 'Gas exchange'], [455, 'True or false?'], [519, 'Brain break'], [532, 'Part 2: The breathing muscles'], [614, 'The breathing muscles'],
+        [689, 'Breathing in'], [770, 'Breathing out'], [852, 'Breathing rate'], [931, 'Quiz and big ideas'], [1059, 'Workbook for grown-ups']],
+      acts: {
+        'The moving chest': {room: 0, t: 0},
+        'Fitness lab': {room: 1, t: 107, kw: [[/cell, tissue/i, 0], [/criteri|stamina|suppleness|strength|speed/i, 192]]},
+        'Build the words': {room: 2, t: 614, kw: [[/respiration/i, 273], [/trachea/i, 366]]},
+        'Oxygen lab': {room: 3, t: 273, kw: [[/blood|carbon|heart|vessel/i, 366]]},
+        'Muscle lab': {room: 4, t: 532},
+        'Chest model': {room: 6, t: 689, kw: [[/relax|breathing out/i, 770], [/find the/i, 614]]},
+        'Breathing rate': {room: 7, t: 852},
+        'Teach Celly': {room: 8, t: 931}}},
     '7Ae': {video: 'Klo1RDcyc-o',
       chapters: [[0, 'Climb the ladder'], [74, 'Word workshop: organ system'], [140, 'The digestive system'], [205, 'The circulatory system'],
         [268, 'The breathing system'], [323, 'The urinary system'], [386, 'Brain break'], [400, 'The nervous system'], [456, 'The locomotor system'],
@@ -322,7 +335,8 @@
     '7Ab': {lesson: ['7ac', '7Ac Tissues'], game: ['7ac', 'The Tissue Lab']},
     '7Ac': {lesson: ['7ad', '7Ad Cells'], game: ['7ad', "Celly's Cell Museum"]},
     '7Ad': {lesson: ['7ae', '7Ae Organ systems'], game: ['7ae', 'Body Town Grand Opening']},
-    '7Ae': {lesson: ['7ca', '7Ca Fitness and breathing'], game: null}
+    '7Ae': {lesson: ['7ca', '7Ca Fitness and breathing'], game: ['7ca', 'The Case of the Moving Chest']},
+    '7Ca': {lesson: ['7cb', '7Cb Muscles and blood'], game: null}
   };
   var BASE = (location.pathname.match(/^\/preview-[a-z0-9-]+/) || [''])[0];
   function schoolOrder() {

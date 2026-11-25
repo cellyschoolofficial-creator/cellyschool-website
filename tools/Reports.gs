@@ -23,11 +23,15 @@ var NEXT = {
   '7Ab': {t: 'the 7Ac Tissues game', u: '/play/7ac/'},
   '7Ac': {t: 'the 7Ad Cells game', u: '/play/7ad/'},
   '7Ad': {t: 'the 7Ae Organ systems game', u: '/play/7ae/'},
-  '7Ae': {t: 'the 7C Muscles and bones lessons', u: '/year-7/7c'},
-  '7Ca': {t: 'the 7C Muscles and bones lessons', u: '/year-7/7c'}
+  '7Ae': {t: 'the 7Ca Fitness and breathing game', u: '/play/7ca/'},
+  '7Ca': {t: 'the 7Cb Muscles and blood lesson', u: '/7cb'}
 };
 
-function doGet() { return out_({ok: true, service: 'Celly School game reports'}); }
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  if (p.confirm || p.unsub) return nlLink_(p);
+  return out_({ok: true, service: 'Celly School game reports'});
+}
 
 function doPost(e) {
   try {
@@ -37,6 +41,7 @@ function doPost(e) {
     if (d.type === 'code') return famCode_(d);
     if (d.type === 'verify') return famVerify_(d);
     if (d.type === 'sync') return famSync_(d);
+    if (d.type === 'subscribe') return nlSubscribe_(d);
     var email = String(d.email || '').trim().toLowerCase();
     if (!/^[^\s@<>()",;]+@[^\s@<>()",;]+\.[a-z]{2,}$/.test(email) || email.length > 120) return out_({ok: false, why: 'email'});
     if (d.parent !== true) return out_({ok: false, why: 'parent'});
@@ -682,3 +687,64 @@ function famMerge_(a, b) {
   });
   return st;
 }
+
+/* ---------- newsletter (optional, from the workbook pages) ----------
+   Double opt-in: the form asks, we email a confirm link; only "confirmed" rows get emails. One-click unsubscribe.
+   Sheet "Celly School newsletter" (Celly School folder): Email | Status | Who | Asked | Confirmed | Left | From page | Token */
+var NL_EXEC = 'https://script.google.com/macros/s/AKfycbwYsiK2ZrKioF6k0YO_y_m_GhEVFV4ZkxaXX4NvWdqmMY5pcNaCRiwAKmNf4UgOME8DKQ/exec';
+var NL_HEAD = ['Email', 'Status', 'Who', 'Asked', 'Confirmed', 'Left', 'From page', 'Token'];
+function nlSheet_() {
+  var root = DriveApp.getFolderById(ROOT_ID), name = 'Celly School newsletter', it = root.getFilesByName(name), ss;
+  if (it.hasNext()) ss = SpreadsheetApp.open(it.next());
+  else { ss = SpreadsheetApp.create(name); DriveApp.getFileById(ss.getId()).moveTo(root); }
+  var sh = ss.getSheets()[0];
+  if (sh.getLastRow() === 0) { sh.appendRow(NL_HEAD); sh.setFrozenRows(1); sh.getRange(1, 1, 1, NL_HEAD.length).setFontWeight('bold'); }
+  return sh;
+}
+function nlSubscribe_(d) {
+  var email = famEmail_(d.email); if (!email) return out_({ok: false, why: 'email'});
+  if (!d.consent) return out_({ok: false, why: 'consent'});
+  var cache = CacheService.getScriptCache(), k = 'nl_' + famHash_(email);
+  if (cache.get(k)) return out_({ok: true, again: true});               // one confirm email per address per hour
+  if (MailApp.getRemainingDailyQuota() < 5) return out_({ok: false, why: 'quota'});
+  var who = ['parent', 'teacher', 'tutor', 'other'].indexOf(d.who) >= 0 ? d.who : '';
+  var page = String(d.page || '').replace(/[^a-z0-9\-\/]/gi, '').slice(0, 60);
+  var lock = LockService.getScriptLock(); lock.waitLock(15000);
+  var token;
+  try {
+    var sh = nlSheet_(), rows = sh.getDataRange().getValues(), at = -1;
+    for (var i = 1; i < rows.length; i++) if (String(rows[i][0]).toLowerCase() === email) { at = i; break; }
+    if (at > 0 && rows[at][1] === 'confirmed') { cache.put(k, '1', 3600); return out_({ok: true, already: true}); }
+    token = Utilities.getUuid().replace(/-/g, '');
+    var row = [email, 'waiting', who, new Date(), '', '', page, token];
+    if (at > 0) sh.getRange(at + 1, 1, 1, row.length).setValues([row]); else sh.appendRow(row);
+  } finally { lock.releaseLock(); }
+  cache.put(k, '1', 3600);
+  var url = NL_EXEC, yes = url + '?confirm=' + token, no = url + '?unsub=' + token;
+  MailApp.sendEmail({to: email, name: 'Celly School', subject: 'Please confirm: Celly School emails',
+    htmlBody: '<div style="font-family:Verdana,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1F2A44;max-width:520px">' +
+      '<p>Hello! Someone (we hope you) asked for Celly School emails on www.cellyschool.com.</p>' +
+      '<p><a href="' + yes + '" style="display:inline-block;background:#81A63C;color:#fff;text-decoration:none;padding:10px 18px;border-radius:12px;font-weight:bold">Yes, send me Celly School emails</a></p>' +
+      '<p>We email when a new lesson, workbook or game is ready, at most once a week. We never share your email.</p>' +
+      '<p style="font-size:13px;color:#56607A">If you didn’t ask for this, just ignore this email and we won’t write again.</p>' +
+      '<p>Celly School · www.cellyschool.com</p></div>'});
+  return out_({ok: true});
+}
+function nlLink_(p) {
+  var token = String(p.confirm || p.unsub || '').replace(/[^a-f0-9]/g, ''), msg = 'This link has expired.';
+  if (token.length === 32) {
+    var lock = LockService.getScriptLock(); lock.waitLock(15000);
+    try {
+      var sh = nlSheet_(), rows = sh.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) if (rows[i][7] === token) {
+        if (p.confirm) { sh.getRange(i + 1, 2).setValue('confirmed'); sh.getRange(i + 1, 5).setValue(new Date()); msg = 'Thank you! You will get Celly School emails. Every email has a link to stop them.'; }
+        else { sh.getRange(i + 1, 2).setValue('left'); sh.getRange(i + 1, 6).setValue(new Date()); msg = 'Done. You will not get any more Celly School emails.'; }
+        break;
+      }
+    } finally { lock.releaseLock(); }
+  }
+  return HtmlService.createHtmlOutput('<div style="font-family:Verdana,Arial,sans-serif;font-size:18px;line-height:1.6;color:#1F2A44;max-width:520px;margin:40px auto;padding:0 16px">' +
+    '<p>' + msg + '</p><p><a href="https://www.cellyschool.com">Back to Celly School</a></p></div>').setTitle('Celly School');
+}
+/* for sending a newsletter later: the unsubscribe link for one confirmed row */
+function nlUnsubUrl_(token) { return NL_EXEC + '?unsub=' + token; }

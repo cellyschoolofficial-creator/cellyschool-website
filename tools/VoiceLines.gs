@@ -83,7 +83,7 @@ function report_() {
   while (it.hasNext()) {
     var f = it.next(); if (!/\.json$/i.test(f.getName())) continue;
     var st = JSON.parse(props['state_' + f.getId()] || '{}');
-    var n = JSON.parse(f.getBlob().getDataAsString()).lines.length;
+    var bj = JSON.parse(f.getBlob().getDataAsString()), n = bj.lines ? bj.lines.length : (bj.check_folders || []).length;
     out.waiting.push({name: f.getName(), id: f.getId(), recorded: st.next || 0, of: n, running: !!props['claim_' + f.getId()]});
   }
   var d = folder_(inbox.getId(), 'done').getFiles(), k = 0;
@@ -110,7 +110,7 @@ function runBatch_(file, start) {
     props.setProperty(stateKey, JSON.stringify(state));
   }
   var key = props.getProperty('GEMINI_KEY_' + (b.key || 1));
-  if (!key) { note_(out, 'FAILED - no key.txt', 'Script property GEMINI_KEY_' + (b.key || 1) + ' is missing.'); return false; }
+  if (!key) { if (!out.getFilesByName('FAILED - no key.txt').hasNext()) note_(out, 'FAILED - no key.txt', 'Script property GEMINI_KEY_' + (b.key || 1) + ' is missing.'); return false; }
 
   while (state.next < b.lines.length) {
     if (Date.now() - start > RUN_LIMIT_MS) { props.setProperty(stateKey, JSON.stringify(state)); return false; }

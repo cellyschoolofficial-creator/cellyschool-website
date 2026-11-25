@@ -5,7 +5,7 @@ import json, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLAY = os.path.join(ROOT, 'static', 'play')
 TARGET = 40.0
-for g in sorted(os.listdir(PLAY)):
+for g in (sys.argv[1:] or sorted(os.listdir(PLAY))):
     vj = os.path.join(PLAY, g, 'voice.js')
     if not os.path.exists(vj): continue
     t = open(vj, encoding='utf-8').read()
