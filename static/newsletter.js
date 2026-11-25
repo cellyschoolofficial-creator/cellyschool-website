@@ -9,7 +9,7 @@
   function track(n, p) { try { if (window.csTrack) window.csTrack(n, p || {}); } catch (e) {} }
   var st = document.createElement('style');
   st.textContent = '.nl{display:grid;gap:8px;border-color:#81A63C}.nl[hidden]{display:none}.nl label{font-weight:600}.nl input[type=email],.nl select{font:inherit;width:100%;max-width:420px;box-sizing:border-box;border:2px solid #C9C2AE;border-radius:12px;padding:10px 12px;background:#fff}' +
-    '.nl .tick{display:flex;gap:10px;align-items:flex-start;font-weight:400}.nl .tick input{width:24px;height:24px;flex:none;margin-top:2px}.nl-msg{min-height:1.4em;margin:0;color:#4A5573}';
+    '.nl .tick{display:flex;gap:10px;align-items:flex-start;font-weight:400}.nl .tick input{width:24px;height:24px;flex:none;margin-top:2px}.nl-msg{min-height:1.4em;margin:0;color:#4A5573}.nl button.btn{font:inherit;font-size:17px;font-weight:600;padding:10px 18px;min-height:46px;cursor:pointer}';
   document.head.appendChild(st);
   var fam = null; try { fam = JSON.parse(get('cs_family') || 'null'); } catch (e) {}
   if (fam && fam.email) document.getElementById('nlEmail').value = fam.email;

@@ -285,10 +285,10 @@ def build_workbook(d, nxt=None):
 <label for="nlEmail">Your email</label><input type="email" id="nlEmail" autocomplete="email" inputmode="email" maxlength="120">
 <label for="nlWho">I am a</label><select id="nlWho"><option value="parent">parent or carer</option><option value="teacher">teacher</option><option value="tutor">tutor</option><option value="other">other</option></select>
 <input type="text" id="nlHp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
-<label class="tick"><input type="checkbox" id="nlOk"> I am 18 or over, and I'd like Celly School emails about new lessons, workbooks and games (at most once a week). I can stop them at any time. See our <a href="/privacy">privacy page</a>.</label>
+<label class="tick"><input type="checkbox" id="nlOk"><span>I am 18 or over, and I'd like Celly School emails about new lessons, workbooks and games (at most once a week). I can stop them at any time. See our <a href="/privacy">privacy page</a>.</span></label>
 <p class="nl-msg" aria-live="polite"></p>
 <div class="btns"><button type="submit" class="btn primary">Email me new workbooks</button><button type="button" class="btn" id="nlNo">No thanks</button></div>
-</form><script src="/newsletter.js?v=1" defer></script>
+</form><script src="/newsletter.js?v=2" defer></script>
 <div class="card"><h2 style="margin-top:0">What is inside</h2><ul>
 <li>Short parts that match the parts of the video</li><li>Picture activities, labelling and sorting</li>
 <li>Key words with syllable taps, and memory tricks</li><li>Test-style questions, with answers for grown-ups</li>

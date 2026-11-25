@@ -5,10 +5,13 @@ import json, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLAY = os.path.join(ROOT, 'static', 'play')
 TARGET = 40.0
-for g in (sys.argv[1:] or sorted(os.listdir(PLAY))):
+for g in ([a for a in sys.argv[1:] if not a.startswith('--')] or sorted(os.listdir(PLAY))):
     vj = os.path.join(PLAY, g, 'voice.js')
     if not os.path.exists(vj): continue
     t = open(vj, encoding='utf-8').read()
+    cj = os.path.join(PLAY, g, 'media', 'v', 'chunks.js')
+    if os.path.exists(cj) and 'fix.mp3' in open(cj).read() and '--force' not in sys.argv:
+        print(g, 'skipped: has media/v/fix.mp3 (beat fixes from games/beatfix/patch.py); rebuild the sprite first or use --force'); continue
     m = re.search(r'window\.VOICE=(\{.*?\});\s*$', t, re.S | re.M)
     V = json.loads(m.group(1))
     sprite = os.path.join(PLAY, g, V['sprite'])
