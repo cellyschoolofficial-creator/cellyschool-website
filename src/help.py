@@ -133,7 +133,7 @@ GUIDES = [
   'try': ['7aa', '7ea', '7ia'],
   'faq': [
    ('Does this follow the curriculum used in British schools in Qatar?', 'It follows the Year 7 Exploring Science topic order, which many British-curriculum schools use for KS3. Check your school\'s scheme of work to match units.'),
-   ('Is it free?', 'Yes. All videos and printable workbooks are free, with no sign-up.'),
+   ('Is it free?', 'Yes. All videos and printable workbooks are free. To download a workbook we ask for your email once; there is no account or password.'),
    ('Will there be Arabic support?', 'Arabic guides for parents are planned. The lessons themselves are in English, with every key word said slowly and broken into syllables.'),
   ],
  },

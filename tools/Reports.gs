@@ -690,7 +690,8 @@ function famMerge_(a, b) {
 
 /* ---------- newsletter (optional, from the workbook pages) ----------
    Double opt-in: the form asks, we email a confirm link; only "confirmed" rows get emails. One-click unsubscribe.
-   Sheet "Celly School newsletter" (Celly School folder): Email | Status | Who | Asked | Confirmed | Left | From page | Token */
+   Sheet "Celly School newsletter" (Celly School folder): Email | Status (download only / waiting / confirmed / left) | Who | First seen | Confirmed | Left | Workbook pages | Token
+   Every workbook download asks for an email (stored as "download only"); newsletter emails go only to "confirmed" rows. */
 var NL_EXEC = 'https://script.google.com/macros/s/AKfycbwYsiK2ZrKioF6k0YO_y_m_GhEVFV4ZkxaXX4NvWdqmMY5pcNaCRiwAKmNf4UgOME8DKQ/exec';
 var NL_HEAD = ['Email', 'Status', 'Who', 'Asked', 'Confirmed', 'Left', 'From page', 'Token'];
 function nlSheet_() {
@@ -703,32 +704,38 @@ function nlSheet_() {
 }
 function nlSubscribe_(d) {
   var email = famEmail_(d.email); if (!email) return out_({ok: false, why: 'email'});
-  if (!d.consent) return out_({ok: false, why: 'consent'});
-  var cache = CacheService.getScriptCache(), k = 'nl_' + famHash_(email);
-  if (cache.get(k)) return out_({ok: true, again: true});               // one confirm email per address per hour
-  if (MailApp.getRemainingDailyQuota() < 5) return out_({ok: false, why: 'quota'});
+  var wantsNews = !!d.newsletter;                                        // separate, optional consent
   var who = ['parent', 'teacher', 'tutor', 'other'].indexOf(d.who) >= 0 ? d.who : '';
   var page = String(d.page || '').replace(/[^a-z0-9\-\/]/gi, '').slice(0, 60);
+  var cache = CacheService.getScriptCache(), k = 'nl_' + famHash_(email), mail = false, token;
   var lock = LockService.getScriptLock(); lock.waitLock(15000);
-  var token;
   try {
     var sh = nlSheet_(), rows = sh.getDataRange().getValues(), at = -1;
     for (var i = 1; i < rows.length; i++) if (String(rows[i][0]).toLowerCase() === email) { at = i; break; }
-    if (at > 0 && rows[at][1] === 'confirmed') { cache.put(k, '1', 3600); return out_({ok: true, already: true}); }
-    token = Utilities.getUuid().replace(/-/g, '');
-    var row = [email, 'waiting', who, new Date(), '', '', page, token];
-    if (at > 0) sh.getRange(at + 1, 1, 1, row.length).setValues([row]); else sh.appendRow(row);
+    var now = new Date();
+    if (at > 0) {
+      var st = rows[at][1]; token = rows[at][7] || Utilities.getUuid().replace(/-/g, '');
+      var pages = String(rows[at][6] || ''); if (page && pages.split(' ').indexOf(page) < 0) pages = (pages + ' ' + page).trim().slice(-400);
+      if (wantsNews && st !== 'confirmed') { st = 'waiting'; mail = true; }
+      sh.getRange(at + 1, 1, 1, 8).setValues([[email, st, who || rows[at][2], rows[at][3] || now, rows[at][4], rows[at][5], pages, token]]);
+    } else {
+      token = Utilities.getUuid().replace(/-/g, '');
+      sh.appendRow([email, wantsNews ? 'waiting' : 'download only', who, now, '', '', page, token]);
+      mail = wantsNews;
+    }
   } finally { lock.releaseLock(); }
-  cache.put(k, '1', 3600);
-  var url = NL_EXEC, yes = url + '?confirm=' + token, no = url + '?unsub=' + token;
-  MailApp.sendEmail({to: email, name: 'Celly School', subject: 'Please confirm: Celly School emails',
-    htmlBody: '<div style="font-family:Verdana,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1F2A44;max-width:520px">' +
-      '<p>Hello! Someone (we hope you) asked for Celly School emails on www.cellyschool.com.</p>' +
-      '<p><a href="' + yes + '" style="display:inline-block;background:#81A63C;color:#fff;text-decoration:none;padding:10px 18px;border-radius:12px;font-weight:bold">Yes, send me Celly School emails</a></p>' +
-      '<p>We email when a new lesson, workbook or game is ready, at most once a week. We never share your email.</p>' +
-      '<p style="font-size:13px;color:#56607A">If you didn’t ask for this, just ignore this email and we won’t write again.</p>' +
-      '<p>Celly School · www.cellyschool.com</p></div>'});
-  return out_({ok: true});
+  if (mail && !cache.get(k) && MailApp.getRemainingDailyQuota() >= 5) {
+    cache.put(k, '1', 3600);
+    var yes = NL_EXEC + '?confirm=' + token;
+    MailApp.sendEmail({to: email, name: 'Celly School', subject: 'Please confirm: Celly School emails',
+      htmlBody: '<div style="font-family:Verdana,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1F2A44;max-width:520px">' +
+        '<p>Hello! Someone (we hope you) asked for Celly School emails on www.cellyschool.com.</p>' +
+        '<p><a href="' + yes + '" style="display:inline-block;background:#81A63C;color:#fff;text-decoration:none;padding:10px 18px;border-radius:12px;font-weight:bold">Yes, send me Celly School emails</a></p>' +
+        '<p>We email when a new lesson, workbook or game is ready, at most once a week. We never share your email.</p>' +
+        '<p style="font-size:13px;color:#56607A">If you didn’t ask for this, just ignore this email and we won’t write again.</p>' +
+        '<p>Celly School · www.cellyschool.com</p></div>'});
+  }
+  return out_({ok: true, mailed: mail});
 }
 function nlLink_(p) {
   var token = String(p.confirm || p.unsub || '').replace(/[^a-f0-9]/g, ''), msg = 'This link has expired.';

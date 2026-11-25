@@ -279,16 +279,17 @@ def build_workbook(d, nxt=None):
 <p class="lead">A printable workbook for the {d["code"]} lesson, made for children who find reading and spelling hard.</p>
 <div class="btns"><a class="btn primary" href="/workbooks/{fn}" download>{ICON_DL} Download the workbook (PDF, {mb:.1f} MB)</a>
 <a class="btn" href="/{d["slug"]}">Go to the {d["code"]} lesson</a>{wb_game}</div>
-<form class="card nl" id="nlBox" hidden data-page="{d["slug"]}-workbook" novalidate>
-<h2 style="margin-top:0">Your download has started 🎉</h2>
-<p>Want the next workbook and new lessons by email? <b>This is optional</b>: the workbook is yours either way.</p>
+<form class="card nl" id="nlBox" hidden data-page="{d["slug"]}-workbook" data-file="/workbooks/{fn}" novalidate>
+<h2 style="margin-top:0">Get your free workbook</h2>
+<p>Type your email and press <b>Download</b>. The workbook downloads straight away. We only ask once on this device.</p>
 <label for="nlEmail">Your email</label><input type="email" id="nlEmail" autocomplete="email" inputmode="email" maxlength="120">
 <label for="nlWho">I am a</label><select id="nlWho"><option value="parent">parent or carer</option><option value="teacher">teacher</option><option value="tutor">tutor</option><option value="other">other</option></select>
 <input type="text" id="nlHp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
-<label class="tick"><input type="checkbox" id="nlOk"><span>I am 18 or over, and I'd like Celly School emails about new lessons, workbooks and games (at most once a week). I can stop them at any time. See our <a href="/privacy">privacy page</a>.</span></label>
+<label class="tick"><input type="checkbox" id="nlOk"><span>Also send me Celly School emails about new lessons, workbooks and games (at most once a week, optional). I am 18 or over and can stop them at any time.</span></label>
+<p class="small">We keep your email so we know who uses the workbooks. We only send news emails if you tick the box and confirm. See our <a href="/privacy">privacy page</a>.</p>
 <p class="nl-msg" aria-live="polite"></p>
-<div class="btns"><button type="submit" class="btn primary">Email me new workbooks</button><button type="button" class="btn" id="nlNo">No thanks</button></div>
-</form><script src="/newsletter.js?v=2" defer></script>
+<div class="btns"><button type="submit" class="btn primary">{ICON_DL} Download</button><button type="button" class="btn" id="nlNo">Cancel</button></div>
+</form><script src="/newsletter.js?v=3" defer></script>
 <div class="card"><h2 style="margin-top:0">What is inside</h2><ul>
 <li>Short parts that match the parts of the video</li><li>Picture activities, labelling and sorting</li>
 <li>Key words with syllable taps, and memory tricks</li><li>Test-style questions, with answers for grown-ups</li>
@@ -347,7 +348,7 @@ def build_workbooks():
         items = ''.join(f'<li><a href="/{d["slug"]}-workbook">{d["code"]} {E(d["title"])}</a></li>' for d in u['lessons'])
         rows.append(f'<div class="card"><span class="chip {u["subject"]}">{u["code"]}</span><h3 style="margin-top:.5em">{E(u["name"])}</h3><ul>{items}</ul></div>')
     body = f'''<div class="wrap"><h1 style="margin-top:36px">Free printable workbooks</h1>
-<p class="lead">60 free workbooks for Year 7 science, one for every lesson. No sign-up, no email: just download and print.</p>
+<p class="lead">60 free workbooks for Year 7 science, one for every lesson. Free to download and print: just type your email once.</p>
 <div class="grid">{"".join(rows)}</div>
 <p class="note" style="margin-top:28px">Free to print and share for home and classroom use. Please don't sell them or upload them elsewhere.</p></div>'''
     page('workbooks.html', 'Free printable Year 7 science workbooks with answers (PDF) | Celly School',
@@ -458,13 +459,13 @@ def build_static_pages():
     page('about.html', 'About Celly School | For parents, tutors and teachers', 'How Celly School lessons help dyslexic learners: short parts, syllable taps, memory tricks and free workbooks.', about, 'ab')
     privacy = f'''<div class="wrap narrow"><h1 style="margin-top:36px">Privacy</h1>
 <p>Celly School is made for children, so this website collects as little as possible.</p>
-<ul><li>No accounts and no sign-up. The only personal details we collect are the ones a parent or carer chooses to give for the game reports below: their email and their children’s first names.</li>
+<ul><li>No accounts and no passwords. The only personal details we collect are your email when you download a workbook, and, if a parent or carer chooses the game reports below, their email and their children’s first names.</li>
 <li>No advertising cookies on this website.</li>
 <li>The “Easier reading” setting is saved only in your own browser, on your device. It is never sent to us.</li>
 <li>We count which pages are visited and which buttons are used (for example “download the workbook”, “play the video” or “finished a game”) with Umami. Umami uses no cookies and collects no personal information; we only see totals.</li>
 <li>To make the lessons and games easier to use, we use three tools that look at how the website is used: Microsoft Clarity (clicks, scrolling and where people get stuck), PostHog (which pages and game rooms are used and where people stop; its data is kept in the EU) and Google Analytics (which websites and searches bring visitors). They hide anything typed and do not record names or contact details. Google Analytics' advertising and Google-signals features are switched off, and for visitors in the UK and Europe Clarity and Google Analytics do not set cookies. The privacy statements of Microsoft, PostHog and Google apply to their tools. You can switch these tools off on your device here: <button type="button" class="btn" data-consent-reset hidden>Turn them off on this device</button></li>
 <li>We count visits with Cloudflare Web Analytics. It uses no cookies, does not collect personal information and does not follow you to other websites. It only tells us totals, such as how many people visited a page and which country or website they came from.</li>
-<li><b>Emails about new workbooks (optional).</b> On a workbook page you can ask for emails about new lessons, workbooks and games. You give your email, say whether you are a parent, carer, teacher or tutor, and tick a box to agree. We then email you a link to confirm, and only send emails after you press it. We keep your email, that choice, the page you were on and the dates in a private list in our Google account. We email at most once a week, never share or sell your email, and every email has a link to stop them. You can also write to cellyschool.official@gmail.com and we will delete your details.</li>
+<li><b>Workbook downloads and emails.</b> To download a workbook we ask for your email and whether you are a parent, carer, teacher or tutor. We keep these, the workbook pages you downloaded from and the date in a private list in our Google account, so we know who uses the workbooks. We do not send you news emails unless you also tick the box to ask for them and then press the link in the email we send to confirm. We email at most once a week, never share or sell your email, and every email has a link to stop them. To have your details deleted, write to cellyschool.official@gmail.com.</li>
 <li><b>Game reports.</b> Talk to Celly games can email a parent or carer a short report after each game. This is optional. To use it, a parent or carer enters their email and, if they wish, their children’s first names (or nicknames), and ticks a box to say they are the parent or carer and agree to us keeping these details. That tick is their consent. We keep the email address and the first names in a private list in our Google account, together with each child’s games, answers, scores and progress over time, so we can send reports, recap results and the next recap for the right child, and use the anonymous totals to make the games and lessons better. The game results (which answers were right first time, the time taken and the words to practise) are sent to our Google account, which makes the PDF report and emails it. We never share or sell these details, and we do not send newsletters unless you ask for them. You can change your mind at any time: to see, change or delete your details, reply to any report email or write to cellyschool.official@gmail.com, and we will delete them. The device also remembers the email and names so a child can simply tap their name next time; “Remove from this device” on the Talk to Celly page clears them.</li>
 <li><b>Progress and your school's order.</b> This website remembers, in your own browser on your device, which lessons and games each child has done and the order your school teaches the units, so it can show ticks and a “Carry on” button. If a parent or carer chooses to link a device to their email (we email a 6-digit code to check the email is theirs), we also keep the children’s first names, the school’s order and this progress with that email in our private Google account, so it is the same on all their linked devices. A linked device holds a private random key; we store only a scrambled copy of it. Use “Remove from this device” on the Talk to Celly page to forget it on one device, or email us to delete everything.</li>
 <li>Lesson videos are hosted on YouTube. While a video plays we count how much of it has been watched, only to mark the lesson as watched. A video only loads from YouTube (in privacy-enhanced mode, youtube-nocookie.com) when you press play. YouTube's own privacy policy then applies.</li>
